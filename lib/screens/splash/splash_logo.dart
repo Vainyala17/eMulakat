@@ -35,7 +35,45 @@ class _SplashLogoScreenState extends State<SplashLogoScreen>
     _controller.dispose();
     super.dispose();
   }
-
+  Widget _buildLogo() {
+    return Container(
+      width: 120,
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.asset(
+          'assets/images/npip_logo.png',
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Colors.white,
+              child: Center(
+                child: Text(
+                  'NPIP',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF5A8BBA),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,12 +84,10 @@ class _SplashLogoScreenState extends State<SplashLogoScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: Colors.white,
-                backgroundImage: AssetImage('assets/images/npip_logo.png'),
-              ),
               SizedBox(height: 24),
+              _buildLogo(),
+              SizedBox(height: 24),
+
               Text(
                 'E-Mulakat',
                 style: TextStyle(

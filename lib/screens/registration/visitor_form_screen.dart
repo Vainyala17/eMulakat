@@ -3,13 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:io';
+import 'dart:math';
 import 'meet_form_screen.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/form_section_title.dart';
-import '../../utils/color_scheme.dart';
 import '../../utils/validators.dart';
-import '../../utils/constants.dart';
 
 class VisitorFormScreen extends StatefulWidget {
   @override
@@ -26,12 +25,23 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
   final TextEditingController _idNumberController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
 
   String? _selectedGender;
   String? _selectedRelation;
   String? _selectedIdProof;
   bool _isInternationalVisitor = false;
-  File? _selectedImage;
+
+  // Separate variables for different images
+  File? _passportImage;  // For passport photo
+  File? _idProofImage;   // For ID proof image
+
+  // OTP related variables
+  bool _isOtpSent = false;
+  bool _isOtpVerified = false;
+  String? _generatedOtp;
+  int _resendCounter = 0;
+  bool _canResend = true;
 
   final List<String> _genders = ['Male', 'Female', 'Other'];
   final List<String> _relations = ['Father', 'Mother', 'Spouse', 'Brother', 'Sister', 'Son', 'Daughter', 'Friend', 'Other'];
@@ -52,7 +62,101 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     super.initState();
   }
 
-  Future<void> _pickImage() async {
+  // Generate random OTP
+  String _generateOtp() {
+    Random random = Random();
+    String otp = '';
+    for (int i = 0; i < 6; i++) {
+      otp += random.nextInt(10).toString();
+    }
+    return otp;
+  }
+
+  // Send OTP function
+  void _sendOtp() {
+    if (_mobileController.text.length == 10) {
+      setState(() {
+        _generatedOtp = _generateOtp();
+        _isOtpSent = true;
+        _canResend = false;
+      });
+
+      // Show OTP in console for testing (remove in production)
+      print('Generated OTP: $_generatedOtp');
+
+      // Show snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('OTP sent to ${_mobileController.text}'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Enable resend after 30 seconds
+      Future.delayed(Duration(seconds: 30), () {
+        if (mounted) {
+          setState(() {
+            _canResend = true;
+          });
+        }
+      });
+    }
+  }
+
+  // Verify OTP function
+  void _verifyOtp() {
+    if (_otpController.text == _generatedOtp) {
+      setState(() {
+        _isOtpVerified = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('OTP verified successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Invalid OTP. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // Resend OTP function
+  void _resendOtp() {
+    if (_canResend && _resendCounter < 3) {
+      setState(() {
+        _resendCounter++;
+        _generatedOtp = _generateOtp();
+        _canResend = false;
+        _otpController.clear();
+      });
+
+      print('Resent OTP: $_generatedOtp');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('OTP resent to ${_mobileController.text}'),
+          backgroundColor: Colors.blue,
+        ),
+      );
+
+      // Enable resend after 30 seconds
+      Future.delayed(Duration(seconds: 30), () {
+        if (mounted) {
+          setState(() {
+            _canResend = true;
+          });
+        }
+      });
+    }
+  }
+
+  // Pick image function with type parameter
+  Future<void> _pickImage(String imageType) async {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -65,7 +169,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 title: Text('Camera'),
                 onTap: () {
                   Navigator.pop(context);
-                  _getImage(ImageSource.camera);
+                  _getImage(ImageSource.camera, imageType);
                 },
               ),
               ListTile(
@@ -73,7 +177,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 title: Text('Gallery'),
                 onTap: () {
                   Navigator.pop(context);
-                  _getImage(ImageSource.gallery);
+                  _getImage(ImageSource.gallery, imageType);
                 },
               ),
             ],
@@ -83,12 +187,17 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     );
   }
 
-  Future<void> _getImage(ImageSource source) async {
+  // Get image function with type parameter
+  Future<void> _getImage(ImageSource source, String imageType) async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: source);
     if (image != null) {
       setState(() {
-        _selectedImage = File(image.path);
+        if (imageType == 'passport') {
+          _passportImage = File(image.path);
+        } else if (imageType == 'idproof') {
+          _idProofImage = File(image.path);
+        }
       });
     }
   }
@@ -96,6 +205,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text('Visitor Registration'),
         centerTitle: true,
@@ -121,6 +231,62 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
               FormSectionTitle(title: 'Visitor Details'),
               SizedBox(height: 20),
 
+              // Passport Photo Upload
+              Align(
+                alignment: Alignment.topRight,
+                child: Container(
+                  width: 100,
+                  height: 130,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: _passportImage != null
+                      ? Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          _passportImage!,
+                          width: 100,
+                          height: 130,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        top: 3,
+                        right: 3,
+                        child: IconButton(
+                          icon: Icon(Icons.close, size: 18, color: Colors.red),
+                          padding: EdgeInsets.zero,
+                          constraints: BoxConstraints(),
+                          onPressed: () {
+                            setState(() {
+                              _passportImage = null;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  )
+                      : InkWell(
+                    onTap: () => _pickImage('passport'),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.upload, size: 30, color: Colors.black,),
+                        SizedBox(height: 5),
+                        Text(
+                          'Upload\nPhoto',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
               // Visitor Name
               CustomTextField(
                 controller: _nameController,
@@ -129,7 +295,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 validator: Validators.validateName,
                 inputFormatters: [
                   TextInputFormatter.withFunction((oldValue, newValue) {
-                    // Convert first letter of each word to uppercase
                     String text = newValue.text;
                     if (text.isNotEmpty) {
                       text = text.split(' ').map((word) {
@@ -152,11 +317,10 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
               CustomTextField(
                 controller: _fatherNameController,
                 label: 'Father/Husband Name*',
-                hint: 'Enter Your Father Name',
+                hint: 'Enter Father/Husband Name',
                 validator: Validators.validateName,
                 inputFormatters: [
                   TextInputFormatter.withFunction((oldValue, newValue) {
-                    // Convert first letter of each word to uppercase
                     String text = newValue.text;
                     if (text.isNotEmpty) {
                       text = text.split(' ').map((word) {
@@ -183,7 +347,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 validator: Validators.validateAddress,
                 inputFormatters: [
                   TextInputFormatter.withFunction((oldValue, newValue) {
-                    // Convert first letter of each word to uppercase
                     String text = newValue.text;
                     if (text.isNotEmpty) {
                       text = text.split(' ').map((word) {
@@ -206,8 +369,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
               DropdownButtonFormField<String>(
                 value: _selectedGender,
                 decoration: InputDecoration(
-                  label: Text('Gender*'),
-                  labelText: 'Select Gender',
+                  hintText: 'Select your gender',
                   border: OutlineInputBorder(),
                 ),
                 items: _genders.map((gender) {
@@ -234,7 +396,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 validator: Validators.validateAge,
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(3), // Limit age to 3 digits
+                  LengthLimitingTextInputFormatter(3),
                 ],
               ),
               SizedBox(height: 16),
@@ -243,7 +405,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
               DropdownButtonFormField<String>(
                 value: _selectedRelation,
                 decoration: InputDecoration(
-                  label: Text('Relation*'),
                   labelText: 'Select Relation',
                   border: OutlineInputBorder(),
                 ),
@@ -266,7 +427,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
               DropdownButtonFormField<String>(
                 value: _selectedIdProof,
                 decoration: InputDecoration(
-                  label: Text('ID Proof*'),
                   labelText: 'Select Identity Proof',
                   border: OutlineInputBorder(),
                 ),
@@ -313,47 +473,59 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 ),
               SizedBox(height: 16),
 
-              // Image Upload
-              Container(
-                width: double.infinity,
-                height: 200,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: _selectedImage != null
-                    ? Stack(
-                  children: [
-                    Image.file(
-                      _selectedImage!,
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: IconButton(
-                        icon: Icon(Icons.close, color: Colors.red),
-                        onPressed: () {
-                          setState(() {
-                            _selectedImage = null;
-                          });
-                        },
+              // ID Proof Image Upload
+              Align(
+                alignment: Alignment.center,
+                child: Container(
+                  width: 500,
+                  height: 130,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: _idProofImage != null
+                      ? Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          _idProofImage!,
+                          width: 500,
+                          height: 150,
+                          fit: BoxFit.cover,
+                        ),
                       ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: IconButton(
+                          icon: Icon(Icons.close, size: 18, color: Colors.red),
+                          padding: EdgeInsets.zero,
+                          constraints: BoxConstraints(),
+                          onPressed: () {
+                            setState(() {
+                              _idProofImage = null;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  )
+                      : InkWell(
+                    onTap: () => _pickImage('idproof'),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.upload, size: 50, color: Colors.black,),
+                        SizedBox(height: 8),
+                        Text(
+                          'Upload ID Proof Image',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 15),
+                        ),
+                      ],
                     ),
-                  ],
-                )
-                    : Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.upload, size: 50, color: Colors.grey),
-                    SizedBox(height: 16),
-                    CustomButton(
-                      text: 'Upload ID Proof Image',
-                      onPressed: _pickImage,
-                    ),
-                  ],
+                  ),
                 ),
               ),
               SizedBox(height: 16),
@@ -367,6 +539,9 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                     _isInternationalVisitor = value ?? false;
                     if (_isInternationalVisitor) {
                       _mobileController.clear();
+                      _isOtpSent = false;
+                      _isOtpVerified = false;
+                      _otpController.clear();
                     } else {
                       _emailController.clear();
                     }
@@ -386,18 +561,122 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
               SizedBox(height: 16),
 
               // Mobile Number (for non-international visitors)
-              if (!_isInternationalVisitor)
-                CustomTextField(
-                  controller: _mobileController,
-                  label: 'Mobile No*',
-                  hint: 'Enter Your Mobile Number',
-                  keyboardType: TextInputType.phone,
-                  validator: Validators.validateMobile,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(10), // Limit to 10 digits
+              if (!_isInternationalVisitor) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: CustomTextField(
+                        controller: _mobileController,
+                        label: 'Mobile No*',
+                        hint: 'Enter Your Mobile Number',
+                        keyboardType: TextInputType.phone,
+                        validator: Validators.validateMobile,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(10),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            if (value.length != 10) {
+                              _isOtpSent = false;
+                              _isOtpVerified = false;
+                              _otpController.clear();
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    if (_mobileController.text.length == 10 && !_isOtpVerified)
+                      ElevatedButton(
+                        onPressed: _isOtpSent ? null : _sendOtp,
+                        child: Text(_isOtpSent ? 'Sent' : 'Get OTP'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _isOtpSent ? Colors.black : Colors.blue,
+                        ),
+                      ),
                   ],
                 ),
+                SizedBox(height: 16),
+
+                // OTP Verification Section
+                if (_isOtpSent && !_isOtpVerified) ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CustomTextField(
+                          controller: _otpController,
+                          label: 'Enter OTP*',
+                          hint: 'Enter 6-digit OTP',
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(6),
+                          ],
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter OTP';
+                            }
+                            if (value.length != 6) {
+                              return 'OTP must be 6 digits';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Column(
+                        children: [
+                          ElevatedButton(
+                            onPressed: _otpController.text.length == 6 ? _verifyOtp : null,
+                            child: Text('Verify'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                            ),
+                          ),
+                          SizedBox(height: 5),
+                          TextButton(
+                            onPressed: _canResend && _resendCounter < 3 ? _resendOtp : null,
+                            child: Text(
+                              _canResend ? 'Resend' : 'Wait...',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  if (_resendCounter > 0)
+                    Text(
+                      'Resend attempts: $_resendCounter/3',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                ],
+
+                // OTP Verified Message
+                if (_isOtpVerified) ...[
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(color: Colors.green),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green),
+                        SizedBox(width: 10),
+                        Text(
+                          'Mobile number verified successfully!',
+                          style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                ],
+              ],
 
               SizedBox(height: 30),
 
@@ -406,6 +685,17 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 text: 'Save & Next',
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
+                    // Check OTP verification for non-international visitors
+                    if (!_isInternationalVisitor && !_isOtpVerified) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Please verify your mobile number with OTP'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => MeetFormScreen()),
@@ -429,6 +719,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     _idNumberController.dispose();
     _emailController.dispose();
     _mobileController.dispose();
+    _otpController.dispose();
     super.dispose();
   }
 }
