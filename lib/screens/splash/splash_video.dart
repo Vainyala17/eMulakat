@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import 'splash_animation.dart';
 
 class SplashVideoScreen extends StatefulWidget {
@@ -7,15 +8,41 @@ class SplashVideoScreen extends StatefulWidget {
 }
 
 class _SplashVideoScreenState extends State<SplashVideoScreen> {
-  bool _isVideoPlaying = true;
+  late VideoPlayerController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize the video
+    _controller = VideoPlayerController.network(
+      'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+    )
+      ..initialize().then((_) {
+        setState(() {});
+        _controller.play(); // autoplay
+      })
+      ..setLooping(false);
+
+    // Listen for when the video ends
+    _controller.addListener(() {
+      if (_controller.value.position == _controller.value.duration) {
+        _skipVideo();
+      }
+    });
+  }
 
   void _skipVideo() {
-    setState(() {
-      _isVideoPlaying = false;
-    });
+    _controller.pause();
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (context) => SplashAnimationScreen()),
     );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -25,48 +52,12 @@ class _SplashVideoScreenState extends State<SplashVideoScreen> {
       body: Stack(
         children: [
           Center(
-            child: Container(
-              width: double.infinity,
-              height: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.black,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.play_circle_outline,
-                    size: 100,
-                    color: Colors.white,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Introduction Video',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Playing introduction video...',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                  SizedBox(height: 32),
-                  ElevatedButton(
-                    onPressed: _skipVideo,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                    ),
-                    child: Text('Play Video'),
-                  ),
-                ],
-              ),
-            ),
+            child: _controller.value.isInitialized
+                ? AspectRatio(
+              aspectRatio: _controller.value.aspectRatio,
+              child: VideoPlayer(_controller),
+            )
+                : CircularProgressIndicator(color: Colors.white),
           ),
           Positioned(
             bottom: 40,

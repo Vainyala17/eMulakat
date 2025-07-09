@@ -161,7 +161,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 controller: _addressController,
                 label: 'Address*',
                 hint: 'Enter Your Address',
-                maxLength: 3,
                 validator: Validators.validateAddress,
               ),
               SizedBox(height: 16),
