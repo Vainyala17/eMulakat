@@ -46,25 +46,10 @@ class _SplashLogoScreenState extends State<SplashLogoScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(60),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 10,
-                      offset: Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.security,
-                  size: 60,
-                  color: Theme.of(context).primaryColor,
-                ),
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: Colors.white,
+                backgroundImage: AssetImage('assets/images/npip_logo.png'),
               ),
               SizedBox(height: 24),
               Text(

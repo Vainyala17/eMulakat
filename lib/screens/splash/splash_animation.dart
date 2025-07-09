@@ -76,25 +76,10 @@ class _SplashAnimationScreenState extends State<SplashAnimationScreen>
                   angle: _rotationAnimation.value * 3.14159,
                   child: ScaleTransition(
                     scale: _scaleAnimation,
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(50),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 15,
-                            offset: Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.security,
-                        size: 50,
-                        color: Theme.of(context).primaryColor,
-                      ),
+                    child: CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.white,
+                      backgroundImage: AssetImage('assets/images/npip_logo.png'),
                     ),
                   ),
                 );

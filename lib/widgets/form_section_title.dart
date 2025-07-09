@@ -18,21 +18,24 @@ class FormSectionTitle extends StatelessWidget {
         color: Theme.of(context).primaryColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Row(
-        children: [
-          if (icon != null) ...[
-            Icon(icon, color: Theme.of(context).primaryColor),
-            SizedBox(width: 8),
-          ],
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).primaryColor,
+      child: Center(
+        child: Row(
+          mainAxisSize: MainAxisSize.min, // to center row content
+          children: [
+            if (icon != null) ...[
+              Icon(icon, color: Theme.of(context).primaryColor),
+              SizedBox(width: 8),
+            ],
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).primaryColor,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

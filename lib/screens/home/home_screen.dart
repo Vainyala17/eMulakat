@@ -70,6 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('E-Mulakat'),
+        centerTitle: true,
         backgroundColor: _selectedColor,
         actions: [
           // Notification Icon
@@ -200,9 +201,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildDashboardCard(
                     'Help',
                     Icons.help,
-                        () {
-                      // Navigate to help
-                    },
+                      (){
+
+                      }
                   ),
                 ],
               ),

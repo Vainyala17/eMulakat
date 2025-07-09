@@ -23,6 +23,7 @@ class _TermsOfUseScreenState extends State<TermsOfUseScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Terms of Use'),
+        centerTitle: true,
         backgroundColor: Theme.of(context).primaryColor,
       ),
       body: WebViewWidget(controller: controller),
