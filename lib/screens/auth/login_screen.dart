@@ -69,38 +69,76 @@ class _LoginScreenState extends State<LoginScreen> {
   }) {
     final isSelected = _selectedIndex == index;
 
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
-        onTap();
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: isSelected
-            ? BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        )
-            : null,
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 24,
-              color: isSelected ? Color(0xFF5A41EF) : Colors.white,
-            ),
-            if (isSelected) SizedBox(width: 6),
-            if (isSelected)
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedIndex = index;
+          });
+          onTap();
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 24,
+                color: Colors.white,
+              ),
+              SizedBox(height: 4),
               Text(
                 label,
                 style: TextStyle(
-                  color: Color(0xFF5A41EF),
-                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogo() {
+    return Container(
+      width: 120,
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.asset(
+          'assets/images/npip_logo.png',
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Colors.white,
+              child: Center(
+                child: Text(
+                  'NPIP',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF5A8BBA),
+                  ),
                 ),
               ),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -109,10 +147,11 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white, // Light grey background
       appBar: AppBar(
         title: Text('Login'),
         centerTitle: true,
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Color(0xFF5A8BBA),
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -124,15 +163,8 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 SizedBox(height: 40),
-                // App Logo
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.white,
-                  backgroundImage: AssetImage('assets/images/npip_logo.png'),
-                ),
-                SizedBox(height: 40),
-
-                // Email Field
+                _buildLogo(),
+                SizedBox(height: 40),                // Email Field
                 CustomTextField(
                   label: 'Email',
                   hint: 'Enter your email',
@@ -242,46 +274,54 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
       bottomNavigationBar: Container(
-        margin: EdgeInsets.all(16),
-        padding: EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: Color(0xFF5A41EF), // Your preferred primary color
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(
-              index: 0,
-              icon: Icons.privacy_tip,
-              label: 'Privacy Policy',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => PrivacyPolicyScreen()),
-                );
-              },
-            ),
-            _buildNavItem(
-              index: 1,
-              icon: Icons.contact_page,
-              label: 'Contact Us',
-              onTap: () {
-                ContactUsPopup.show(context);
-              },
-            ),
-            _buildNavItem(
-              index: 2,
-              icon: Icons.description,
-              label: 'Terms Of Use',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => TermsOfUseScreen()),
-                );
-              },
+          color: Color(0xFF5A8BBA), // Your specified color
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: Offset(0, -2),
             ),
           ],
+        ),
+        child: SafeArea(
+          child: Container(
+            height: 70,
+            child: Row(
+              children: [
+                _buildNavItem(
+                  index: 0,
+                  icon: Icons.shield_outlined, // Better icon for privacy
+                  label: 'Privacy Policy',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => PrivacyPolicyScreen()),
+                    );
+                  },
+                ),
+                _buildNavItem(
+                  index: 1,
+                  icon: Icons.support_agent_outlined, // Better icon for contact
+                  label: 'Contact Us',
+                  onTap: () {
+                    ContactUsPopup.show(context);
+                  },
+                ),
+                _buildNavItem(
+                  index: 2,
+                  icon: Icons.article_outlined, // Better icon for terms
+                  label: 'Terms Of Use',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => TermsOfUseScreen()),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

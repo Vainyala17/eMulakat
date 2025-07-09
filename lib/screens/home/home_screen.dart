@@ -68,6 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text('E-Mulakat'),
         centerTitle: true,
@@ -165,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
               'Prison Visitor Management System',
               style: TextStyle(
                 fontSize: _fontSize + 2,
-                color: Colors.grey[600],
+                color: Colors.white,
               ),
             ),
             SizedBox(height: 30),

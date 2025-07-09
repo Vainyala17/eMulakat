@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../home/home_screen.dart';
@@ -74,6 +75,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text('Whom to Meet'),
         centerTitle: true,
@@ -175,6 +177,10 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                 label: 'Additional Visitors',
                 hint: 'Enter number of additional visitors',
                 keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(10), // Limit age to 10 digits
+                ],
               ),
               SizedBox(height: 16),
 
@@ -190,6 +196,24 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                       label: 'Additional Visitor ${i + 1} Name*',
                       hint: 'Enter visitor name',
                       validator: Validators.validateName,
+                      inputFormatters: [
+                        TextInputFormatter.withFunction((oldValue, newValue) {
+                          // Convert first letter of each word to uppercase
+                          String text = newValue.text;
+                          if (text.isNotEmpty) {
+                            text = text.split(' ').map((word) {
+                              if (word.isNotEmpty) {
+                                return word[0].toUpperCase() + word.substring(1).toLowerCase();
+                              }
+                              return word;
+                            }).join(' ');
+                          }
+                          return TextEditingValue(
+                            text: text,
+                            selection: TextSelection.collapsed(offset: text.length),
+                          );
+                        }),
+                      ],
                     ),
                   ),
               ],
@@ -202,8 +226,26 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
               CustomTextField(
                 controller: _prisonerNameController,
                 label: 'Prisoner Name*',
-                hint: 'Enter prisoner name',
+                hint: 'Enter prisoner Name',
                 validator: Validators.validateName,
+                inputFormatters: [
+                  TextInputFormatter.withFunction((oldValue, newValue) {
+                    // Convert first letter of each word to uppercase
+                    String text = newValue.text;
+                    if (text.isNotEmpty) {
+                      text = text.split(' ').map((word) {
+                        if (word.isNotEmpty) {
+                          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+                        }
+                        return word;
+                      }).join(' ');
+                    }
+                    return TextEditingValue(
+                      text: text,
+                      selection: TextSelection.collapsed(offset: text.length),
+                    );
+                  }),
+                ],
               ),
               SizedBox(height: 16),
 
@@ -211,8 +253,26 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
               CustomTextField(
                 controller: _prisonerFatherNameController,
                 label: 'Father/Husband Name*',
-                hint: 'Enter father/husband name',
+                hint: 'Enter Father/Husband Name',
                 validator: Validators.validateName,
+                inputFormatters: [
+                  TextInputFormatter.withFunction((oldValue, newValue) {
+                    // Convert first letter of each word to uppercase
+                    String text = newValue.text;
+                    if (text.isNotEmpty) {
+                      text = text.split(' ').map((word) {
+                        if (word.isNotEmpty) {
+                          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+                        }
+                        return word;
+                      }).join(' ');
+                    }
+                    return TextEditingValue(
+                      text: text,
+                      selection: TextSelection.collapsed(offset: text.length),
+                    );
+                  }),
+                ],
               ),
               SizedBox(height: 16),
 
@@ -220,9 +280,13 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
               CustomTextField(
                 controller: _prisonerAgeController,
                 label: 'Prisoner Age*',
-                hint: 'Enter prisoner age',
+                hint: 'Enter prisoner Age',
                 keyboardType: TextInputType.number,
                 validator: Validators.validateAge,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(3), // Limit age to 3 digits
+                ],
               ),
               SizedBox(height: 16),
 
