@@ -1,0 +1,22 @@
+import 'package:flutter/material.dart';
+import 'screens/splash/splash_logo.dart';
+import 'utils/color_scheme.dart';
+
+void main() {
+  runApp(EMulakatApp());
+}
+
+class EMulakatApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'E-Mulakat',
+      theme: ThemeData(
+        primarySwatch: AppColors.primarySwatch,
+        colorScheme: AppColors.colorScheme,
+      ),
+      home: SplashLogoScreen(),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
