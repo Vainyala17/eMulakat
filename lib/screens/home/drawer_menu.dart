@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../utils/color_scheme.dart';
+import '../auth/login_screen.dart';
 
 class DrawerMenu extends StatelessWidget {
   @override
@@ -54,11 +55,34 @@ class DrawerMenu extends StatelessWidget {
           ListTile(
             leading: Icon(Icons.logout),
             title: Text('Logout'),
-            onTap: () {
-              Navigator.pop(context);
-              // Handle logout
+            onTap: () async {
+              final shouldLogout = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('Confirm Logout'),
+                  content: Text('Are you sure you want to logout?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text('Logout'),
+                    ),
+                  ],
+                ),
+              );
+
+              if (shouldLogout == true) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                      (route) => false,
+                );
+              }
             },
           ),
+
         ],
       ),
     );

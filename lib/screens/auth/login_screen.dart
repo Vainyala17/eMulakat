@@ -1,10 +1,10 @@
+import 'package:e_mulakat/screens/home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import '../../policies/contact_us_popup.dart';
 import '../../policies/privacy_policy_screen.dart';
 import '../../policies/terms_of_use_screen.dart';
 import '../registration/visitor_form_screen.dart';
-import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_button.dart';
@@ -16,6 +16,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  int _selectedIndex = 0;
+
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -54,9 +56,54 @@ class _LoginScreenState extends State<LoginScreen> {
       await Future.delayed(Duration(seconds: 2));
 
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => VisitorFormScreen()),
+        MaterialPageRoute(builder: (context) => HomeScreen()),
       );
     }
+  }
+
+  Widget _buildNavItem({
+    required int index,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final isSelected = _selectedIndex == index;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedIndex = index;
+        });
+        onTap();
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: isSelected
+            ? BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        )
+            : null,
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 24,
+              color: isSelected ? Color(0xFF5A41EF) : Colors.white,
+            ),
+            if (isSelected) SizedBox(width: 6),
+            if (isSelected)
+              Text(
+                label,
+                style: TextStyle(
+                  color: Color(0xFF5A41EF),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -64,6 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Login'),
+        centerTitle: true,
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
       ),
@@ -77,18 +125,10 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 SizedBox(height: 40),
                 // App Logo
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                    borderRadius: BorderRadius.circular(40),
-                  ),
-                  child: Icon(
-                    Icons.security,
-                    size: 40,
-                    color: Colors.white,
-                  ),
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.white,
+                  backgroundImage: AssetImage('assets/images/npip_logo.png'),
                 ),
                 SizedBox(height: 40),
 
@@ -202,39 +242,44 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
       bottomNavigationBar: Container(
-        padding: EdgeInsets.symmetric(vertical: 8),
+        margin: EdgeInsets.all(16),
+        padding: EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: Color(0xFF5A41EF), // Your preferred primary color
+          borderRadius: BorderRadius.circular(30),
+        ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            TextButton(
-              onPressed: () {
+            _buildNavItem(
+              index: 0,
+              icon: Icons.privacy_tip,
+              label: 'Privacy Policy',
+              onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => PrivacyPolicyScreen()),
                 );
               },
-              child: Text('Privacy Policy'),
             ),
-            GestureDetector(
+            _buildNavItem(
+              index: 1,
+              icon: Icons.contact_page,
+              label: 'Contact Us',
               onTap: () {
                 ContactUsPopup.show(context);
               },
-              child: Text(
-                'Contact Us',
-                style: TextStyle(
-                  color: Theme.of(context).primaryColor,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
             ),
-            TextButton(
-              onPressed: () {
+            _buildNavItem(
+              index: 2,
+              icon: Icons.description,
+              label: 'Terms Of Use',
+              onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => TermsOfUseScreen()),
                 );
               },
-              child: Text('Terms of Use'),
             ),
           ],
         ),

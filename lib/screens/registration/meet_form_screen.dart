@@ -76,6 +76,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Whom to Meet'),
+        centerTitle: true,
         backgroundColor: Theme.of(context).primaryColor,
         actions: [
           IconButton(

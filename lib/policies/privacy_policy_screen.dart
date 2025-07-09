@@ -23,6 +23,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Privacy Policy'),
+        centerTitle: true,
         backgroundColor: Theme.of(context).primaryColor,
       ),
       body: WebViewWidget(controller: controller),

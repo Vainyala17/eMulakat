@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:io';
 import 'meet_form_screen.dart';
 import '../../widgets/custom_textfield.dart';
@@ -15,6 +17,7 @@ class VisitorFormScreen extends StatefulWidget {
 }
 
 class _VisitorFormScreenState extends State<VisitorFormScreen> {
+  late WebViewController controller;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _fatherNameController = TextEditingController();
@@ -23,14 +26,11 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
   final TextEditingController _idNumberController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
-  final TextEditingController _additionalVisitorsController = TextEditingController();
 
   String? _selectedGender;
   String? _selectedRelation;
   String? _selectedIdProof;
   bool _isInternationalVisitor = false;
-  int _additionalVisitors = 0;
-  List<TextEditingController> _additionalVisitorControllers = [];
   File? _selectedImage;
 
   final List<String> _genders = ['Male', 'Female', 'Other'];
@@ -50,26 +50,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
   @override
   void initState() {
     super.initState();
-    _additionalVisitorsController.addListener(() {
-      final count = int.tryParse(_additionalVisitorsController.text) ?? 0;
-      setState(() {
-        _additionalVisitors = count;
-        _updateAdditionalVisitorControllers();
-      });
-    });
-  }
-
-  void _updateAdditionalVisitorControllers() {
-    if (_additionalVisitors > _additionalVisitorControllers.length) {
-      for (int i = _additionalVisitorControllers.length; i < _additionalVisitors; i++) {
-        _additionalVisitorControllers.add(TextEditingController());
-      }
-    } else if (_additionalVisitors < _additionalVisitorControllers.length) {
-      for (int i = _additionalVisitorControllers.length - 1; i >= _additionalVisitors; i--) {
-        _additionalVisitorControllers[i].dispose();
-        _additionalVisitorControllers.removeAt(i);
-      }
-    }
   }
 
   Future<void> _pickImage() async {
@@ -81,7 +61,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: Icon(Icons.camera),
+                leading: Icon(Icons.camera_alt),
                 title: Text('Camera'),
                 onTap: () {
                   Navigator.pop(context);
@@ -89,7 +69,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.image),
+                leading: Icon(Icons.image_search),
                 title: Text('Gallery'),
                 onTap: () {
                   Navigator.pop(context);
@@ -118,12 +98,15 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Visitor Registration'),
+        centerTitle: true,
         backgroundColor: Theme.of(context).primaryColor,
         actions: [
           IconButton(
             icon: Icon(Icons.help_outline),
             onPressed: () {
-              // Navigate to help URL
+              controller = WebViewController()
+                ..setJavaScriptMode(JavaScriptMode.unrestricted)
+                ..loadRequest(Uri.parse('https://eprisons.nic.in/downloads/eMulakat_VCRequestPublic.pdf'));
             },
           ),
         ],
@@ -144,6 +127,24 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 label: 'Visitor Name*',
                 hint: 'Enter your Name',
                 validator: Validators.validateName,
+                inputFormatters: [
+                  TextInputFormatter.withFunction((oldValue, newValue) {
+                    // Convert first letter of each word to uppercase
+                    String text = newValue.text;
+                    if (text.isNotEmpty) {
+                      text = text.split(' ').map((word) {
+                        if (word.isNotEmpty) {
+                          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+                        }
+                        return word;
+                      }).join(' ');
+                    }
+                    return TextEditingValue(
+                      text: text,
+                      selection: TextSelection.collapsed(offset: text.length),
+                    );
+                  }),
+                ],
               ),
               SizedBox(height: 16),
 
@@ -153,6 +154,24 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 label: 'Father/Husband Name*',
                 hint: 'Enter Your Father Name',
                 validator: Validators.validateName,
+                inputFormatters: [
+                  TextInputFormatter.withFunction((oldValue, newValue) {
+                    // Convert first letter of each word to uppercase
+                    String text = newValue.text;
+                    if (text.isNotEmpty) {
+                      text = text.split(' ').map((word) {
+                        if (word.isNotEmpty) {
+                          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+                        }
+                        return word;
+                      }).join(' ');
+                    }
+                    return TextEditingValue(
+                      text: text,
+                      selection: TextSelection.collapsed(offset: text.length),
+                    );
+                  }),
+                ],
               ),
               SizedBox(height: 16),
 
@@ -162,6 +181,24 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 label: 'Address*',
                 hint: 'Enter Your Address',
                 validator: Validators.validateAddress,
+                inputFormatters: [
+                  TextInputFormatter.withFunction((oldValue, newValue) {
+                    // Convert first letter of each word to uppercase
+                    String text = newValue.text;
+                    if (text.isNotEmpty) {
+                      text = text.split(' ').map((word) {
+                        if (word.isNotEmpty) {
+                          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+                        }
+                        return word;
+                      }).join(' ');
+                    }
+                    return TextEditingValue(
+                      text: text,
+                      selection: TextSelection.collapsed(offset: text.length),
+                    );
+                  }),
+                ],
               ),
               SizedBox(height: 16),
 
@@ -169,7 +206,8 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
               DropdownButtonFormField<String>(
                 value: _selectedGender,
                 decoration: InputDecoration(
-                  labelText: 'Gender*',
+                  label: Text('Gender*'),
+                  labelText: 'Select Gender',
                   border: OutlineInputBorder(),
                 ),
                 items: _genders.map((gender) {
@@ -193,7 +231,11 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 label: 'Age*',
                 hint: 'Enter Your Age',
                 keyboardType: TextInputType.number,
-                validator:Validators.validateAge,
+                validator: Validators.validateAge,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(3), // Limit age to 3 digits
+                ],
               ),
               SizedBox(height: 16),
 
@@ -201,7 +243,8 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
               DropdownButtonFormField<String>(
                 value: _selectedRelation,
                 decoration: InputDecoration(
-                  labelText: 'Relation*',
+                  label: Text('Relation*'),
+                  labelText: 'Select Relation',
                   border: OutlineInputBorder(),
                 ),
                 items: _relations.map((relation) {
@@ -223,7 +266,8 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
               DropdownButtonFormField<String>(
                 value: _selectedIdProof,
                 decoration: InputDecoration(
-                  labelText: 'Identity Proof*',
+                  label: Text('ID Proof*'),
+                  labelText: 'Select Identity Proof',
                   border: OutlineInputBorder(),
                 ),
                 items: _idProofs.map((idProof) {
@@ -248,8 +292,24 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                   controller: _idNumberController,
                   label: 'ID Number*',
                   hint: 'Enter ${_selectedIdProof} Number',
-                  keyboardType: TextInputType.text,
+                  keyboardType: _selectedIdProof == 'Pan Card' ? TextInputType.text : TextInputType.number,
                   validator: (value) => Validators.validateIdNumber(value, _selectedIdProof!, _idLimits[_selectedIdProof!] ?? 0),
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(_idLimits[_selectedIdProof!] ?? 0),
+                    if (_selectedIdProof == 'Pan Card')
+                      FilteringTextInputFormatter.allow(RegExp(r'[A-Z0-9]'))
+                    else if (_selectedIdProof == 'Passport')
+                      FilteringTextInputFormatter.allow(RegExp(r'[A-Z0-9]'))
+                    else
+                      FilteringTextInputFormatter.digitsOnly,
+                    if (_selectedIdProof == 'Pan Card')
+                      TextInputFormatter.withFunction((oldValue, newValue) {
+                        return TextEditingValue(
+                          text: newValue.text.toUpperCase(),
+                          selection: newValue.selection,
+                        );
+                      }),
+                  ],
                 ),
               SizedBox(height: 16),
 
@@ -287,7 +347,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                     : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.cloud_upload, size: 50, color: Colors.grey),
+                    Icon(Icons.upload, size: 50, color: Colors.grey),
                     SizedBox(height: 16),
                     CustomButton(
                       text: 'Upload ID Proof Image',
@@ -333,33 +393,11 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                   hint: 'Enter Your Mobile Number',
                   keyboardType: TextInputType.phone,
                   validator: Validators.validateMobile,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(10), // Limit to 10 digits
+                  ],
                 ),
-              SizedBox(height: 16),
-
-              // Additional Visitors Count
-              CustomTextField(
-                controller: _additionalVisitorsController,
-                label: 'Additional Visitors',
-                hint: 'Enter number of additional visitors',
-                keyboardType: TextInputType.number,
-              ),
-              SizedBox(height: 16),
-
-              // Additional Visitor Names (Dynamic)
-              if (_additionalVisitors > 0) ...[
-                FormSectionTitle(title: 'Additional Visitor Names'),
-                SizedBox(height: 16),
-                for (int i = 0; i < _additionalVisitors; i++)
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 16),
-                    child: CustomTextField(
-                      controller: _additionalVisitorControllers[i],
-                      label: 'Additional Visitor ${i + 1} Name*',
-                      hint: 'Enter visitor name',
-                      validator:Validators.validateName,
-                    ),
-                  ),
-              ],
 
               SizedBox(height: 30),
 
@@ -391,10 +429,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     _idNumberController.dispose();
     _emailController.dispose();
     _mobileController.dispose();
-    _additionalVisitorsController.dispose();
-    for (var controller in _additionalVisitorControllers) {
-      controller.dispose();
-    }
     super.dispose();
   }
 }
