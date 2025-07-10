@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../../dashboard/visit/visit_home.dart';
+import '../../pdf_viewer_screen.dart';
 import '../auth/login_screen.dart';
 import '../home/home_screen.dart';
 import 'visitor_form_screen.dart';
@@ -30,6 +32,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
   String? _selectedJail;
   String? _selectedPrisonerGender;
   bool _isPhysicalVisit = false;
+  bool _isVideoConferencingVisit = false;
   int _additionalVisitors = 0;
   List<TextEditingController> _additionalVisitorControllers = [];
 
@@ -41,11 +44,167 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
   ];
 
-  Map<String, List<String>> _jailsByState = {
-    'Maharashtra': ['Yerawada Central Prison', 'Arthur Road Jail', 'Nagpur Central Prison'],
-    'Delhi': ['Tihar Jail', 'Rohini Jail', 'Mandoli Jail'],
-    'Karnataka': ['Parappana Agrahara Central Prison', 'Belgaum Central Prison'],
-    // Add more jails as needed
+  final Map<String, List<String>> _jailsByState = {
+    'Maharashtra': [
+      'Yerawada Central Prison',
+      'Arthur Road Jail',
+      'Nagpur Central Prison',
+      'Thane Central Jail',
+      'Pune Yerwada Open Jail',
+    ],
+    'Delhi': [
+      'Tihar Jail',
+      'Rohini Jail',
+      'Mandoli Jail',
+    ],
+    'Uttar Pradesh': [
+      'Naini Central Jail (Prayagraj)',
+      'Dasna Jail (Ghaziabad)',
+      'Lucknow District Jail',
+      'Fatehgarh Central Jail',
+    ],
+    'Tamil Nadu': [
+      'Puzhal Central Prison',
+      'Coimbatore Central Jail',
+      'Madurai Central Prison',
+      'Trichy Central Prison',
+    ],
+    'Karnataka': [
+      'Parappana Agrahara Central Jail (Bengaluru)',
+      'Ballari Central Jail',
+      'Mysore District Jail',
+    ],
+    'West Bengal': [
+      'Presidency Correctional Home (Kolkata)',
+      'Dumdum Central Jail',
+      'Alipore Women’s Correctional Home',
+    ],
+    'Rajasthan': [
+      'Jaipur Central Jail',
+      'Ajmer Central Jail',
+      'Jodhpur Central Jail',
+    ],
+    'Bihar': [
+      'Beur Central Jail (Patna)',
+      'Bhagalpur Central Jail',
+      'Buxar Central Jail',
+    ],
+    'Punjab': [
+      'Patiala Central Jail',
+      'Ludhiana Central Jail',
+      'Amritsar Jail',
+    ],
+    'Haryana': [
+      'Ambala Central Jail',
+      'Hisar Central Jail',
+      'Gurugram District Jail',
+    ],
+    'Gujarat': [
+      'Sabarmati Central Jail (Ahmedabad)',
+      'Vadodara Central Jail',
+      'Rajkot Central Jail',
+    ],
+    'Madhya Pradesh': [
+      'Indore Central Jail',
+      'Bhopal Central Jail',
+      'Jabalpur Central Jail',
+    ],
+    'Jharkhand': [
+      'Ranchi Central Jail',
+      'Dumka Central Jail',
+      'Hazaribagh District Jail',
+    ],
+    'Odisha': [
+      'Bhubaneswar Special Jail',
+      'Choudwar Circle Jail',
+      'Berhampur Circle Jail',
+    ],
+    'Kerala': [
+      'Poojappura Central Prison',
+      'Viyyur Central Jail',
+      'Kannur Central Prison',
+    ],
+    'Andhra Pradesh': [
+      'Rajahmundry Central Jail',
+      'Kadapa Central Prison',
+      'Visakhapatnam Jail',
+    ],
+    'Telangana': [
+      'Chanchalguda Central Jail',
+      'Cherlapally Central Jail',
+      'Warangal Central Jail',
+    ],
+    'Assam': [
+      'Guwahati Central Jail',
+      'Jorhat District Jail',
+      'Silchar Jail',
+    ],
+    'Chhattisgarh': [
+      'Raipur Central Jail',
+      'Bilaspur Jail',
+      'Jagdalpur Central Jail',
+    ],
+    'Uttarakhand': [
+      'Dehradun District Jail',
+      'Haldwani Jail',
+      'Haridwar Jail',
+    ],
+    'Himachal Pradesh': [
+      'Kanda Central Jail',
+      'Nahan Jail',
+      'Dharamshala Jail',
+    ],
+    'Goa': [
+      'Colvale Central Jail',
+      'Sada Sub Jail',
+    ],
+    'Tripura': [
+      'Agartala Central Jail',
+      'Dharmanagar Jail',
+    ],
+    'Meghalaya': [
+      'Shillong Jail',
+      'Tura Jail',
+    ],
+    'Manipur': [
+      'Sajiwa Central Jail',
+      'Imphal Jail',
+    ],
+    'Nagaland': [
+      'Dimapur Central Jail',
+      'Kohima Jail',
+    ],
+    'Mizoram': [
+      'Aizawl Central Jail',
+      'Lunglei Jail',
+    ],
+    'Arunachal Pradesh': [
+      'Jully Jail (Itanagar)',
+    ],
+    'Sikkim': [
+      'Rangpo District Jail',
+    ],
+    'Chandigarh': [
+      'Model Jail, Chandigarh',
+    ],
+    'Jammu and Kashmir': [
+      'Kot Bhalwal Jail',
+      'Srinagar Central Jail',
+    ],
+    'Ladakh': [
+      'Leh Jail',
+    ],
+    'Andaman and Nicobar Islands': [
+      'Port Blair District Jail',
+      'Cellular Jail (Historical Monument)',
+    ],
+    'Puducherry': [
+      'Kalapet Central Prison',
+    ],
+    'Dadra and Nagar Haveli and Daman and Diu': [
+      'Silvassa Jail',
+      'Daman Jail',
+    ],
   };
 
   @override
@@ -85,9 +244,14 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
           IconButton(
             icon: Icon(Icons.help_outline),
             onPressed: () {
-              controller = WebViewController()
-                ..setJavaScriptMode(JavaScriptMode.unrestricted)
-                ..loadRequest(Uri.parse('https://eprisons.nic.in/downloads/eMulakat_VCRequestPublic.pdf'));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PDFViewerScreen(
+                    assetPath: 'assets/pdfs/about_us.pdf',
+                  ),
+                ),
+              );
             },
           ),
         ],
@@ -323,6 +487,18 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                   });
                 },
               ),
+              SizedBox(height: 16),
+
+              // Visit Mode
+              CheckboxListTile(
+                title: Text('Video Conferencing Visit'),
+                value: _isVideoConferencingVisit,
+                onChanged: (value) {
+                  setState(() {
+                    _isVideoConferencingVisit = value ?? false;
+                  });
+                },
+              ),
 
               SizedBox(height: 30),
 
@@ -337,7 +513,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                         if (_formKey.currentState!.validate()) {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (context) => LoginScreen()),
+                            MaterialPageRoute(builder: (context) => VisitHomeScreen()),
                           );
                         }
                       },
