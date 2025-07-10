@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:io';
 import 'dart:math';
+import '../../pdf_viewer_screen.dart';
 import 'meet_form_screen.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_button.dart';
@@ -217,9 +218,14 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
           IconButton(
             icon: Icon(Icons.help_outline),
             onPressed: () {
-              controller = WebViewController()
-                ..setJavaScriptMode(JavaScriptMode.unrestricted)
-                ..loadRequest(Uri.parse('https://eprisons.nic.in/downloads/eMulakat_VCRequestPublic.pdf'));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PDFViewerScreen(
+                    assetPath: 'assets/pdfs/about_us.pdf',
+                  ),
+                ),
+              );
             },
           ),
         ],

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math';
@@ -26,26 +28,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _mobileController = TextEditingController();
-  final _otpController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _captchaController = TextEditingController();
 
   String _captchaText = '';
   bool _isLoading = false;
-
-  // OTP related variables
-  bool _isOtpSent = false;
-  bool _isOtpVerified = false;
-  String? _generatedOtp;
-  int _resendCounter = 0;
-  bool _canResend = true;
-
-  // Step tracking
-  int _currentStep = 1; // 1: Send OTP, 2: Verify OTP, 3: Reset Password
+  int _secondsRemaining = 30;
 
   // Dummy OTP for testing
-  final String _dummyOtp = "123456";
 
   @override
   void initState() {
@@ -58,145 +49,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     _captchaText = List.generate(5, (index) => chars[random.nextInt(chars.length)]).join();
     setState(() {});
-  }
-
-  // Generate random OTP (but we'll use dummy OTP for testing)
-  String _generateOtp() {
-    return _dummyOtp;
-  }
-
-  // Send OTP function
-  void _sendOtp() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    if (_captchaController.text.toUpperCase() != _captchaText) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Invalid captcha'), backgroundColor: Colors.red),
-      );
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    // Simulate API call
-    await Future.delayed(Duration(seconds: 2));
-
-    setState(() {
-      _generatedOtp = _generateOtp();
-      _isOtpSent = true;
-      _canResend = false;
-      _currentStep = 2;
-      _isLoading = false;
-    });
-
-    // Show OTP in console for testing
-    print('Generated OTP: $_generatedOtp');
-
-    String recipient = widget.isInternationalVisitor ? _emailController.text : _mobileController.text;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('OTP sent to $recipient'),
-        backgroundColor: Colors.green,
-      ),
-    );
-
-    // Enable resend after 30 seconds
-    Future.delayed(Duration(seconds: 30), () {
-      if (mounted) {
-        setState(() {
-          _canResend = true;
-        });
-      }
-    });
-  }
-
-  // Verify OTP function
-  void _verifyOtp() async {
-    if (_otpController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter OTP'), backgroundColor: Colors.red),
-      );
-      return;
-    }
-
-    if (_otpController.text.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('OTP must be 6 digits'), backgroundColor: Colors.red),
-      );
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    // Simulate API call
-    await Future.delayed(Duration(seconds: 1));
-
-    if (_otpController.text == _generatedOtp) {
-      setState(() {
-        _isOtpVerified = true;
-        _currentStep = 3;
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('OTP verified successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Invalid OTP. Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  // Resend OTP function
-  void _resendOtp() async {
-    if (_canResend && _resendCounter < 3) {
-      setState(() {
-        _resendCounter++;
-        _generatedOtp = _generateOtp();
-        _canResend = false;
-        _otpController.clear();
-        _isLoading = true;
-      });
-
-      // Simulate API call
-      await Future.delayed(Duration(seconds: 1));
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      print('Resent OTP: $_generatedOtp');
-
-      String recipient = widget.isInternationalVisitor ? _emailController.text : _mobileController.text;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('OTP resent to $recipient'),
-          backgroundColor: Colors.blue,
-        ),
-      );
-
-      // Enable resend after 30 seconds
-      Future.delayed(Duration(seconds: 30), () {
-        if (mounted) {
-          setState(() {
-            _canResend = true;
-          });
-        }
-      });
-    }
   }
 
   // Reset Password function
@@ -226,7 +78,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _isLoading = true;
     });
 
-    // Simulate API call
     await Future.delayed(Duration(seconds: 2));
 
     ScaffoldMessenger.of(context).showSnackBar(

@@ -38,6 +38,7 @@ dependencies:
   video_player: ^2.10.0
   flutter_colorpicker: ^1.1.0
   flutter_tts: ^4.2.3
+  syncfusion_flutter_pdfviewer: ^30.1.39
   speech_to_text: ^7.1.0
   connectivity_plus: ^6.1.4
   permission_handler: ^12.0.1
@@ -67,7 +68,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
-    - assets/videos/
+    - assets/pdfs/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

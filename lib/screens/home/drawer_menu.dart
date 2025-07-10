@@ -2,128 +2,87 @@ import 'package:flutter/material.dart';
 import '../../utils/color_scheme.dart';
 import '../auth/login_screen.dart';
 
-class DrawerMenu extends StatelessWidget {
+class DrawerMenu extends StatefulWidget {
+  @override
+  State<DrawerMenu> createState() => _DrawerMenuState();
+}
+
+class _DrawerMenuState extends State<DrawerMenu> {
+  int _selectedIndex = 0;
+
+  void _handleItemTap(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    Navigator.pop(context); // Close drawer
+  }
+
   @override
   Widget build(BuildContext context) {
+
+    final List<Map<String, dynamic>> drawerItems = [
+      {'icon': Icons.dashboard, 'label': 'Dashboard'},
+      {'icon': Icons.lock, 'label': 'Prison Citizen Services'},
+      {'icon': Icons.info_outline, 'label': 'About Us'},
+      {'icon': Icons.gavel, 'label': 'Legal Aid'},
+      {'icon': Icons.map, 'label': 'Prison Map'},
+      {'icon': Icons.store, 'label': 'Kara Bazaar'},
+      {'icon': Icons.public, 'label': 'India Portal'},
+      {'icon': Icons.phone, 'label': 'Contact Us'},
+      {'icon': Icons.share, 'label': 'Share Us'},
+      {'icon': Icons.star_rate, 'label': 'Rate Us'},
+    ];
+
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: AppColors.primary,
+          UserAccountsDrawerHeader(
+            decoration: BoxDecoration(color: Colors.white),
+            accountName: Text(
+              'Vainyala Samal',
+              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.white,
-                  child: Icon(
-                    Icons.person,
-                    size: 40,
-                    color: AppColors.primary,
-                  ),
-                ),
-                SizedBox(height: 12),
-                Text(
-                  'e-Mulakat',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'Prison Visitor System',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
+            accountEmail: Text(
+              'samal_123@gmail.com',
+              style: TextStyle(color: Colors.black54),
+            ),
+            currentAccountPicture: CircleAvatar(
+              backgroundImage: AssetImage('assets/images/user.png'),
             ),
           ),
+
+          // Drawer items
+          for (int i = 0; i < drawerItems.length; i++)
+            Container(
+              color: _selectedIndex == i ? Color(0xFFFFFFFF) : Colors.transparent,
+              child: ListTile(
+                leading: Icon(
+                  drawerItems[i]['icon'],
+                  color: _selectedIndex == i ? Color(0xFF3A6895) : Colors.black,
+                ),
+                title: Text(
+                  drawerItems[i]['label'],
+                  style: TextStyle(
+                    color: _selectedIndex == i ? Color(0xFF3A6895) : Colors.black,
+                  ),
+                ),
+                onTap: () => _handleItemTap(i),
+              ),
+            ),
+
+          Divider(),
+
           ListTile(
-            leading: Icon(Icons.dashboard),
-            title: Text('Dashboard'),
+            leading: Icon(Icons.settings),
+            title: Text('Settings & account'),
             onTap: () {
               Navigator.pop(context);
             },
           ),
+
           Divider(),
-          ListTile(
-            leading: Icon(Icons.lock),
-            title: Text('Prison Citizen Services'),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.info_outline),
-            title: Text('About Us'),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.gavel),
-            title: Text('Legal Aid'),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.maps_home_work_outlined),
-            title: Text('Prison Map'),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.storefront),
-            title: Text('Kara Bazaar'),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.public),
-            title: Text('India Portal'),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.support_agent_outlined),
-            title: Text('Contact Us'),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.share),
-            title: Text('Share Us'),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.star_rate),
-            title: Text('Rate Us'),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          Divider(),
+
           ListTile(
             leading: Icon(Icons.logout),
             title: Text('Logout'),
@@ -154,7 +113,6 @@ class DrawerMenu extends StatelessWidget {
               }
             },
           ),
-
         ],
       ),
     );

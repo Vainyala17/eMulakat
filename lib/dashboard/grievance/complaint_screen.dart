@@ -6,10 +6,14 @@ import 'package:image_picker/image_picker.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:io';
 import 'dart:math';
+import '../../pdf_viewer_screen.dart';
+import '../../screens/home/home_screen.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/form_section_title.dart';
 import '../../utils/validators.dart';
+import '../visit/visit_home.dart';
+import 'grievance_home.dart';
 
 class ComplaintScreen extends StatefulWidget {
   @override
@@ -17,6 +21,7 @@ class ComplaintScreen extends StatefulWidget {
 }
 
 class _ComplaintScreenState extends State<ComplaintScreen> {
+  int _selectedIndex = 0;
   late WebViewController controller;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
@@ -133,7 +138,50 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
       });
     }
   }
+  Widget _buildNavItem({
+    required int index,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final _ = _selectedIndex == index;
 
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedIndex = index;
+          });
+          onTap();
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: Colors.white,
+              ),
+              SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -146,9 +194,14 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
           IconButton(
             icon: Icon(Icons.help_outline),
             onPressed: () {
-              controller = WebViewController()
-                ..setJavaScriptMode(JavaScriptMode.unrestricted)
-                ..loadRequest(Uri.parse('https://eprisons.nic.in/downloads/eMulakat_VCRequestPublic.pdf'));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PDFViewerScreen(
+                    assetPath: 'assets/pdfs/about_us.pdf',
+                  ),
+                ),
+              );
             },
           ),
         ],
@@ -380,6 +433,60 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                 },
               ),
             ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Color(0xFF5A8BBA),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Container(
+            height: 60,
+            child: Row(
+              children: [
+                _buildNavItem(
+                  index: 0,
+                  icon: Icons.directions_walk,
+                  label: 'Visit',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => VisitHomeScreen()),
+                    );
+                  },
+                ),
+                _buildNavItem(
+                  index: 1,
+                  icon: Icons.dashboard,
+                  label: 'Dashboard',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomeScreen()),
+                    );
+                  },
+                ),
+                _buildNavItem(
+                  index: 3,
+                  icon: Icons.report_problem,
+                  label: 'Grievance',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),

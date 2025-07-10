@@ -1,49 +1,61 @@
 import 'package:flutter/material.dart';
 
 import '../../dashboard/grievance/grievance_home.dart';
+import '../../dashboard/visit/visit_home.dart';
 import 'home_screen.dart';
 
-class BottomNavBar extends StatefulWidget {
+class BottomNavBarScreen extends StatefulWidget {
   @override
-  _BottomNavBarState createState() => _BottomNavBarState();
+  _BottomNavBarScreenState createState() => _BottomNavBarScreenState();
 }
 
-class _BottomNavBarState extends State<BottomNavBar> {
-  int _currentIndex = 1; // Dashboard in center
+class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
+  int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    HomeScreen(),             // Visit
+    VisitHomeScreen(),             // Visit
     HomeScreen(),             // Dashboard
     GrievanceHomeScreen(),    // Grievance
   ];
 
-  void _onTabSelected(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-  }
+  Widget _buildNavItem({
+    required int index,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final _ = _selectedIndex == index;
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: _pages[_currentIndex],
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _onTabSelected(1), // Dashboard center
-        backgroundColor: Color(0xFF00E5FF),
-        child: Icon(Icons.dashboard, color: Colors.white),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        shape: CircularNotchedRectangle(),
-        notchMargin: 8,
-        color: Color(0xFF5A8BBA),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedIndex = index;
+          });
+          onTap();
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              _buildTabItem(icon: Icons.directions_walk, label: 'Visit', index: 0),
-              _buildTabItem(icon: Icons.report_problem, label: 'Grievance', index: 2),
+              Icon(
+                icon,
+                size: 20,
+                color: Colors.white,
+              ),
+              SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ),
         ),
@@ -51,23 +63,64 @@ class _BottomNavBarState extends State<BottomNavBar> {
     );
   }
 
-  Widget _buildTabItem({required IconData icon, required String label, required int index}) {
-    return InkWell(
-      onTap: () => _onTabSelected(index),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: Colors.white),
-            SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(color: Colors.white, fontSize: 12),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Color(0xFF5A8BBA),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: Offset(0, -2),
             ),
           ],
+        ),
+        child: SafeArea(
+          child: Container(
+            height: 60,
+            child: Row(
+              children: [
+                _buildNavItem(
+                  index: 0,
+                  icon: Icons.directions_walk,
+                  label: 'Visit',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => VisitHomeScreen()),
+                    );
+                  },
+                ),
+                _buildNavItem(
+                  index: 1,
+                  icon: Icons.dashboard,
+                  label: 'Dashboard',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomeScreen()),
+                    );
+                  },
+                ),
+                _buildNavItem(
+                  index: 3,
+                  icon: Icons.report_problem,
+                  label: 'Grievance',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
+
 }
