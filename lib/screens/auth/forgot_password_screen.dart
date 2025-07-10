@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:math';
 import '../../policies/contact_us_popup.dart';
 import '../../policies/privacy_policy_screen.dart';
@@ -9,6 +10,13 @@ import '../../widgets/custom_button.dart';
 import '../../utils/validators.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
+  final bool isInternationalVisitor;
+
+  const ForgotPasswordScreen({
+    Key? key,
+    this.isInternationalVisitor = false,
+  }) : super(key: key);
+
   @override
   _ForgotPasswordScreenState createState() => _ForgotPasswordScreenState();
 }
@@ -17,10 +25,27 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   int _selectedIndex = 0;
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final _mobileController = TextEditingController();
+  final _otpController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _captchaController = TextEditingController();
 
   String _captchaText = '';
   bool _isLoading = false;
+
+  // OTP related variables
+  bool _isOtpSent = false;
+  bool _isOtpVerified = false;
+  String? _generatedOtp;
+  int _resendCounter = 0;
+  bool _canResend = true;
+
+  // Step tracking
+  int _currentStep = 1; // 1: Send OTP, 2: Verify OTP, 3: Reset Password
+
+  // Dummy OTP for testing
+  final String _dummyOtp = "123456";
 
   @override
   void initState() {
@@ -35,31 +60,188 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     setState(() {});
   }
 
-  void _resetPassword() async {
-    if (_formKey.currentState!.validate()) {
-      if (_captchaController.text.toUpperCase() != _captchaText) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Invalid captcha')),
-        );
-        return;
-      }
+  // Generate random OTP (but we'll use dummy OTP for testing)
+  String _generateOtp() {
+    return _dummyOtp;
+  }
 
-      setState(() {
-        _isLoading = true;
-      });
+  // Send OTP function
+  void _sendOtp() async {
+    if (!_formKey.currentState!.validate()) return;
 
-      // Simulate password reset process
-      await Future.delayed(Duration(seconds: 2));
-
+    if (_captchaController.text.toUpperCase() != _captchaText) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Password reset link sent to your email')),
+        SnackBar(content: Text('Invalid captcha'), backgroundColor: Colors.red),
       );
+      return;
+    }
 
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => LoginScreen()),
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Simulate API call
+    await Future.delayed(Duration(seconds: 2));
+
+    setState(() {
+      _generatedOtp = _generateOtp();
+      _isOtpSent = true;
+      _canResend = false;
+      _currentStep = 2;
+      _isLoading = false;
+    });
+
+    // Show OTP in console for testing
+    print('Generated OTP: $_generatedOtp');
+
+    String recipient = widget.isInternationalVisitor ? _emailController.text : _mobileController.text;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('OTP sent to $recipient'),
+        backgroundColor: Colors.green,
+      ),
+    );
+
+    // Enable resend after 30 seconds
+    Future.delayed(Duration(seconds: 30), () {
+      if (mounted) {
+        setState(() {
+          _canResend = true;
+        });
+      }
+    });
+  }
+
+  // Verify OTP function
+  void _verifyOtp() async {
+    if (_otpController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter OTP'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (_otpController.text.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('OTP must be 6 digits'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Simulate API call
+    await Future.delayed(Duration(seconds: 1));
+
+    if (_otpController.text == _generatedOtp) {
+      setState(() {
+        _isOtpVerified = true;
+        _currentStep = 3;
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('OTP verified successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Invalid OTP. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
+
+  // Resend OTP function
+  void _resendOtp() async {
+    if (_canResend && _resendCounter < 3) {
+      setState(() {
+        _resendCounter++;
+        _generatedOtp = _generateOtp();
+        _canResend = false;
+        _otpController.clear();
+        _isLoading = true;
+      });
+
+      // Simulate API call
+      await Future.delayed(Duration(seconds: 1));
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      print('Resent OTP: $_generatedOtp');
+
+      String recipient = widget.isInternationalVisitor ? _emailController.text : _mobileController.text;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('OTP resent to $recipient'),
+          backgroundColor: Colors.blue,
+        ),
+      );
+
+      // Enable resend after 30 seconds
+      Future.delayed(Duration(seconds: 30), () {
+        if (mounted) {
+          setState(() {
+            _canResend = true;
+          });
+        }
+      });
+    }
+  }
+
+  // Reset Password function
+  void _resetPassword() async {
+    if (_newPasswordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter new password'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (_newPasswordController.text.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Password must be at least 6 characters'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (_newPasswordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Passwords do not match'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Simulate API call
+    await Future.delayed(Duration(seconds: 2));
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Password reset successfully!'),
+        backgroundColor: Colors.green,
+      ),
+    );
+
+    // Navigate back to login
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+    );
+  }
+
   Widget _buildLogo() {
     return Container(
       width: 120,
@@ -117,13 +299,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           onTap();
         },
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 12),
+          padding: EdgeInsets.symmetric(vertical: 8),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 icon,
-                size: 24,
+                size: 20,
                 color: Colors.white,
               ),
               SizedBox(height: 4),
@@ -131,10 +313,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 label,
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 12,
+                  fontSize: 10,
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -165,38 +349,50 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 _buildLogo(),
                 SizedBox(height: 40),
 
+                // Instruction Text
                 Text(
-                  'Reset Your Password',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor,
-                  ),
+                  widget.isInternationalVisitor
+                      ? 'Reset password using Email ID'
+                      : 'Reset password using Mobile Number',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                SizedBox(height: 16),
 
+                SizedBox(height: 16),
                 Text(
-                  'Enter your email address and we\'ll send you a link to reset your password.',
+                  'Enter your ${widget.isInternationalVisitor ? 'email address' : 'mobile number'} and we\'ll send you a link to reset your password.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
+
                 SizedBox(height: 32),
 
-                // Email Field
-                CustomTextField(
-                  label: 'Email',
-                  hint: 'Enter your email',
-                  isRequired: true,
-                  controller: _emailController,
-                  validator: Validators.validateEmail,
-                  keyboardType: TextInputType.emailAddress,
-                ),
+                // Email or Mobile Field
+                if (widget.isInternationalVisitor)
+                  CustomTextField(
+                    label: 'Email',
+                    hint: 'Enter your email',
+                    isRequired: true,
+                    controller: _emailController,
+                    validator: Validators.validateEmail,
+                    keyboardType: TextInputType.emailAddress,
+                  )
+                else
+                  CustomTextField(
+                    label: 'Mobile No',
+                    hint: 'Enter your mobile number',
+                    isRequired: true,
+                    controller: _mobileController,
+                    keyboardType: TextInputType.phone,
+                    validator: Validators.validateMobile,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(10),
+                    ],
+                  ),
+
                 SizedBox(height: 16),
 
-                // Captcha
+                // Captcha Row
                 Row(
                   children: [
                     Expanded(
@@ -241,6 +437,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                   ],
                 ),
+
                 SizedBox(height: 24),
 
                 // Reset Button
@@ -250,9 +447,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   isLoading: _isLoading,
                   width: double.infinity,
                 ),
+
                 SizedBox(height: 16),
 
-                // Back to Login Link
+                // Back to Login
                 TextButton(
                   onPressed: () {
                     Navigator.pushReplacement(
@@ -269,7 +467,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Color(0xFF5A8BBA), // Your specified color
+          color: Color(0xFF5A8BBA),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
@@ -280,12 +478,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         child: SafeArea(
           child: Container(
-            height: 70,
+            height: 60,
             child: Row(
               children: [
                 _buildNavItem(
                   index: 0,
-                  icon: Icons.shield_outlined, // Better icon for privacy
+                  icon: Icons.info_outline,
+                  label: 'About Us',
+                  onTap: () {
+                    ContactUsPopup.show(context);
+                  },
+                ),
+                _buildNavItem(
+                  index: 1,
+                  icon: Icons.shield_outlined,
                   label: 'Privacy Policy',
                   onTap: () {
                     Navigator.push(
@@ -295,17 +501,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   },
                 ),
                 _buildNavItem(
-                  index: 1,
-                  icon: Icons.support_agent_outlined, // Better icon for contact
+                  index: 2,
+                  icon: Icons.support_agent_outlined,
                   label: 'Contact Us',
                   onTap: () {
                     ContactUsPopup.show(context);
                   },
                 ),
                 _buildNavItem(
-                  index: 2,
-                  icon: Icons.article_outlined, // Better icon for terms
-                  label: 'Terms Of Use',
+                  index: 3,
+                  icon: Icons.article_outlined,
+                  label: 'Terms of Use',
                   onTap: () {
                     Navigator.push(
                       context,

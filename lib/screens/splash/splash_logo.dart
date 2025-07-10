@@ -89,7 +89,7 @@ class _SplashLogoScreenState extends State<SplashLogoScreen>
               SizedBox(height: 24),
 
               Text(
-                'E-Mulakat',
+                'e-Mulakat',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,

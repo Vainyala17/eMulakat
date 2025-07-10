@@ -2,22 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import '../auth/login_screen.dart';
-import '../home/home_screen.dart';
-import 'visitor_form_screen.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/form_section_title.dart';
 import '../../utils/color_scheme.dart';
 import '../../utils/validators.dart';
 import '../../utils/constants.dart';
+import 'grievance_home.dart';
 
-class MeetFormScreen extends StatefulWidget {
+class GrievanceDetailsScreen extends StatefulWidget {
   @override
-  _MeetFormScreenState createState() => _MeetFormScreenState();
+  _GrievanceDetailsScreenState createState() => _GrievanceDetailsScreenState();
 }
 
-class _MeetFormScreenState extends State<MeetFormScreen> {
+class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
   late WebViewController controller;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _prisonerNameController = TextEditingController();
@@ -29,9 +27,15 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
   String? _selectedState;
   String? _selectedJail;
   String? _selectedPrisonerGender;
-  bool _isPhysicalVisit = false;
+  String? _selectedCategory;
   int _additionalVisitors = 0;
   List<TextEditingController> _additionalVisitorControllers = [];
+
+  final List<String> _category = ['SELECT',
+    'III Treated by the prison authorities',
+    'Basic Facilities not provided inside prison',
+  'Manhandling by co prisoners',
+  'Others'];
 
   final List<String> _states = [
     'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -78,7 +82,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Whom to Meet'),
+        title: Text('Grievance Details'),
         centerTitle: true,
         backgroundColor: Theme.of(context).primaryColor,
         actions: [
@@ -99,7 +103,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              FormSectionTitle(title: 'Whom to Meet'),
+              FormSectionTitle(title: 'Grievance Details'),
               SizedBox(height: 20),
 
               // State Selection
@@ -148,78 +152,6 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                 validator: (value) => value == null ? 'Please select a jail' : null,
               ),
               SizedBox(height: 16),
-
-              // Visit Date
-              TextFormField(
-                controller: _visitDateController,
-                decoration: InputDecoration(
-                  labelText: 'Visit Date*',
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.calendar_today),
-                ),
-                readOnly: true,
-                onTap: () async {
-                  DateTime? pickedDate = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(Duration(days: 30)),
-                  );
-                  if (pickedDate != null) {
-                    _visitDateController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
-                  }
-                },
-                validator: (value) => value!.isEmpty ? 'Please select visit date' : null,
-              ),
-              SizedBox(height: 16),
-              // Additional Visitors
-              CustomTextField(
-                controller: _additionalVisitorsController,
-                label: 'Additional Visitors',
-                hint: 'Enter number of additional visitors',
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(10), // Limit age to 10 digits
-                ],
-              ),
-              SizedBox(height: 16),
-
-              // Additional Visitor Names (Dynamic)
-              if (_additionalVisitors > 0) ...[
-                FormSectionTitle(title: 'Additional Visitor Names'),
-                SizedBox(height: 16),
-                for (int i = 0; i < _additionalVisitors; i++)
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 16),
-                    child: CustomTextField(
-                      controller: _additionalVisitorControllers[i],
-                      label: 'Additional Visitor ${i + 1} Name*',
-                      hint: 'Enter visitor name',
-                      validator: Validators.validateName,
-                      inputFormatters: [
-                        TextInputFormatter.withFunction((oldValue, newValue) {
-                          // Convert first letter of each word to uppercase
-                          String text = newValue.text;
-                          if (text.isNotEmpty) {
-                            text = text.split(' ').map((word) {
-                              if (word.isNotEmpty) {
-                                return word[0].toUpperCase() + word.substring(1).toLowerCase();
-                              }
-                              return word;
-                            }).join(' ');
-                          }
-                          return TextEditingValue(
-                            text: text,
-                            selection: TextSelection.collapsed(offset: text.length),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-              ],
-
-              SizedBox(height: 20),
               FormSectionTitle(title: 'Prisoner Details'),
               SizedBox(height: 20),
 
@@ -228,33 +160,6 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                 controller: _prisonerNameController,
                 label: 'Prisoner Name*',
                 hint: 'Enter prisoner Name',
-                validator: Validators.validateName,
-                inputFormatters: [
-                  TextInputFormatter.withFunction((oldValue, newValue) {
-                    // Convert first letter of each word to uppercase
-                    String text = newValue.text;
-                    if (text.isNotEmpty) {
-                      text = text.split(' ').map((word) {
-                        if (word.isNotEmpty) {
-                          return word[0].toUpperCase() + word.substring(1).toLowerCase();
-                        }
-                        return word;
-                      }).join(' ');
-                    }
-                    return TextEditingValue(
-                      text: text,
-                      selection: TextSelection.collapsed(offset: text.length),
-                    );
-                  }),
-                ],
-              ),
-              SizedBox(height: 16),
-
-              // Prisoner Father Name
-              CustomTextField(
-                controller: _prisonerFatherNameController,
-                label: 'Father/Husband Name*',
-                hint: 'Enter Father/Husband Name',
                 validator: Validators.validateName,
                 inputFormatters: [
                   TextInputFormatter.withFunction((oldValue, newValue) {
@@ -312,20 +217,51 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                 validator: (value) => value == null ? 'Please select gender' : null,
               ),
               SizedBox(height: 16),
-
-              // Visit Mode
-              CheckboxListTile(
-                title: Text('Physical Visit'),
-                value: _isPhysicalVisit,
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                decoration: InputDecoration(
+                  labelText: 'Select Category',
+                  border: OutlineInputBorder(),
+                ),
+                items: _category.map((relation) {
+                  return DropdownMenuItem(
+                    value: relation,
+                    child: Text(relation),
+                  );
+                }).toList(),
                 onChanged: (value) {
                   setState(() {
-                    _isPhysicalVisit = value ?? false;
+                    _selectedCategory = value;
                   });
                 },
+                validator: (value) => value == null ? 'Please select Category' : null,
               ),
-
+              SizedBox(height: 16),
+              CustomTextField(
+                controller: _prisonerNameController,
+                label: 'Message*',
+                hint: 'Enter issue Description',
+                validator: Validators.validateName,
+                inputFormatters: [
+                  TextInputFormatter.withFunction((oldValue, newValue) {
+                    // Convert first letter of each word to uppercase
+                    String text = newValue.text;
+                    if (text.isNotEmpty) {
+                      text = text.split(' ').map((word) {
+                        if (word.isNotEmpty) {
+                          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+                        }
+                        return word;
+                      }).join(' ');
+                    }
+                    return TextEditingValue(
+                      text: text,
+                      selection: TextSelection.collapsed(offset: text.length),
+                    );
+                  }),
+                ],
+              ),
               SizedBox(height: 30),
-
               // Action Buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -337,7 +273,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                         if (_formKey.currentState!.validate()) {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (context) => LoginScreen()),
+                            MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
                           );
                         }
                       },
@@ -355,13 +291,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
   @override
   void dispose() {
     _prisonerNameController.dispose();
-    _prisonerFatherNameController.dispose();
     _prisonerAgeController.dispose();
-    _visitDateController.dispose();
-    _additionalVisitorsController.dispose();
-    for (var controller in _additionalVisitorControllers) {
-      controller.dispose();
-    }
     super.dispose();
   }
 }

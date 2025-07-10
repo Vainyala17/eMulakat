@@ -16,7 +16,7 @@ class _SplashVideoScreenState extends State<SplashVideoScreen> {
 
     // Initialize the video
     _controller = VideoPlayerController.network(
-      'https://flutter.github.io/assets-for-api-docs/assets/videos/intro.mp4',
+      'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
     )
       ..initialize().then((_) {
         setState(() {});
