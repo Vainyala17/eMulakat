@@ -1,3 +1,4 @@
+import 'package:e_mulakat/screens/auth/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -26,6 +27,8 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
   final TextEditingController _otpController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
   String? _selectedGender;
   String? _selectedRelation;
@@ -43,7 +46,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
   int _resendCounter = 0;
   bool _canResend = true;
 
-  final List<String> _genders = ['Male', 'Female', 'Other'];
+  final List<String> _genders = ['Male', 'Female', 'Transgender'];
   final List<String> _relations = ['Father', 'Mother', 'Spouse', 'Brother', 'Sister', 'Son', 'Daughter', 'Friend', 'Other'];
   final List<String> _idProofs = ['Aadhar Card', 'Pan Card', 'Driving License', 'Passport', 'Voter ID', 'Others', 'Not Available'];
 
@@ -366,24 +369,35 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
               SizedBox(height: 16),
 
               // Gender
-              DropdownButtonFormField<String>(
-                value: _selectedGender,
-                decoration: InputDecoration(
-                  hintText: 'Select your gender',
-                  border: OutlineInputBorder(),
-                ),
-                items: _genders.map((gender) {
-                  return DropdownMenuItem(
-                    value: gender,
-                    child: Text(gender),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedGender = value;
-                  });
-                },
-                validator: (value) => value == null ? 'Please select gender' : null,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Gender*',
+                    style: TextStyle(fontSize: 16,),
+                  ),
+                  ..._genders.map((gender) {
+                    return RadioListTile<String>(
+                      title: Text(gender),
+                      value: gender,
+                      groupValue: _selectedGender,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedGender = value;
+                        });
+                      },
+                      contentPadding: EdgeInsets.zero,
+                    );
+                  }).toList(),
+                  if (_selectedGender == null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12, top: 4),
+                      child: Text(
+                        'Select your gender',
+                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                    ),
+                ],
               ),
               SizedBox(height: 16),
 
@@ -665,7 +679,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.check_circle, color: Colors.green),
+                        Icon(Icons.check_circle, color: Colors.black),
                         SizedBox(width: 10),
                         Text(
                           'Mobile number verified successfully!',
@@ -677,12 +691,43 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                   SizedBox(height: 16),
                 ],
               ],
+              SizedBox(height: 10),
+              CustomTextField(
+                controller: _passwordController,
+                label: 'Password*',
+                hint: 'Enter a secure password',
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Password is required';
+                  }
+                  if (value.length < 6) {
+                    return 'Password must be at least 6 characters';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 16),
 
+              CustomTextField(
+                controller: _confirmPasswordController,
+                label: 'Confirm Password*',
+                hint: 'Re-enter your password',
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please confirm your password';
+                  }
+                  if (value != _passwordController.text) {
+                    return 'Passwords do not match';
+                  }
+                  return null;
+                },
+              ),
               SizedBox(height: 30),
-
               // Save Button
               CustomButton(
-                text: 'Save & Next',
+                text: 'Save',
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     // Check OTP verification for non-international visitors
@@ -698,7 +743,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
 
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => MeetFormScreen()),
+                      MaterialPageRoute(builder: (context) => LoginScreen()),
                     );
                   }
                 },
@@ -720,6 +765,8 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     _emailController.dispose();
     _mobileController.dispose();
     _otpController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 }

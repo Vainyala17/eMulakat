@@ -27,7 +27,7 @@ class DrawerMenu extends StatelessWidget {
                 ),
                 SizedBox(height: 12),
                 Text(
-                  'E-Mulakat',
+                  'e-Mulakat',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -47,6 +47,78 @@ class DrawerMenu extends StatelessWidget {
           ListTile(
             leading: Icon(Icons.dashboard),
             title: Text('Dashboard'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.lock),
+            title: Text('Prison Citizen Services'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.info_outline),
+            title: Text('About Us'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.gavel),
+            title: Text('Legal Aid'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.maps_home_work_outlined),
+            title: Text('Prison Map'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.storefront),
+            title: Text('Kara Bazaar'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.public),
+            title: Text('India Portal'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.support_agent_outlined),
+            title: Text('Contact Us'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.share),
+            title: Text('Share Us'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.star_rate),
+            title: Text('Rate Us'),
             onTap: () {
               Navigator.pop(context);
             },

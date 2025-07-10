@@ -10,7 +10,7 @@ class EMulakatApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'E-Mulakat',
+      title: 'e-Mulakat',
       theme: ThemeData(
         primarySwatch: AppColors.primarySwatch,
         colorScheme: AppColors.colorScheme,

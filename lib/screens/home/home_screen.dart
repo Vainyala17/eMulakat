@@ -1,6 +1,9 @@
+import 'package:e_mulakat/dashboard/grievance/grievance_home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import '../../dashboard/visit/visit_home.dart';
+import 'bottom_nav_bar.dart';
 import 'drawer_menu.dart';
 import '../../utils/color_scheme.dart';
 
@@ -10,6 +13,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
   FlutterTts flutterTts = FlutterTts();
   SpeechToText speechToText = SpeechToText();
 
@@ -47,7 +51,50 @@ class _HomeScreenState extends State<HomeScreen> {
   void _speak(String text) async {
     await flutterTts.speak(text);
   }
+  Widget _buildNavItem({
+    required int index,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final isSelected = _selectedIndex == index;
 
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedIndex = index;
+          });
+          onTap();
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: Colors.white,
+              ),
+              SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
   void _listen() async {
     if (!speechToText.isListening) {
       bool available = await speechToText.initialize();
@@ -70,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('E-Mulakat'),
+        title: Text('e-Mulakat'),
         centerTitle: true,
         backgroundColor: _selectedColor,
         actions: [
@@ -122,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Text to Speech
           IconButton(
             icon: Icon(Icons.volume_up),
-            onPressed: () => _speak('Welcome to E-Mulakat'),
+            onPressed: () => _speak('Welcome to e-Mulakat'),
           ),
 
           // Color Picker
@@ -154,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Welcome to E-Mulakat',
+              'Welcome to e-Mulakat',
               style: TextStyle(
                 fontSize: _fontSize + 8,
                 fontWeight: FontWeight.bold,
@@ -166,80 +213,64 @@ class _HomeScreenState extends State<HomeScreen> {
               'Prison Visitor Management System',
               style: TextStyle(
                 fontSize: _fontSize + 2,
-                color: Colors.white,
+                color: Colors.black,
               ),
             ),
             SizedBox(height: 30),
-
-            // Dashboard Cards
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                children: [
-                  _buildDashboardCard(
-                    'New Registration',
-                    Icons.person_add,
-                        () {
-                      // Navigate to registration
-                    },
-                  ),
-                  _buildDashboardCard(
-                    'My Visits',
-                    Icons.event,
-                        () {
-                      // Navigate to visits
-                    },
-                  ),
-                  _buildDashboardCard(
-                    'Visit History',
-                    Icons.history,
-                        () {
-                      // Navigate to history
-                    },
-                  ),
-                  _buildDashboardCard(
-                    'Help',
-                    Icons.help,
-                      (){
-
-                      }
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildDashboardCard(String title, IconData icon, VoidCallback onTap) {
-    return Card(
-      elevation: 4,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 48,
-                color: _selectedColor,
-              ),
-              SizedBox(height: 12),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: _fontSize,
-                  fontWeight: FontWeight.w600,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Color(0xFF5A8BBA),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Container(
+            height: 60,
+            child: Row(
+              children: [
+                _buildNavItem(
+                  index: 0,
+                  icon: Icons.directions_walk,
+                  label: 'Visit',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => VisitScreen()),
+                    );
+                  },
                 ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+                _buildNavItem(
+                  index: 1,
+                  icon: Icons.dashboard,
+                  label: 'Dashboard',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomeScreen()),
+                    );
+                  },
+                ),
+                _buildNavItem(
+                  index: 3,
+                  icon: Icons.report_problem,
+                  label: 'Grievance',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
