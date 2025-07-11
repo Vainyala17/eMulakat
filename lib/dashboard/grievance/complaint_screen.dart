@@ -187,7 +187,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Complainant Details'),
+        title: Text('Register Grievance'),
         centerTitle: true,
         backgroundColor: Theme.of(context).primaryColor,
         actions: [

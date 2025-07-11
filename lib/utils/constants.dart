@@ -1,5 +1,5 @@
 class AppConstants {
-  static const String appName = 'e-Mulakat';
+  static const String appName = 'eMulakat';
   static const String baseUrl = 'https://eprisons.nic.in/npip/public/';
   static const String helpUrl = 'https://eprisons.nic.in/npip/public/DashBoard';
 

@@ -4,15 +4,10 @@ import 'package:intl/intl.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../dashboard/visit/visit_home.dart';
 import '../../pdf_viewer_screen.dart';
-import '../auth/login_screen.dart';
-import '../home/home_screen.dart';
-import 'visitor_form_screen.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/form_section_title.dart';
-import '../../utils/color_scheme.dart';
 import '../../utils/validators.dart';
-import '../../utils/constants.dart';
 
 class MeetFormScreen extends StatefulWidget {
   @override
@@ -31,11 +26,12 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
   String? _selectedState;
   String? _selectedJail;
   String? _selectedPrisonerGender;
-  bool _isPhysicalVisit = false;
-  bool _isVideoConferencingVisit = false;
+  String? _selectedPrisonerType;
   int _additionalVisitors = 0;
   List<TextEditingController> _additionalVisitorControllers = [];
 
+  final List<String> _genders = ['Male', 'Female', 'Transgender'];
+  final List<String> _visitType = ['Physical Visit', 'Video Conferencing Visit'];
   final List<String> _states = [
     'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
     'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
@@ -237,7 +233,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Whom to Meet'),
+        title: Text('Register Visit'),
         centerTitle: true,
         backgroundColor: Theme.of(context).primaryColor,
         actions: [
@@ -456,48 +452,60 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
               SizedBox(height: 16),
 
               // Prisoner Gender
-              DropdownButtonFormField<String>(
-                value: _selectedPrisonerGender,
-                decoration: InputDecoration(
-                  labelText: 'Gender*',
-                  border: OutlineInputBorder(),
-                ),
-                items: ['Male', 'Female', 'Transgender'].map((gender) {
-                  return DropdownMenuItem(
-                    value: gender,
-                    child: Text(gender),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedPrisonerGender = value;
-                  });
-                },
-                validator: (value) => value == null ? 'Please select gender' : null,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Gender*',
+                    style: TextStyle(fontSize: 16,),
+                  ),
+                  ..._genders.map((gender) {
+                    return RadioListTile<String>(
+                      title: Text(gender),
+                      value: gender,
+                      groupValue: _selectedPrisonerGender,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedPrisonerGender = value;
+                        });
+                      },
+                      contentPadding: EdgeInsets.zero,
+                    );
+                  }).toList(),
+                  if (_selectedPrisonerGender == null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12, top: 4),
+                      child: Text(
+                        'Select your gender',
+                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                    ),
+                ],
               ),
               SizedBox(height: 16),
 
               // Visit Mode
-              CheckboxListTile(
-                title: Text('Physical Visit'),
-                value: _isPhysicalVisit,
-                onChanged: (value) {
-                  setState(() {
-                    _isPhysicalVisit = value ?? false;
-                  });
-                },
-              ),
-              SizedBox(height: 16),
-
-              // Visit Mode
-              CheckboxListTile(
-                title: Text('Video Conferencing Visit'),
-                value: _isVideoConferencingVisit,
-                onChanged: (value) {
-                  setState(() {
-                    _isVideoConferencingVisit = value ?? false;
-                  });
-                },
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Select Visit Type*',
+                    style: TextStyle(fontSize: 16,),
+                  ),
+                  ..._visitType.map((gender) {
+                    return RadioListTile<String>(
+                      title: Text(gender),
+                      value: gender,
+                      groupValue: _selectedPrisonerType,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedPrisonerType = value;
+                        });
+                      },
+                      contentPadding: EdgeInsets.zero,
+                    );
+                  }).toList(),
+                ],
               ),
 
               SizedBox(height: 30),

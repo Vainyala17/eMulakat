@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../screens/home/home_screen.dart';
 import '../visit/visit_home.dart';
 import 'complaint_screen.dart';
+import 'grievance_preview_screen.dart';
 
 class GrievanceHomeScreen extends StatefulWidget {
   @override
@@ -97,7 +98,7 @@ class _GrievanceHomeScreenState extends State<GrievanceHomeScreen> {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => ComplaintScreen()),
+                    MaterialPageRoute(builder: (context) => GrievancePreviewScreen()),
                   );
                 },
                 child: const Text(
