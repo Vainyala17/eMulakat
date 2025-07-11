@@ -23,9 +23,7 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
   late WebViewController controller;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _prisonerNameController = TextEditingController();
-  final TextEditingController _prisonerFatherNameController = TextEditingController();
   final TextEditingController _prisonerAgeController = TextEditingController();
-  final TextEditingController _visitDateController = TextEditingController();
   final TextEditingController _additionalVisitorsController = TextEditingController();
 
   String? _selectedState;
@@ -35,6 +33,7 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
   int _additionalVisitors = 0;
   List<TextEditingController> _additionalVisitorControllers = [];
 
+  final List<String> _genders = ['Male', 'Female', 'Transgender'];
   final List<String> _category = ['SELECT',
     'III Treated by the prison authorities',
     'Basic Facilities not provided inside prison',
@@ -49,11 +48,167 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
     'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
   ];
 
-  Map<String, List<String>> _jailsByState = {
-    'Maharashtra': ['Yerawada Central Prison', 'Arthur Road Jail', 'Nagpur Central Prison'],
-    'Delhi': ['Tihar Jail', 'Rohini Jail', 'Mandoli Jail'],
-    'Karnataka': ['Parappana Agrahara Central Prison', 'Belgaum Central Prison'],
-    // Add more jails as needed
+  final Map<String, List<String>> _jailsByState = {
+    'Maharashtra': [
+      'Yerawada Central Prison',
+      'Arthur Road Jail',
+      'Nagpur Central Prison',
+      'Thane Central Jail',
+      'Pune Yerwada Open Jail',
+    ],
+    'Delhi': [
+      'Tihar Jail',
+      'Rohini Jail',
+      'Mandoli Jail',
+    ],
+    'Uttar Pradesh': [
+      'Naini Central Jail (Prayagraj)',
+      'Dasna Jail (Ghaziabad)',
+      'Lucknow District Jail',
+      'Fatehgarh Central Jail',
+    ],
+    'Tamil Nadu': [
+      'Puzhal Central Prison',
+      'Coimbatore Central Jail',
+      'Madurai Central Prison',
+      'Trichy Central Prison',
+    ],
+    'Karnataka': [
+      'Parappana Agrahara Central Jail (Bengaluru)',
+      'Ballari Central Jail',
+      'Mysore District Jail',
+    ],
+    'West Bengal': [
+      'Presidency Correctional Home (Kolkata)',
+      'Dumdum Central Jail',
+      'Alipore Women’s Correctional Home',
+    ],
+    'Rajasthan': [
+      'Jaipur Central Jail',
+      'Ajmer Central Jail',
+      'Jodhpur Central Jail',
+    ],
+    'Bihar': [
+      'Beur Central Jail (Patna)',
+      'Bhagalpur Central Jail',
+      'Buxar Central Jail',
+    ],
+    'Punjab': [
+      'Patiala Central Jail',
+      'Ludhiana Central Jail',
+      'Amritsar Jail',
+    ],
+    'Haryana': [
+      'Ambala Central Jail',
+      'Hisar Central Jail',
+      'Gurugram District Jail',
+    ],
+    'Gujarat': [
+      'Sabarmati Central Jail (Ahmedabad)',
+      'Vadodara Central Jail',
+      'Rajkot Central Jail',
+    ],
+    'Madhya Pradesh': [
+      'Indore Central Jail',
+      'Bhopal Central Jail',
+      'Jabalpur Central Jail',
+    ],
+    'Jharkhand': [
+      'Ranchi Central Jail',
+      'Dumka Central Jail',
+      'Hazaribagh District Jail',
+    ],
+    'Odisha': [
+      'Bhubaneswar Special Jail',
+      'Choudwar Circle Jail',
+      'Berhampur Circle Jail',
+    ],
+    'Kerala': [
+      'Poojappura Central Prison',
+      'Viyyur Central Jail',
+      'Kannur Central Prison',
+    ],
+    'Andhra Pradesh': [
+      'Rajahmundry Central Jail',
+      'Kadapa Central Prison',
+      'Visakhapatnam Jail',
+    ],
+    'Telangana': [
+      'Chanchalguda Central Jail',
+      'Cherlapally Central Jail',
+      'Warangal Central Jail',
+    ],
+    'Assam': [
+      'Guwahati Central Jail',
+      'Jorhat District Jail',
+      'Silchar Jail',
+    ],
+    'Chhattisgarh': [
+      'Raipur Central Jail',
+      'Bilaspur Jail',
+      'Jagdalpur Central Jail',
+    ],
+    'Uttarakhand': [
+      'Dehradun District Jail',
+      'Haldwani Jail',
+      'Haridwar Jail',
+    ],
+    'Himachal Pradesh': [
+      'Kanda Central Jail',
+      'Nahan Jail',
+      'Dharamshala Jail',
+    ],
+    'Goa': [
+      'Colvale Central Jail',
+      'Sada Sub Jail',
+    ],
+    'Tripura': [
+      'Agartala Central Jail',
+      'Dharmanagar Jail',
+    ],
+    'Meghalaya': [
+      'Shillong Jail',
+      'Tura Jail',
+    ],
+    'Manipur': [
+      'Sajiwa Central Jail',
+      'Imphal Jail',
+    ],
+    'Nagaland': [
+      'Dimapur Central Jail',
+      'Kohima Jail',
+    ],
+    'Mizoram': [
+      'Aizawl Central Jail',
+      'Lunglei Jail',
+    ],
+    'Arunachal Pradesh': [
+      'Jully Jail (Itanagar)',
+    ],
+    'Sikkim': [
+      'Rangpo District Jail',
+    ],
+    'Chandigarh': [
+      'Model Jail, Chandigarh',
+    ],
+    'Jammu and Kashmir': [
+      'Kot Bhalwal Jail',
+      'Srinagar Central Jail',
+    ],
+    'Ladakh': [
+      'Leh Jail',
+    ],
+    'Andaman and Nicobar Islands': [
+      'Port Blair District Jail',
+      'Cellular Jail (Historical Monument)',
+    ],
+    'Puducherry': [
+      'Kalapet Central Prison',
+    ],
+    'Dadra and Nagar Haveli and Daman and Diu': [
+      'Silvassa Jail',
+      'Daman Jail',
+    ],
   };
 
   @override
@@ -250,26 +405,39 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
               SizedBox(height: 16),
 
               // Prisoner Gender
-              DropdownButtonFormField<String>(
-                value: _selectedPrisonerGender,
-                decoration: InputDecoration(
-                  labelText: 'Gender*',
-                  border: OutlineInputBorder(),
-                ),
-                items: ['Male', 'Female', 'Transgender'].map((gender) {
-                  return DropdownMenuItem(
-                    value: gender,
-                    child: Text(gender),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedPrisonerGender = value;
-                  });
-                },
-                validator: (value) => value == null ? 'Please select gender' : null,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Gender*',
+                    style: TextStyle(fontSize: 16,),
+                  ),
+                  ..._genders.map((gender) {
+                    return RadioListTile<String>(
+                      title: Text(gender),
+                      value: gender,
+                      groupValue: _selectedPrisonerGender,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedPrisonerGender = value;
+                        });
+                      },
+                      contentPadding: EdgeInsets.zero,
+                    );
+                  }).toList(),
+                  if (_selectedPrisonerGender == null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12, top: 4),
+                      child: Text(
+                        'Select your gender',
+                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                    ),
+                ],
               ),
+
               SizedBox(height: 16),
+
               DropdownButtonFormField<String>(
                 value: _selectedCategory,
                 decoration: InputDecoration(

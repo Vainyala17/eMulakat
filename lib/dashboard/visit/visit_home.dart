@@ -1,8 +1,9 @@
-import 'package:e_mulakat/screens/registration/meet_form_screen.dart';
+import 'package:e_mulakat/dashboard/visit/visit_preview_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../../screens/home/home_screen.dart';
 import '../grievance/grievance_home.dart';
+import 'meet_form_screen.dart';
 
 class VisitHomeScreen extends StatefulWidget {
   @override
@@ -11,6 +12,7 @@ class VisitHomeScreen extends StatefulWidget {
 
 class _VisitHomeScreenState extends State<VisitHomeScreen> {
   int _selectedIndex = 0;
+
   Widget _buildNavItem({
     required int index,
     required IconData icon,
@@ -55,6 +57,7 @@ class _VisitHomeScreenState extends State<VisitHomeScreen> {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -96,7 +99,7 @@ class _VisitHomeScreenState extends State<VisitHomeScreen> {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => MeetFormScreen()),
+                    MaterialPageRoute(builder: (context) => VisitPreviewScreen()),
                   );
                 },
                 child: const Text(

@@ -117,17 +117,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('e-Mulakat'),
+        title: Text('eMulakat'),
         centerTitle: true,
         backgroundColor: _selectedColor,
         actions: [
-          // Notification Icon
-          IconButton(
-            icon: Icon(Icons.notifications),
-            onPressed: () {
-              // Handle notifications
-            },
-          ),
 
           // Font Size Controls
           PopupMenuButton<double>(
@@ -169,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Text to Speech
           IconButton(
             icon: Icon(Icons.volume_up),
-            onPressed: () => _speak('Welcome to e-Mulakat'),
+            onPressed: () => _speak('Welcome to eMulakat'),
           ),
 
           // Color Picker
@@ -180,6 +173,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 _selectedColor = color;
               });
             },
+            // Notification Icon
+            child: IconButton(
+              icon: Icon(Icons.notifications),
+              onPressed: () {
+                // Handle notifications
+              },
+            ),
             itemBuilder: (context) => _colorOptions.map((colorHex) {
               Color color = Color(int.parse('0xff$colorHex'));
               return PopupMenuItem(
@@ -201,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Welcome to e-Mulakat',
+              'Welcome to eMulakat',
               style: TextStyle(
                 fontSize: _fontSize + 8,
                 fontWeight: FontWeight.bold,

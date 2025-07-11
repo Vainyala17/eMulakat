@@ -11,7 +11,7 @@ class PDFViewerScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('PDF Viewer'),
-        backgroundColor: Colors.teal,
+        backgroundColor: Color(0xFF3A6895),
       ),
       body: SfPdfViewer.asset(assetPath),
     );

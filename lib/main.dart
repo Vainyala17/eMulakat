@@ -3,14 +3,14 @@ import 'screens/splash/splash_logo.dart';
 import 'utils/color_scheme.dart';
 
 void main() {
-  runApp(EMulakatApp());
+  runApp(eMulakatApp());
 }
 
-class EMulakatApp extends StatelessWidget {
+class eMulakatApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'e-Mulakat',
+      title: 'eMulakat',
       theme: ThemeData(
         primarySwatch: AppColors.primarySwatch,
         colorScheme: AppColors.colorScheme,

@@ -121,7 +121,7 @@ class _SplashAnimationScreenState extends State<SplashAnimationScreen>
             ),
             SizedBox(height: 32),
             Text(
-              'Welcome to e-Mulakat',
+              'Welcome to eMulakat',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,

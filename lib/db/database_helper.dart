@@ -19,7 +19,7 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'e_mulakat.db');
+    String path = join(await getDatabasesPath(), 'emulakat.db');
     return await openDatabase(
       path,
       version: 1,
