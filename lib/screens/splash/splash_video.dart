@@ -14,9 +14,9 @@ class _SplashVideoScreenState extends State<SplashVideoScreen> {
   void initState() {
     super.initState();
 
-    // Initialize the video
-    _controller = VideoPlayerController.network(
-      'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+    // Initialize the local asset video
+    _controller = VideoPlayerController.asset(
+      'assets/videos/videoplayback.mp4',
     )
       ..initialize().then((_) {
         setState(() {});
@@ -31,6 +31,7 @@ class _SplashVideoScreenState extends State<SplashVideoScreen> {
       }
     });
   }
+
 
   void _skipVideo() {
     _controller.pause();
@@ -65,7 +66,7 @@ class _SplashVideoScreenState extends State<SplashVideoScreen> {
             child: ElevatedButton(
               onPressed: _skipVideo,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
+                backgroundColor: Color(0xFF7AA9D4),
                 foregroundColor: Colors.black,
               ),
               child: Text('Skip'),
