@@ -34,49 +34,6 @@ class _GrievancePreviewScreenState extends State<GrievancePreviewScreen> {
     'message': 'The prisoner is not getting proper medical facilities and the food quality is very poor. There are also issues with cleanliness in the barracks.',
   };
 
-  Widget _buildNavItem({
-    required int index,
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _selectedIndex = index;
-          });
-          onTap();
-        },
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 20,
-                color: Colors.white,
-              ),
-              SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildPreviewCard({
     required String title,
     required List<MapEntry<String, String>> data,
@@ -169,26 +126,6 @@ class _GrievancePreviewScreenState extends State<GrievancePreviewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text('Preview Grievance'),
-        centerTitle: true,
-        backgroundColor: Theme.of(context).primaryColor,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.help_outline),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PDFViewerScreen(
-                    assetPath: 'assets/pdfs/about_us.pdf',
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
         child: Column(
@@ -383,60 +320,6 @@ class _GrievancePreviewScreenState extends State<GrievancePreviewScreen> {
               ],
             ),
           ],
-        ),
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Color(0xFF5A8BBA),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Container(
-            height: 60,
-            child: Row(
-              children: [
-                _buildNavItem(
-                  index: 0,
-                  icon: Icons.directions_walk,
-                  label: 'Visit',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => VisitHomeScreen()),
-                    );
-                  },
-                ),
-                _buildNavItem(
-                  index: 1,
-                  icon: Icons.dashboard,
-                  label: 'Dashboard',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => HomeScreen()),
-                    );
-                  },
-                ),
-                _buildNavItem(
-                  index: 3,
-                  icon: Icons.report_problem,
-                  label: 'Grievance',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );

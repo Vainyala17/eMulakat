@@ -12,6 +12,7 @@ import '../../utils/validators.dart';
 import '../../utils/constants.dart';
 import '../visit/visit_home.dart';
 import 'grievance_home.dart';
+import 'grievance_preview_screen.dart';
 
 class GrievanceDetailsScreen extends StatefulWidget {
   @override
@@ -25,6 +26,7 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
   final TextEditingController _prisonerNameController = TextEditingController();
   final TextEditingController _prisonerAgeController = TextEditingController();
   final TextEditingController _additionalVisitorsController = TextEditingController();
+  final TextEditingController _messageController = TextEditingController(); // Added separate controller for message
 
   String? _selectedState;
   String? _selectedJail;
@@ -34,11 +36,13 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
   List<TextEditingController> _additionalVisitorControllers = [];
 
   final List<String> _genders = ['Male', 'Female', 'Transgender'];
-  final List<String> _category = ['SELECT',
+  final List<String> _category = [
+    'SELECT',
     'III Treated by the prison authorities',
     'Basic Facilities not provided inside prison',
-  'Manhandling by co prisoners',
-  'Others'];
+    'Manhandling by co prisoners',
+    'Others'
+  ];
 
   final List<String> _states = [
     'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -81,7 +85,7 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
     'West Bengal': [
       'Presidency Correctional Home (Kolkata)',
       'Dumdum Central Jail',
-      'Alipore Women’s Correctional Home',
+      'Alipore Women\'s Correctional Home',
     ],
     'Rajasthan': [
       'Jaipur Central Jail',
@@ -235,6 +239,7 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
       }
     }
   }
+
   Widget _buildNavItem({
     required int index,
     required IconData icon,
@@ -279,283 +284,335 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text('Grievance Details'),
-        centerTitle: true,
-        backgroundColor: Theme.of(context).primaryColor,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.help_outline),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PDFViewerScreen(
-                    assetPath: 'assets/pdfs/about_us.pdf',
+    return DefaultTabController(
+      length: 2,
+      initialIndex: 0,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          title: const Text('Grievance'),
+          centerTitle: true,
+          backgroundColor: Color(0xFF5A8BBA),
+          foregroundColor: Colors.black,
+          actions: [
+            IconButton(
+              icon: Icon(Icons.help_outline),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PDFViewerScreen(
+                      assetPath: 'assets/pdfs/about_us.pdf',
+                    ),
                   ),
+                );
+              },
+            ),
+          ],
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(kToolbarHeight),
+            child: Container(
+              color: Colors.white,
+              child: const TabBar(
+                indicatorColor: Colors.black,
+                labelStyle: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
-              );
-            },
+                unselectedLabelStyle: TextStyle(
+                  fontSize: 18,
+                ),
+                labelColor: Color(0xFF5A8BBA),
+                unselectedLabelColor: Colors.black,
+                tabs: [
+                  Tab(text: 'Register Grievance'),
+                  Tab(text: 'Preview Grievance'),
+                ],
+              ),
+            ),
           ),
-        ],
-      ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FormSectionTitle(title: 'Grievance Details'),
-              SizedBox(height: 20),
+        ),
+        body: TabBarView(
+          children: [
+            // Register Grievance Tab
+            SingleChildScrollView(
+              padding: EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FormSectionTitle(title: 'Grievance Details'),
+                    SizedBox(height: 20),
 
-              // State Selection
-              DropdownButtonFormField<String>(
-                value: _selectedState,
-                decoration: InputDecoration(
-                  labelText: 'State*',
-                  border: OutlineInputBorder(),
-                ),
-                items: _states.map((state) {
-                  return DropdownMenuItem(
-                    value: state,
-                    child: Text(state),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedState = value;
-                    _selectedJail = null;
-                  });
-                },
-                validator: (value) => value == null ? 'Please select a state' : null,
-              ),
-              SizedBox(height: 16),
-
-              // Jail Selection
-              DropdownButtonFormField<String>(
-                value: _selectedJail,
-                decoration: InputDecoration(
-                  labelText: 'Jail*',
-                  border: OutlineInputBorder(),
-                ),
-                items: _selectedState != null && _jailsByState[_selectedState] != null
-                    ? _jailsByState[_selectedState]!.map((jail) {
-                  return DropdownMenuItem(
-                    value: jail,
-                    child: Text(jail),
-                  );
-                }).toList()
-                    : [],
-                onChanged: (value) {
-                  setState(() {
-                    _selectedJail = value;
-                  });
-                },
-                validator: (value) => value == null ? 'Please select a jail' : null,
-              ),
-              SizedBox(height: 16),
-              FormSectionTitle(title: 'Prisoner Details'),
-              SizedBox(height: 20),
-
-              // Prisoner Name
-              CustomTextField(
-                controller: _prisonerNameController,
-                label: 'Prisoner Name*',
-                hint: 'Enter prisoner Name',
-                validator: Validators.validateName,
-                inputFormatters: [
-                  TextInputFormatter.withFunction((oldValue, newValue) {
-                    // Convert first letter of each word to uppercase
-                    String text = newValue.text;
-                    if (text.isNotEmpty) {
-                      text = text.split(' ').map((word) {
-                        if (word.isNotEmpty) {
-                          return word[0].toUpperCase() + word.substring(1).toLowerCase();
-                        }
-                        return word;
-                      }).join(' ');
-                    }
-                    return TextEditingValue(
-                      text: text,
-                      selection: TextSelection.collapsed(offset: text.length),
-                    );
-                  }),
-                ],
-              ),
-              SizedBox(height: 16),
-
-              // Prisoner Age
-              CustomTextField(
-                controller: _prisonerAgeController,
-                label: 'Prisoner Age*',
-                hint: 'Enter prisoner Age',
-                keyboardType: TextInputType.number,
-                validator: Validators.validateAge,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(3), // Limit age to 3 digits
-                ],
-              ),
-              SizedBox(height: 16),
-
-              // Prisoner Gender
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Gender*',
-                    style: TextStyle(fontSize: 16,),
-                  ),
-                  ..._genders.map((gender) {
-                    return RadioListTile<String>(
-                      title: Text(gender),
-                      value: gender,
-                      groupValue: _selectedPrisonerGender,
+                    // State Selection
+                    DropdownButtonFormField<String>(
+                      value: _selectedState,
+                      decoration: InputDecoration(
+                        labelText: 'State*',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _states.map((state) {
+                        return DropdownMenuItem(
+                          value: state,
+                          child: Text(state),
+                        );
+                      }).toList(),
                       onChanged: (value) {
                         setState(() {
-                          _selectedPrisonerGender = value;
+                          _selectedState = value;
+                          _selectedJail = null;
                         });
                       },
-                      contentPadding: EdgeInsets.zero,
-                    );
-                  }).toList(),
-                  if (_selectedPrisonerGender == null)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 12, top: 4),
-                      child: Text(
-                        'Select your gender',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      validator: (value) => value == null ? 'Please select a state' : null,
+                    ),
+                    SizedBox(height: 16),
+
+                    // Jail Selection
+                    DropdownButtonFormField<String>(
+                      value: _selectedJail,
+                      decoration: InputDecoration(
+                        labelText: 'Jail*',
+                        border: OutlineInputBorder(),
                       ),
-                    ),
-                ],
-              ),
-
-              SizedBox(height: 16),
-
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                decoration: InputDecoration(
-                  labelText: 'Select Category',
-                  border: OutlineInputBorder(),
-                ),
-                items: _category.map((relation) {
-                  return DropdownMenuItem(
-                    value: relation,
-                    child: Text(relation),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCategory = value;
-                  });
-                },
-                validator: (value) => value == null ? 'Please select Category' : null,
-              ),
-              SizedBox(height: 16),
-              CustomTextField(
-                controller: _prisonerNameController,
-                label: 'Message*',
-                hint: 'Enter issue Description',
-                validator: Validators.validateName,
-                inputFormatters: [
-                  TextInputFormatter.withFunction((oldValue, newValue) {
-                    // Convert first letter of each word to uppercase
-                    String text = newValue.text;
-                    if (text.isNotEmpty) {
-                      text = text.split(' ').map((word) {
-                        if (word.isNotEmpty) {
-                          return word[0].toUpperCase() + word.substring(1).toLowerCase();
-                        }
-                        return word;
-                      }).join(' ');
-                    }
-                    return TextEditingValue(
-                      text: text,
-                      selection: TextSelection.collapsed(offset: text.length),
-                    );
-                  }),
-                ],
-              ),
-              SizedBox(height: 30),
-              // Action Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: CustomButton(
-                      text: 'Save',
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
-                          );
-                        }
+                      items: _selectedState != null && _jailsByState[_selectedState] != null
+                          ? _jailsByState[_selectedState]!.map((jail) {
+                        return DropdownMenuItem(
+                          value: jail,
+                          child: Text(jail),
+                        );
+                      }).toList()
+                          : [],
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedJail = value;
+                        });
                       },
+                      validator: (value) => value == null ? 'Please select a jail' : null,
                     ),
-                  ),
-                ],
+                    SizedBox(height: 16),
+
+                    FormSectionTitle(title: 'Prisoner Details'),
+                    SizedBox(height: 20),
+
+                    // Prisoner Name
+                    CustomTextField(
+                      controller: _prisonerNameController,
+                      label: 'Prisoner Name*',
+                      hint: 'Enter prisoner Name',
+                      validator: Validators.validateName,
+                      inputFormatters: [
+                        TextInputFormatter.withFunction((oldValue, newValue) {
+                          String text = newValue.text;
+                          if (text.isNotEmpty) {
+                            text = text.split(' ').map((word) {
+                              if (word.isNotEmpty) {
+                                return word[0].toUpperCase() + word.substring(1).toLowerCase();
+                              }
+                              return word;
+                            }).join(' ');
+                          }
+                          return TextEditingValue(
+                            text: text,
+                            selection: TextSelection.collapsed(offset: text.length),
+                          );
+                        }),
+                      ],
+                    ),
+                    SizedBox(height: 16),
+
+                    // Prisoner Age
+                    CustomTextField(
+                      controller: _prisonerAgeController,
+                      label: 'Prisoner Age*',
+                      hint: 'Enter prisoner Age',
+                      keyboardType: TextInputType.number,
+                      validator: Validators.validateAge,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(3),
+                      ],
+                    ),
+                    SizedBox(height: 16),
+
+                    // Prisoner Gender
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Gender*',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        ..._genders.map((gender) {
+                          return RadioListTile<String>(
+                            title: Text(gender),
+                            value: gender,
+                            groupValue: _selectedPrisonerGender,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedPrisonerGender = value;
+                              });
+                            },
+                            contentPadding: EdgeInsets.zero,
+                          );
+                        }).toList(),
+                        if (_selectedPrisonerGender == null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 12, top: 4),
+                            child: Text(
+                              'Select your gender',
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: 16),
+
+                    // Category Selection
+                    DropdownButtonFormField<String>(
+                      value: _selectedCategory,
+                      decoration: InputDecoration(
+                        labelText: 'Select Category*',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _category.map((category) {
+                        return DropdownMenuItem(
+                          value: category,
+                          child: Text(category),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedCategory = value;
+                        });
+                      },
+                      validator: (value) => value == null || value == 'SELECT' ? 'Please select Category' : null,
+                    ),
+                    SizedBox(height: 16),
+
+                    // Message Field
+                    CustomTextField(
+                      controller: _messageController,
+                      label: 'Message*',
+                      hint: 'Enter issue Description',
+                      validator: Validators.validateName,
+                      maxLength: 100,
+                      inputFormatters: [
+                        TextInputFormatter.withFunction((oldValue, newValue) {
+                          String text = newValue.text;
+                          if (text.isNotEmpty) {
+                            text = text.split(' ').map((word) {
+                              if (word.isNotEmpty) {
+                                return word[0].toUpperCase() + word.substring(1).toLowerCase();
+                              }
+                              return word;
+                            }).join(' ');
+                          }
+                          return TextEditingValue(
+                            text: text,
+                            selection: TextSelection.collapsed(offset: text.length),
+                          );
+                        }),
+                      ],
+                    ),
+                    SizedBox(height: 30),
+
+                    // Action Buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: CustomButton(
+                            text: 'Save',
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                if (_selectedPrisonerGender == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Please select gender')),
+                                  );
+                                  return;
+                                }
+                                // Show success message
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Grievance details submitted successfully.'),
+                                    backgroundColor: Colors.green,
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+
+                                // Navigate after short delay
+                                Future.delayed(Duration(seconds: 2), () {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
+                                  );
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Preview Grievance Tab
+            GrievancePreviewScreen(),
+          ],
+        ),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Color(0xFF5A8BBA),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: Offset(0, -2),
               ),
             ],
           ),
-        ),
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Color(0xFF5A8BBA),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Container(
-            height: 60,
-            child: Row(
-              children: [
-                _buildNavItem(
-                  index: 0,
-                  icon: Icons.directions_walk,
-                  label: 'Visit',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => VisitHomeScreen()),
-                    );
-                  },
-                ),
-                _buildNavItem(
-                  index: 1,
-                  icon: Icons.dashboard,
-                  label: 'Dashboard',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => HomeScreen()),
-                    );
-                  },
-                ),
-                _buildNavItem(
-                  index: 3,
-                  icon: Icons.report_problem,
-                  label: 'Grievance',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
-                    );
-                  },
-                ),
-              ],
+          child: SafeArea(
+            child: SizedBox(
+              height: 60,
+              child: Row(
+                children: [
+                  _buildNavItem(
+                    index: 0,
+                    icon: Icons.directions_walk,
+                    label: 'Visit',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => VisitHomeScreen()),
+                      );
+                    },
+                  ),
+                  _buildNavItem(
+                    index: 1,
+                    icon: Icons.dashboard,
+                    label: 'Dashboard',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => HomeScreen()),
+                      );
+                    },
+                  ),
+                  _buildNavItem(
+                    index: 2,
+                    icon: Icons.report_problem,
+                    label: 'Grievance',
+                    onTap: () {
+                      // Already on this screen
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -567,6 +624,11 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
   void dispose() {
     _prisonerNameController.dispose();
     _prisonerAgeController.dispose();
+    _additionalVisitorsController.dispose();
+    _messageController.dispose();
+    for (var controller in _additionalVisitorControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 }
