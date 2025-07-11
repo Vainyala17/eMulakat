@@ -1,8 +1,8 @@
 import 'package:e_mulakat/dashboard/visit/visit_preview_screen.dart';
 import 'package:flutter/material.dart';
 
+import '../../pdf_viewer_screen.dart';
 import '../../screens/home/home_screen.dart';
-import '../grievance/grievance_home.dart';
 import 'meet_form_screen.dart';
 
 class VisitHomeScreen extends StatefulWidget {
@@ -60,107 +60,108 @@ class _VisitHomeScreenState extends State<VisitHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Visit'),
-        centerTitle: true,
-        backgroundColor: Color(0xFF5A8BBA),
-        foregroundColor: Colors.black,
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF5A8BBA),
-                  minimumSize: Size(double.infinity, 80),
+    return DefaultTabController(
+      length: 2,
+      initialIndex: 0,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          title: const Text('Visit'),
+          centerTitle: true,
+          backgroundColor: Color(0xFF5A8BBA),
+          foregroundColor: Colors.black,
+          actions: [
+            IconButton(
+              icon: Icon(Icons.help_outline),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PDFViewerScreen(
+                      assetPath: 'assets/pdfs/about_us.pdf',
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(kToolbarHeight),
+            child: Container(
+              color: Colors.white, // ✅ Background color
+              child: const TabBar(
+                indicatorColor:  Colors.black,
+                labelStyle: TextStyle(               // ✅ Font style for selected tab
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => MeetFormScreen()),
-                  );
-                },
-                child: const Text(
-                  'Register Visit',
-                  style: TextStyle(fontSize: 20,color: Colors.white),
+                unselectedLabelStyle: TextStyle(     // ✅ Font style for unselected tabs
+                  fontSize: 18,
                 ),
+                labelColor: Color(0xFF5A8BBA),
+                unselectedLabelColor: Colors.black,
+                tabs: [
+                  Tab(text: 'Register Visit'),
+                  Tab(text: 'Preview Visit'),
+                ],
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF5A8BBA),
-                  minimumSize: Size(double.infinity, 80),
-                ),
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => VisitPreviewScreen()),
-                  );
-                },
-                child: const Text(
-                  'Preview Visit',
-                  style: TextStyle(fontSize: 20, color: Colors.white),
-                ),
+            ),
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            MeetFormScreen(),
+            VisitPreviewScreen(),
+          ],
+        ),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Color(0xFF5A8BBA),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: Offset(0, -2),
               ),
             ],
           ),
-        ),
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Color(0xFF5A8BBA),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Container(
-            height: 60,
-            child: Row(
-              children: [
-                _buildNavItem(
-                  index: 0,
-                  icon: Icons.directions_walk,
-                  label: 'Visit',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => VisitHomeScreen()),
-                    );
-                  },
-                ),
-                _buildNavItem(
-                  index: 1,
-                  icon: Icons.dashboard,
-                  label: 'Dashboard',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => HomeScreen()),
-                    );
-                  },
-                ),
-                _buildNavItem(
-                  index: 3,
-                  icon: Icons.report_problem,
-                  label: 'Grievance',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
-                    );
-                  },
-                ),
-              ],
+          child: SafeArea(
+            child: SizedBox(
+              height: 60,
+              child: Row(
+                children: [
+                  _buildNavItem(
+                    index: 0,
+                    icon: Icons.directions_walk,
+                    label: 'Visit',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => VisitHomeScreen()),
+                      );
+                    },
+                  ),
+                  _buildNavItem(
+                    index: 1,
+                    icon: Icons.dashboard,
+                    label: 'Dashboard',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => HomeScreen()),
+                      );
+                    },
+                  ),
+                  _buildNavItem(
+                    index: 2,
+                    icon: Icons.report_problem,
+                    label: 'Grievance',
+                    onTap: () {
+                      // Already on this screen
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),

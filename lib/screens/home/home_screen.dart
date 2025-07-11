@@ -160,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Text to Speech
           IconButton(
             icon: Icon(Icons.volume_up),
-            onPressed: () => _speak('Welcome to eMulakat'),
+            onPressed: () => _speak('Welcome to eMulakat , Prison Visitor Management System'),
           ),
 
             // Notification Icon
