@@ -232,26 +232,6 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text('Register Visit'),
-        centerTitle: true,
-        backgroundColor: Theme.of(context).primaryColor,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.help_outline),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PDFViewerScreen(
-                    assetPath: 'assets/pdfs/about_us.pdf',
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -472,14 +452,6 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                       contentPadding: EdgeInsets.zero,
                     );
                   }).toList(),
-                  if (_selectedPrisonerGender == null)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 12, top: 4),
-                      child: Text(
-                        'Select your gender',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                    ),
                 ],
               ),
               SizedBox(height: 16),
