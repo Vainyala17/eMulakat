@@ -117,8 +117,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('eMulakat'),
-        centerTitle: true,
         backgroundColor: _selectedColor,
         actions: [
 
@@ -165,32 +163,12 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () => _speak('Welcome to eMulakat'),
           ),
 
-          // Color Picker
-          PopupMenuButton<Color>(
-            icon: Icon(Icons.color_lens),
-            onSelected: (color) {
-              setState(() {
-                _selectedColor = color;
-              });
-            },
             // Notification Icon
-            child: IconButton(
+          IconButton(
               icon: Icon(Icons.notifications),
               onPressed: () {
                 // Handle notifications
               },
-            ),
-            itemBuilder: (context) => _colorOptions.map((colorHex) {
-              Color color = Color(int.parse('0xff$colorHex'));
-              return PopupMenuItem(
-                value: color,
-                child: Container(
-                  width: 40,
-                  height: 20,
-                  color: color,
-                ),
-              );
-            }).toList(),
           ),
         ],
       ),

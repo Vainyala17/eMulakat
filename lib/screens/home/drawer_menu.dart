@@ -40,11 +40,11 @@ class _DrawerMenuState extends State<DrawerMenu> {
           UserAccountsDrawerHeader(
             decoration: BoxDecoration(color: Colors.white),
             accountName: Text(
-              'Vainyala Samal',
+              'John Doe',
               style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
             ),
             accountEmail: Text(
-              'samal_123@gmail.com',
+              'abc123@gmail.com',
               style: TextStyle(color: Colors.black54),
             ),
             currentAccountPicture: CircleAvatar(
