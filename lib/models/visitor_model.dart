@@ -1,3 +1,7 @@
+import 'package:flutter/material.dart';
+
+enum VisitStatus { pending, approved, rejected }
+
 class VisitorModel {
   int? id;
   String visitorName;
@@ -22,6 +26,7 @@ class VisitorModel {
   int prisonerAge;
   String prisonerGender;
   bool isPhysicalVisit;
+  final VisitStatus status;
 
   VisitorModel({
     this.id,
@@ -47,6 +52,7 @@ class VisitorModel {
     required this.prisonerAge,
     required this.prisonerGender,
     required this.isPhysicalVisit,
+    required this.status,
   });
 
   Map<String, dynamic> toMap() {
@@ -74,6 +80,7 @@ class VisitorModel {
       'prisonerAge': prisonerAge,
       'prisonerGender': prisonerGender,
       'isPhysicalVisit': isPhysicalVisit ? 1 : 0,
+      'status': status.index,
     };
   }
 
@@ -102,6 +109,31 @@ class VisitorModel {
       prisonerAge: map['prisonerAge'],
       prisonerGender: map['prisonerGender'],
       isPhysicalVisit: map['isPhysicalVisit'] == 1,
+      status: map['status'] != null
+          ? VisitStatus.values[map['status']]
+          : VisitStatus.pending,
     );
+  }
+  Color statusColor(VisitStatus status) {
+    switch (status) {
+      case VisitStatus.approved:
+        return Colors.green;
+      case VisitStatus.rejected:
+        return Colors.red;
+      case VisitStatus.pending:
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+  String get statusText {
+    switch (status) {
+      case VisitStatus.approved:
+        return 'Approved';
+      case VisitStatus.rejected:
+        return 'Rejected';
+      case VisitStatus.pending:
+        return 'Pending';
+    }
   }
 }
