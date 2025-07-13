@@ -3,7 +3,8 @@ import 'package:e_mulakat/models/visitor_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import '../../dashboard/visit/meet_form_screen.dart';
+import '../../dashboard/visit/visit_preview_screen.dart';
+import '../../dashboard/visit/whom_to_meet_screen.dart';
 import '../../dashboard/visit/visit_home.dart';
 import 'drawer_menu.dart';
 import '../../utils/color_scheme.dart';
@@ -117,6 +118,21 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  String getDayOfWeek(DateTime date) {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return days[date.weekday - 1];
+  }
+
+  String getFormattedDate(DateTime date) {
+    return '${date.day}';
+  }
+
+  String getMonthName(DateTime date) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months[date.month - 1];
+  }
+
   bool showPastVisits = true;
   bool isExpandedView = false;
 
@@ -142,10 +158,13 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerGender: 'Male',
       isPhysicalVisit: true,
       status: VisitStatus.rejected,
+      startTime: '14:00',
+      endTime: '16:30',
+      dayOfWeek: 'Friday',
     ),
     VisitorModel(
-      visitorName: 'Ravi Sharma',
-      fatherName: 'Mahesh Sharma',
+      visitorName: 'Anand Gupta',
+      fatherName: 'Mahesh Gupta',
       address: '123 MG Road, Mumbai',
       gender: 'Male',
       age: 32,
@@ -164,10 +183,13 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerGender: 'Male',
       isPhysicalVisit: true,
       status: VisitStatus.approved,
+      startTime: '9:30',
+      endTime: '11:00',
+      dayOfWeek: 'Monday',
     ),
     VisitorModel(
-      visitorName: 'Ravi Sharma',
-      fatherName: 'Mahesh Sharma',
+      visitorName: 'Vishal Mali',
+      fatherName: 'Mahesh Mali',
       address: '123 MG Road, Mumbai',
       gender: 'Male',
       age: 32,
@@ -186,6 +208,9 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerGender: 'Male',
       isPhysicalVisit: true,
       status: VisitStatus.rejected,
+      startTime: '14:00',
+      endTime: '16:30',
+      dayOfWeek: 'Saturday',
     ),
     VisitorModel(
       visitorName: 'Ravi Sharma',
@@ -208,6 +233,9 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerGender: 'Male',
       isPhysicalVisit: true,
       status: VisitStatus.approved,
+      startTime: '5:00',
+      endTime: '7:30',
+      dayOfWeek: 'Friday',
     ),
   ];
 
@@ -233,10 +261,13 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerGender: 'Male',
       isPhysicalVisit: false,
       status: VisitStatus.rejected,
+      startTime: '4:00',
+      endTime: '6:30',
+      dayOfWeek: 'Friday',
     ),
     VisitorModel(
-      visitorName: 'Meena Gupta',
-      fatherName: 'Raj Gupta',
+      visitorName: 'Shweta patel',
+      fatherName: 'Ramraj Patel',
       address: '5th Block, Pune',
       gender: 'Female',
       age: 29,
@@ -255,6 +286,9 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerGender: 'Male',
       isPhysicalVisit: false,
       status: VisitStatus.pending,
+      startTime: '1:00',
+      endTime: '2:30',
+      dayOfWeek: 'Wednesday',
     ),
     VisitorModel(
       visitorName: 'Meena Gupta',
@@ -277,10 +311,13 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerGender: 'Male',
       isPhysicalVisit: false,
       status: VisitStatus.rejected,
+      startTime: '11:00',
+      endTime: '13:30',
+      dayOfWeek: 'Tuesday',
     ),
     VisitorModel(
-      visitorName: 'Meena Gupta',
-      fatherName: 'Raj Gupta',
+      visitorName: 'Rani patil',
+      fatherName: 'Raj Patil',
       address: '5th Block, Pune',
       gender: 'Female',
       age: 29,
@@ -299,12 +336,15 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerGender: 'Male',
       isPhysicalVisit: false,
       status: VisitStatus.approved,
+      startTime: '15:00',
+      endTime: '17:30',
+      dayOfWeek: 'Mondayday',
     ),
     VisitorModel(
-      visitorName: 'Meena Gupta',
-      fatherName: 'Raj Gupta',
+      visitorName: 'Shyam Roy',
+      fatherName: 'Ram Roy',
       address: '5th Block, Pune',
-      gender: 'Female',
+      gender: 'Male',
       age: 29,
       relation: 'Wife',
       idProof: 'Voter ID',
@@ -321,6 +361,9 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerGender: 'Male',
       isPhysicalVisit: false,
       status: VisitStatus.rejected,
+      startTime: '14:00',
+      endTime: '16:30',
+      dayOfWeek: 'Friday',
     ),
   ];
 
@@ -481,97 +524,143 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Updated vertical visit cards with status
+  // Replace your existing _buildVerticalVisitCards method with this updated version
+
   Widget _buildVerticalVisitCards(List<VisitorModel> visits) {
     return ListView.builder(
       itemCount: visits.length,
       itemBuilder: (context, index) {
         final visitor = visits[index];
         return Card(
-          elevation: 3,
-          margin: EdgeInsets.symmetric(vertical: 8),
+          color: AppColors.background,
+          elevation: 2,
+          margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Padding(
-            padding: EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
               children: [
-                // Status badge at the top
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: statusColor(visitor.status),
-                        borderRadius: BorderRadius.circular(6),
+                // Left vertical date block
+                Container(
+                  width: 70,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        getDayOfWeek(visitor.visitDate), // e.g. "Friday"
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
                       ),
-                      child: Text(
-                        getStatusText(visitor.status), // Fixed: Use the method with parameter
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                      const SizedBox(height: 4),
+                      Text(
+                        visitor.visitDate.day.toString(), // e.g. "14"
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        getMonthName(visitor.visitDate), // e.g. "October"
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // Right content block
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Status label
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Container(
+                          padding:
+                          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: statusColor(visitor.status),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            getStatusText(visitor.status),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                    Text(
-                      visitor.isPhysicalVisit ? 'Physical' : 'Virtual',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 12,
+                      const SizedBox(height: 6),
+
+                      // Time
+                      Row(
+                        children: [
+                          const Icon(Icons.access_time, size: 16, color: Colors.black),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${visitor.startTime} - ${visitor.endTime}',
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 6),
+
+                      // Visitor name
+                      Row(
+                        children: [
+                          Icon(Icons.person,size: 16, color: Colors.black),
+                          SizedBox(width: 8),
+                          Expanded( // This will prevent overflow
+                            child: Text(
+                              visitor.visitorName,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+
+                      // Additional participants
+                      Row(
+                        children: [
+                          const Icon(Icons.group, size: 16, color: Colors.black),
+                          const SizedBox(width: 6),
+                          Flexible( // Prevents overflow
+                            child: Text(
+                              visitor.additionalVisitors > 0
+                                  ? 'With ${visitor.additionalVisitors} additional Visitors'
+                                  : 'No additional Visitors',
+                              style: const TextStyle(fontSize: 13, color: Colors.black),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(Icons.calendar_today, size: 16, color: AppColors.primary),
-                    SizedBox(width: 8),
-                    Text('${visitor.visitDate.toLocal().toString().split(' ')[0]}'),
-                  ],
-                ),
-                SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.person, size: 16),
-                    SizedBox(width: 8),
-                    Text('Visitor: ${visitor.visitorName}'),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Icon(Icons.lock, size: 16),
-                    SizedBox(width: 8),
-                    Text('Prisoner: ${visitor.prisonerName}'),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Icon(Icons.location_city, size: 16),
-                    SizedBox(width: 8),
-                    Text('Jail: ${visitor.jail}'),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Icon(Icons.group, size: 16),
-                    SizedBox(width: 8),
-                    Text(visitor.additionalVisitors > 0
-                        ? 'With ${visitor.additionalVisitors} more'
-                        : 'No additional participants'),
-                  ],
-                ),
-                SizedBox(height: 10),
+
+                // Arrow icon
                 Align(
                   alignment: Alignment.centerRight,
-                  child: GestureDetector(
-                    onTap: () {
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_forward_ios, size: 20),
+                    onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => VisitHomeScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => VisitPreviewScreen(),
+                        ),
                       );
                     },
-                    child: Icon(Icons.arrow_forward_ios, size: 16),
                   ),
                 ),
               ],
@@ -581,6 +670,7 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {

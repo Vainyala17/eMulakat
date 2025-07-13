@@ -27,6 +27,9 @@ class VisitorModel {
   String prisonerGender;
   bool isPhysicalVisit;
   final VisitStatus status;
+  final String startTime;
+  final String endTime;
+  final String dayOfWeek;
 
   VisitorModel({
     this.id,
@@ -53,6 +56,9 @@ class VisitorModel {
     required this.prisonerGender,
     required this.isPhysicalVisit,
     required this.status,
+    this.startTime = '14:00',
+    this.endTime = '16:30',
+    this.dayOfWeek = 'Friday',
   });
 
   Map<String, dynamic> toMap() {

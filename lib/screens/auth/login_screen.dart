@@ -8,7 +8,7 @@ import 'dart:math';
 import '../../policies/contact_us_popup.dart';
 import '../../policies/privacy_policy_screen.dart';
 import '../../policies/terms_of_use_screen.dart';
-import '../registration/visitor_form_screen.dart';
+import '../registration/visitor_register_screen.dart';
 import 'forgot_password_screen.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_button.dart';
@@ -153,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('OTP sent to $recipient'),
-          backgroundColor: Colors.green,
+          backgroundColor: Color(0xFF7AA9D4),
         ),
       );
 
@@ -178,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('OTP verified successfully!'),
-          backgroundColor: Colors.green,
+          backgroundColor: Color(0xFF7AA9D4),
         ),
       );
     } else {
@@ -431,7 +431,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: _isOtpSent ? null : _sendOtp,
                             child: Text(_isOtpSent ? 'Sent' : 'Get OTP'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _isOtpSent ? Colors.grey : Colors.blue,
+                              backgroundColor: _isOtpSent ? Colors.black : Color(0xFF7AA9D4),
                             ),
                           ),
                       ],
@@ -474,7 +474,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               onPressed: _otpController.text.length == 6 ? _verifyOtp : null,
                               child: Text('Verify'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
+                                backgroundColor: Color(0xFF7AA9D4),
                               ),
                             ),
                             SizedBox(height: 5),
@@ -498,22 +498,22 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                     SizedBox(height: 10),
-                    Container(
-                      padding: EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.yellow.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(5),
-                        border: Border.all(color: Colors.orange),
-                      ),
-                      child: Text(
-                        'Test OTP: $_dummyOtp',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.orange,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                    // Container(
+                    //   padding: EdgeInsets.all(8),
+                    //   decoration: BoxDecoration(
+                    //     color: Colors.yellow.withOpacity(0.1),
+                    //     borderRadius: BorderRadius.circular(5),
+                    //     border: Border.all(color: Colors.orange),
+                    //   ),
+                    //   child: Text(
+                    //     'Test OTP: $_dummyOtp',
+                    //     style: TextStyle(
+                    //       fontSize: 12,
+                    //       color: Colors.orange,
+                    //       fontWeight: FontWeight.bold,
+                    //     ),
+                    //   ),
+                    // ),
                   ],
 
                   // OTP Verified Message
@@ -523,17 +523,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: BoxDecoration(
                         color: Colors.green.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(5),
-                        border: Border.all(color: Colors.green),
+                        border: Border.all(color: Color(0xFF7AA9D4)),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.check_circle, color: Colors.green),
+                          Icon(Icons.check_circle, color: Color(0xFF7AA9D4)),
                           SizedBox(width: 10),
                           Text(
                             _isInternationalVisitor
                                 ? 'Email verified successfully!'
                                 : 'Mobile number verified successfully!',
-                            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                            style: TextStyle(color: Color(0xFF7AA9D4), fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
