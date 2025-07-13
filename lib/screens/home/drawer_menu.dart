@@ -90,6 +90,7 @@ class _DrawerMenuState extends State<DrawerMenu> {
               final shouldLogout = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
+                  backgroundColor: Colors.white,
                   title: Text('Confirm Logout'),
                   content: Text('Are you sure you want to logout?'),
                   actions: [

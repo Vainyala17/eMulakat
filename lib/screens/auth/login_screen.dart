@@ -152,8 +152,11 @@ class _LoginScreenState extends State<LoginScreen> {
       print('Generated OTP: $_generatedOtp');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('OTP sent to $recipient'),
-          backgroundColor: Color(0xFF7AA9D4),
+          content: Text(
+            'OTP resent to $recipient',
+            style: TextStyle(color: Colors.black), // <-- Text color
+          ),
+          backgroundColor: Colors.blue, // <-- Background color
         ),
       );
 
@@ -177,7 +180,10 @@ class _LoginScreenState extends State<LoginScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('OTP verified successfully!'),
+          content: Text(
+            'OTP verified successfully!',
+            style: TextStyle(color: Colors.black), // <-- Text color
+          ),
           backgroundColor: Color(0xFF7AA9D4),
         ),
       );
@@ -206,8 +212,11 @@ class _LoginScreenState extends State<LoginScreen> {
       String recipient = _isInternationalVisitor ? _emailController.text : _mobileController.text;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('OTP resent to $recipient'),
-          backgroundColor: Colors.blue,
+          content: Text(
+            'OTP resent to $recipient',
+            style: TextStyle(color: Colors.black), // <-- Text color
+          ),
+            backgroundColor: Colors.blue, // <-- Background color
         ),
       );
       _startResendTimer();
@@ -391,7 +400,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: _isOtpSent ? null : _sendOtp,
                             child: Text(_isOtpSent ? 'Sent' : 'Get OTP'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _isOtpSent ? Colors.grey : Colors.blue,
+                              backgroundColor: _isOtpSent ? Colors.black : Color(0xFF7AA9D4),
+                              foregroundColor: Colors.black,
                             ),
                           ),
                       ],
@@ -432,6 +442,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Text(_isOtpSent ? 'Sent' : 'Get OTP'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _isOtpSent ? Colors.black : Color(0xFF7AA9D4),
+                              foregroundColor: Colors.black,
                             ),
                           ),
                       ],
@@ -475,6 +486,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Text('Verify'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Color(0xFF7AA9D4),
+                                foregroundColor: Colors.black, // <-- Set text/icon color to white
                               ),
                             ),
                             SizedBox(height: 5),

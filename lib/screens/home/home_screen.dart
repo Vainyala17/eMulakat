@@ -444,10 +444,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Updated horizontal visit cards with smaller height
   Widget _buildHorizontalVisitCards(List<VisitorModel> visits) {
     return SizedBox(
-      height: 30, // Reduced from 130 to 100
+      height: 10, // Reduced from 130 to 100
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: visits.length,
@@ -523,20 +522,25 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Updated vertical visit cards with status
-  // Replace your existing _buildVerticalVisitCards method with this updated version
-
   Widget _buildVerticalVisitCards(List<VisitorModel> visits) {
     return ListView.builder(
       itemCount: visits.length,
       itemBuilder: (context, index) {
         final visitor = visits[index];
         return Card(
-          color: AppColors.background,
-          elevation: 2,
+          color: Colors.transparent, // Let the container handle the background
+          elevation: 0, // Remove default elevation shadow if needed
           margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.primary, // Border color
+                width: 1.2, // Border width
+              ),
+            ),
             padding: const EdgeInsets.all(12.0),
             child: Row(
               children: [
@@ -604,7 +608,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Time
                       Row(
                         children: [
-                          const Icon(Icons.access_time, size: 16, color: Colors.black),
+                          const Icon(Icons.access_time, size: 18, color: AppColors.primary,),
                           const SizedBox(width: 6),
                           Text(
                             '${visitor.startTime} - ${visitor.endTime}',
@@ -617,7 +621,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Visitor name
                       Row(
                         children: [
-                          Icon(Icons.person,size: 16, color: Colors.black),
+                          Icon(Icons.person,size: 18, color: AppColors.primary,),
                           SizedBox(width: 8),
                           Expanded( // This will prevent overflow
                             child: Text(
@@ -632,14 +636,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Additional participants
                       Row(
                         children: [
-                          const Icon(Icons.group, size: 16, color: Colors.black),
+                          const Icon(Icons.group, size: 18, color: AppColors.primary,),
                           const SizedBox(width: 6),
                           Flexible( // Prevents overflow
                             child: Text(
                               visitor.additionalVisitors > 0
-                                  ? 'With ${visitor.additionalVisitors} additional Visitors'
+                                  ? '${visitor.additionalVisitors} additional Visitors'
                                   : 'No additional Visitors',
-                              style: const TextStyle(fontSize: 13, color: Colors.black),
+                              style: const TextStyle(fontSize: 14, color: Colors.black),
                             ),
                           ),
                         ],
@@ -652,7 +656,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: IconButton(
-                    icon: const Icon(Icons.arrow_forward_ios, size: 20),
+                    icon: const Icon(Icons.arrow_forward_ios, size: 24, color: AppColors.primary,),
                     onPressed: () {
                       Navigator.push(
                         context,

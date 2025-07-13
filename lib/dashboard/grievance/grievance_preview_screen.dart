@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../pdf_viewer_screen.dart';
 import '../../screens/home/home_screen.dart';
+import '../../utils/color_scheme.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/form_section_title.dart';
 import '../visit/visit_home.dart';
@@ -247,7 +248,7 @@ class _GrievancePreviewScreenState extends State<GrievancePreviewScreen> {
                       'Resolution',
                       'Estimated: 7-10 working days',
                       Icons.done_all,
-                      Colors.grey,
+                      Colors.black,
                       false,
                     ),
                   ],
@@ -266,7 +267,7 @@ class _GrievancePreviewScreenState extends State<GrievancePreviewScreen> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    backgroundColor: Colors.grey[600],
+                    backgroundColor: AppColors.primary,
                   ),
                 ),
                 SizedBox(width: 16),
@@ -292,8 +293,11 @@ class _GrievancePreviewScreenState extends State<GrievancePreviewScreen> {
                       // Download functionality
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Downloading grievance copy...'),
-                          backgroundColor: Colors.blue,
+                          content: Text(
+                            'Downloading grievance copy...',
+                            style: TextStyle(color: Colors.black), // <-- Text color
+                          ),
+                            backgroundColor: Colors.blue, // <-- Background color
                         ),
                       );
                     },
@@ -308,8 +312,11 @@ class _GrievancePreviewScreenState extends State<GrievancePreviewScreen> {
                       // Print functionality
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Printing grievance...'),
-                          backgroundColor: Colors.blue,
+                          content: Text(
+                            'Printing Grievance',
+                            style: TextStyle(color: Colors.black), // <-- Text color
+                          ),
+                            backgroundColor: Colors.blue, // <-- Background color
                         ),
                       );
                     },
@@ -376,17 +383,26 @@ class _GrievancePreviewScreenState extends State<GrievancePreviewScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: Text('Submit Grievance'),
           content: Text('Are you sure you want to submit this grievance? Once submitted, you cannot edit the details.'),
           actions: [
             TextButton(
-              child: Text('Cancel'),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.black),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             ElevatedButton(
-              child: Text('Submit'),
+              child: Text(
+                'Submit',
+                style: TextStyle(color: AppColors.primary),
+              ),
+
+
               onPressed: () {
                 Navigator.of(context).pop();
                 Navigator.pushReplacement(
@@ -395,9 +411,12 @@ class _GrievancePreviewScreenState extends State<GrievancePreviewScreen> {
                 );
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Grievance submitted successfully! ID: #GRV2024001'),
-                    backgroundColor: Colors.green,
-                    duration: Duration(seconds: 3),
+                    content: Text(
+                      'Grievance submitted successfully! ID: #GRV2024001',
+                      style: TextStyle(color: Colors.black), // <-- Text color
+                    ),
+                    backgroundColor: Color(0xFF5A8BBA),
+                    duration: Duration(seconds: 3), // <-- Background color
                   ),
                 );
               },
