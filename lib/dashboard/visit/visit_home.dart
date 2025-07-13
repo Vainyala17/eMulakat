@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../pdf_viewer_screen.dart';
 import '../../screens/home/home_screen.dart';
-import 'meet_form_screen.dart';
+import 'whom_to_meet_screen.dart';
 
 class VisitHomeScreen extends StatefulWidget {
   @override
