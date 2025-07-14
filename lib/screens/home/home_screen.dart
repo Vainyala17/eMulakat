@@ -433,16 +433,17 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             },
             child: Card(
+              color: const Color(0xFFC6DAED), // 🔵 Set dark blue background
               margin: const EdgeInsets.only(right: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
                 side: BorderSide(color: AppColors.primary),
               ),
               child: Container(
-                width: 90,
+                width: 100,
                 padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Status badge
                     Container(
@@ -455,7 +456,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         getStatusText(visitor.status),
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 9,
+                          fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -466,7 +467,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       getDayOfWeek(visitor.visitDate),
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -476,7 +477,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       visitor.visitDate.day.toString().padLeft(2, '0'),
                       style: const TextStyle(
-                        fontSize: 20,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: AppColors.primary,
                       ),
@@ -486,7 +487,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       getMonthName(visitor.visitDate),
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -507,8 +508,8 @@ class _HomeScreenState extends State<HomeScreen> {
       itemBuilder: (context, index) {
         final visitor = visits[index];
         return Card(
-          color: Colors.transparent, // Let the container handle the background
-          elevation: 0, // Remove default elevation shadow if needed
+          color: Colors.transparent,
+          elevation: 0,
           margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Container(
@@ -516,8 +517,8 @@ class _HomeScreenState extends State<HomeScreen> {
               color: AppColors.background,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AppColors.primary, // Border color
-                width: 1.2, // Border width
+                color: AppColors.primary,
+                width: 1.2,
               ),
             ),
             padding: const EdgeInsets.all(12.0),
@@ -535,20 +536,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        getDayOfWeek(visitor.visitDate), // e.g. "Friday"
+                        getDayOfWeek(visitor.visitDate),
                         style: const TextStyle(color: Colors.white, fontSize: 12),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        visitor.visitDate.day.toString(), // e.g. "14"
+                        visitor.visitDate.day.toString(),
                         style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold),
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        getMonthName(visitor.visitDate), // e.g. "October"
+                        getMonthName(visitor.visitDate),
                         style: const TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ],
@@ -566,8 +568,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: Container(
-                          padding:
-                          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: statusColor(visitor.status),
                             borderRadius: BorderRadius.circular(4),
@@ -587,7 +588,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Time
                       Row(
                         children: [
-                          const Icon(Icons.access_time, size: 18, color: AppColors.primary,),
+                          const Icon(Icons.access_time, size: 18, color: AppColors.primary),
                           const SizedBox(width: 6),
                           Text(
                             '${visitor.startTime} - ${visitor.endTime}',
@@ -600,9 +601,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Visitor name
                       Row(
                         children: [
-                          Icon(Icons.person,size: 18, color: AppColors.primary,),
-                          SizedBox(width: 8),
-                          Expanded( // This will prevent overflow
+                          const Icon(Icons.person, size: 18, color: AppColors.primary),
+                          const SizedBox(width: 8),
+                          Expanded(
                             child: Text(
                               visitor.visitorName,
                               overflow: TextOverflow.ellipsis,
@@ -612,12 +613,28 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 6),
 
+                      // ✅ Prison/Jail name
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on, size: 18, color: AppColors.primary),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              visitor.jail,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+
                       // Additional participants
                       Row(
                         children: [
-                          const Icon(Icons.group, size: 18, color: AppColors.primary,),
+                          const Icon(Icons.group, size: 18, color: AppColors.primary),
                           const SizedBox(width: 6),
-                          Flexible( // Prevents overflow
+                          Flexible(
                             child: Text(
                               visitor.additionalVisitors > 0
                                   ? '${visitor.additionalVisitors} additional Visitors'
@@ -635,7 +652,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: IconButton(
-                    icon: const Icon(Icons.arrow_forward_ios, size: 24, color: AppColors.primary,),
+                    icon: const Icon(Icons.arrow_forward_ios, size: 24, color: AppColors.primary),
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -653,7 +670,6 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -715,82 +731,86 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       drawer: DrawerMenu(),
-      body: Container(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Welcome to eMulakat',
-              style: TextStyle(
-                fontSize: _fontSize + 8,
-                fontWeight: FontWeight.bold,
-                color: _selectedColor,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Welcome to eMulakat',
+                style: TextStyle(
+                  fontSize: _fontSize + 8,
+                  fontWeight: FontWeight.bold,
+                  color: _selectedColor,
+                ),
               ),
-            ),
-            SizedBox(height: 15),
-            Text(
-              'Prison Visitor Management System',
-              style: TextStyle(
-                fontSize: _fontSize + 2,
-                color: Colors.black,
+              SizedBox(height: 15),
+              Text(
+                'Prison Visitor Management System',
+                style: TextStyle(
+                  fontSize: _fontSize + 2,
+                  color: Colors.black,
+                ),
               ),
-            ),
-            SizedBox(height: 40),
-            Row(
-              children: [
-                _buildVisitTypeCard('Past Visits', pastVisits.length, showPastVisits, () {
-                  setState(() {
-                    showPastVisits = true;
-                    isExpandedView = false;
-                  });
-                }),
-                SizedBox(width: 10),
-                _buildVisitTypeCard('Upcoming Visits', upcomingVisits.length, !showPastVisits, () {
-                  setState(() {
-                    showPastVisits = false;
-                    isExpandedView = false;
-                  });
-                }),
-              ],
-            ),
-            SizedBox(height: 50),
+              SizedBox(height: 50),
+              Row(
+                children: [
+                  _buildVisitTypeCard('Past Visits', pastVisits.length, showPastVisits, () {
+                    setState(() {
+                      showPastVisits = true;
+                      isExpandedView = false;
+                    });
+                  }),
+                  SizedBox(width: 10),
+                  _buildVisitTypeCard('Upcoming Visits', upcomingVisits.length, !showPastVisits, () {
+                    setState(() {
+                      showPastVisits = false;
+                      isExpandedView = false;
+                    });
+                  }),
+                ],
+              ),
+              SizedBox(height: 60),
 
-            // Dynamic View
-            Expanded(
-              child: isExpandedView
-                  ? _buildVerticalVisitCards(showPastVisits ? pastVisits : upcomingVisits)
-                  : _buildHorizontalVisitCards(showPastVisits ? pastVisits : upcomingVisits),
-            ),
+              // Dynamic View
+              // Replace the Expanded with a fixed-height container:
+              SizedBox(
+                height: isExpandedView ? 200 : 150, // Adjust as needed
+                child: isExpandedView
+                    ? _buildVerticalVisitCards(showPastVisits ? pastVisits : upcomingVisits)
+                    : _buildHorizontalVisitCards(showPastVisits ? pastVisits : upcomingVisits),
+              ),
 
-            SizedBox(height: 50),
-            // E-Pass Button
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 12.0), // Adds space top and bottom
-              child: Center(
-                child: SizedBox(
-                  width: 140, // Controls button width
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // TODO: Add navigation or action
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+              SizedBox(height: 80),
+              // E-Pass Button
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 12.0), // Adds space top and bottom
+                child: Center(
+                  child: SizedBox(
+                    width: 160, // Controls button width
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // TODO: Add navigation or action
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      'E-Pass',
-                      style: TextStyle(fontSize: 16, color: Colors.white),
+                      child: Text(
+                        'eVisitor Pass',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            SizedBox(height: 30),
-          ],
+              SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: Container(
