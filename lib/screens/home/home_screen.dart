@@ -22,14 +22,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String _selectedLanguage = 'English';
   double _fontSize = 16.0;
   Color _selectedColor = AppColors.primary;
-  // Remove the problematic late field
-  // late final VisitStatus status;
 
   final List<String> _languages = ['English', 'Hindi', 'Marathi'];
-  final List<String> _colorOptions = [
-    "edeeee", "5a8bba", "1e2226", "93a6aa", "817777",
-    "39434d", "1f5278", "dd4b48", "545051", "526a5d"
-  ];
 
   @override
   void initState() {
@@ -131,6 +125,31 @@ class _HomeScreenState extends State<HomeScreen> {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return months[date.month - 1];
+  }
+
+  Color statusColor(VisitStatus status) {
+    switch (status) {
+      case VisitStatus.approved:
+        return Colors.green;
+      case VisitStatus.rejected:
+        return Colors.red;
+      case VisitStatus.pending:
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // Fixed: Create a method that takes status as parameter
+  String getStatusText(VisitStatus status) {
+    switch (status) {
+      case VisitStatus.approved:
+        return 'Approved';
+      case VisitStatus.rejected:
+        return 'Rejected';
+      case VisitStatus.pending:
+        return 'Pending';
+    }
   }
 
   bool showPastVisits = true;
@@ -398,55 +417,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildVisitCard(VisitorModel visitor) {
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 8),
-      elevation: 3,
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Visitor: ${visitor.visitorName}',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Text('Prisoner: ${visitor.prisonerName}'),
-            Text('Date: ${visitor.visitDate.toLocal().toString().split(' ')[0]}'),
-            Text('Jail: ${visitor.jail}'),
-            Text('Mode: ${visitor.isPhysicalVisit ? "Physical" : "Virtual"}'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Color statusColor(VisitStatus status) {
-    switch (status) {
-      case VisitStatus.approved:
-        return Colors.green;
-      case VisitStatus.rejected:
-        return Colors.red;
-      case VisitStatus.pending:
-        return Colors.orange;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  // Fixed: Create a method that takes status as parameter
-  String getStatusText(VisitStatus status) {
-    switch (status) {
-      case VisitStatus.approved:
-        return 'Approved';
-      case VisitStatus.rejected:
-        return 'Rejected';
-      case VisitStatus.pending:
-        return 'Pending';
-    }
-  }
-
   Widget _buildHorizontalVisitCards(List<VisitorModel> visits) {
-    return SizedBox(
-      height: 10, // Reduced from 130 to 100
+    return Container(
+      height: 100,
+      color: Colors.white, // ✅ Set background color to white
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: visits.length,
@@ -459,57 +433,61 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             },
             child: Card(
-              color: AppColors.primary,
-              margin: EdgeInsets.only(right: 12),
+              margin: const EdgeInsets.only(right: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(color: AppColors.primary),
+              ),
               child: Container(
-                width: 140, // Reduced from 160 to 140
-                padding: EdgeInsets.all(6), // Reduced from 12 to 8
+                width: 90,
+                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Status badge
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: statusColor(visitor.status),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        getStatusText(visitor.status), // Fixed: Use the method with parameter
-                        style: TextStyle(
+                        getStatusText(visitor.status),
+                        style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
+                          fontSize: 9,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 3),
+
+                    // Day of week
                     Text(
-                      visitor.visitorName,
-                      style: TextStyle(
-                        color: Colors.white,
+                      getDayOfWeek(visitor.visitDate),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+
+                    // Date (big)
+                    Text(
+                      visitor.visitDate.day.toString().padLeft(2, '0'),
+                      style: const TextStyle(
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        fontSize: 12, // Reduced font size
+                        color: AppColors.primary,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: 2),
+
+                    // Month
                     Text(
-                      visitor.prisonerName,
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 11, // Reduced font size
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      '${visitor.visitDate.toLocal().toString().split(' ')[0]}',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10, // Reduced font size
+                      getMonthName(visitor.visitDate),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
@@ -521,6 +499,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
 
   Widget _buildVerticalVisitCards(List<VisitorModel> visits) {
     return ListView.builder(
@@ -757,7 +736,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Colors.black,
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 40),
             Row(
               children: [
                 _buildVisitTypeCard('Past Visits', pastVisits.length, showPastVisits, () {
@@ -775,7 +754,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 }),
               ],
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 50),
 
             // Dynamic View
             Expanded(
@@ -784,7 +763,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   : _buildHorizontalVisitCards(showPastVisits ? pastVisits : upcomingVisits),
             ),
 
-            SizedBox(width: 30),
+            SizedBox(height: 50),
             // E-Pass Button
             Padding(
               padding: EdgeInsets.symmetric(vertical: 12.0), // Adds space top and bottom
@@ -810,6 +789,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
+            SizedBox(height: 30),
           ],
         ),
       ),
