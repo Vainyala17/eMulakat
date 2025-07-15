@@ -26,7 +26,11 @@ class AppConstants {
   };
 
   // Languages
-  static const List<String> languages = ['English', 'Hindi', 'Marathi'];
+  final Map<String, String> _languages = {
+    'English': 'en',
+    'Hindi': 'hi',
+    'Marathi': 'mr',
+  };
 
   // Font Sizes
   static const List<String> fontSizes = ['A-', 'A', 'A+'];

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import '../models/visitor_model.dart';
 import '../pdf_viewer_screen.dart';
 import '../utils/color_scheme.dart';
@@ -16,6 +17,8 @@ class eVisitorPassScreen extends StatefulWidget {
 
 class _eVisitorPassScreenState extends State<eVisitorPassScreen> {
   List<String> _selectedInstructions = [];
+
+
 
   final List<String> instructions = [
     'Carry original ID proof',
@@ -336,7 +339,7 @@ class _eVisitorPassScreenState extends State<eVisitorPassScreen> {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    'https://meet.gov.in/conf1234',
+                    'https://meet.google.com/jdj-uyxi-gfu',
                     style: TextStyle(
                       fontSize: 10,
                       color: Colors.green[600],
@@ -408,27 +411,32 @@ class _eVisitorPassScreenState extends State<eVisitorPassScreen> {
   }
 
   Widget _buildApprovalCard() {
-    final VisitStatus status = widget.visitor.status ?? VisitStatus.pending;
+    final status = widget.visitor.status;
+    final visitDate = widget.visitor.visitDate;
+    final startTime = widget.visitor.startTime ?? '--:--';
+    final endTime = widget.visitor.endTime ?? '--:--';
+    final dayOfWeek = widget.visitor.dayOfWeek ?? 'N/A';
 
     IconData statusIcon;
     Color statusColor;
     String statusText;
 
     switch (status) {
-      case 'approved':
+      case VisitStatus.approved:
         statusIcon = Icons.verified;
         statusColor = Colors.green;
         statusText = 'APPROVED';
         break;
-      case 'rejected':
+      case VisitStatus.rejected:
         statusIcon = Icons.cancel;
         statusColor = Colors.red;
         statusText = 'REJECTED';
         break;
-      default:
+      case VisitStatus.pending:
         statusIcon = Icons.hourglass_bottom;
         statusColor = Colors.orange;
         statusText = 'PENDING';
+        break;
     }
 
     return Container(
@@ -450,7 +458,7 @@ class _eVisitorPassScreenState extends State<eVisitorPassScreen> {
                 Text(
                   'APPROVAL STATUS',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: statusColor,
                   ),
@@ -459,7 +467,7 @@ class _eVisitorPassScreenState extends State<eVisitorPassScreen> {
                 Text(
                   statusText,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 10,
                     fontWeight: FontWeight.bold,
                     color: statusColor,
                   ),
@@ -475,7 +483,9 @@ class _eVisitorPassScreenState extends State<eVisitorPassScreen> {
               border: Border.all(color: statusColor.withOpacity(0.3)),
             ),
             child: Text(
-              'DATE: 11 JULY 2025 \n:: 14:30 HRS', // replace with dynamic date if available
+              visitDate != null
+                  ? 'DATE: ${DateFormat('dd MMMM yyyy').format(visitDate)}\n:: $startTime - $endTime HRS \n($dayOfWeek)'
+                  : 'DATE: N/A\n:: --:-- HRS',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
@@ -515,35 +525,44 @@ class _eVisitorPassScreenState extends State<eVisitorPassScreen> {
   Widget _buildInstructionsGrid() {
     return Container(
       padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
       child: Column(
-        children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _selectedInstructions.map((indexStr) {
-              int index = int.parse(indexStr);
-              return Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.3)),
-                ),
-                child: Text(
-                  '${index + 1}. ${instructions[index]}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: List.generate(instructions.length, (index) {
+          bool isChecked = _selectedInstructions.contains(index.toString());
+
+          return CheckboxListTile(
+            value: isChecked,
+            onChanged: (bool? value) {
+              setState(() {
+                if (value == true) {
+                  _selectedInstructions.add(index.toString());
+                } else {
+                  _selectedInstructions.remove(index.toString());
+                }
+              });
+            },
+            controlAffinity: ListTileControlAffinity.leading,
+            title: Text(
+              '${index + 1}. ${instructions[index]}',
+              style: TextStyle(
+                fontSize: 14,
+                color: isChecked ? AppColors.primary : Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            activeColor: AppColors.primary,
+            contentPadding: EdgeInsets.symmetric(vertical: 2, horizontal: 0),
+          );
+        }),
       ),
     );
   }
+
 
 
   Widget _buildFooter() {
@@ -707,7 +726,13 @@ class _eVisitorPassScreenState extends State<eVisitorPassScreen> {
           children: [
             Icon(Icons.download, color: Colors.black),
             SizedBox(width: 12),
-            Text('Pass downloaded successfully!'),
+            Text(
+              'Pass downloaded successfully!',
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.black,
+              ),
+            ),
           ],
         ),
         backgroundColor: Color(0xFF7AA9D4),
