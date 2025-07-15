@@ -510,22 +510,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                     SizedBox(height: 10),
-                    // Container(
-                    //   padding: EdgeInsets.all(8),
-                    //   decoration: BoxDecoration(
-                    //     color: Colors.yellow.withOpacity(0.1),
-                    //     borderRadius: BorderRadius.circular(5),
-                    //     border: Border.all(color: Colors.orange),
-                    //   ),
-                    //   child: Text(
-                    //     'Test OTP: $_dummyOtp',
-                    //     style: TextStyle(
-                    //       fontSize: 12,
-                    //       color: Colors.orange,
-                    //       fontWeight: FontWeight.bold,
-                    //     ),
-                    //   ),
-                    // ),
                   ],
 
                   // OTP Verified Message

@@ -25,11 +25,14 @@ class VisitorModel {
   String prisonerFatherName;
   int prisonerAge;
   String prisonerGender;
-  bool isPhysicalVisit;
+  //bool isPhysicalVisit;
   final VisitStatus status;
   final String startTime;
   final String endTime;
   final String dayOfWeek;
+  final String? videoLink;
+  final String? officer;
+  bool mode;
 
   VisitorModel({
     this.id,
@@ -54,11 +57,14 @@ class VisitorModel {
     required this.prisonerFatherName,
     required this.prisonerAge,
     required this.prisonerGender,
-    required this.isPhysicalVisit,
+   // required this.isPhysicalVisit,
     required this.status,
-    this.startTime = '14:00',
-    this.endTime = '16:30',
-    this.dayOfWeek = 'Friday',
+    required this.startTime,
+    required this.endTime ,
+    required this.dayOfWeek,
+    this.videoLink,
+    this.officer,
+    required this.mode,
   });
 
   Map<String, dynamic> toMap() {
@@ -85,7 +91,7 @@ class VisitorModel {
       'prisonerFatherName': prisonerFatherName,
       'prisonerAge': prisonerAge,
       'prisonerGender': prisonerGender,
-      'isPhysicalVisit': isPhysicalVisit ? 1 : 0,
+      'mode': mode ? 1 : 0,
       'status': status.index,
     };
   }
@@ -114,10 +120,10 @@ class VisitorModel {
       prisonerFatherName: map['prisonerFatherName'],
       prisonerAge: map['prisonerAge'],
       prisonerGender: map['prisonerGender'],
-      isPhysicalVisit: map['isPhysicalVisit'] == 1,
+      mode: map['mode'] == 1,
       status: map['status'] != null
           ? VisitStatus.values[map['status']]
-          : VisitStatus.pending,
+          : VisitStatus.pending, startTime: '', endTime: '', dayOfWeek: '',
     );
   }
   Color statusColor(VisitStatus status) {

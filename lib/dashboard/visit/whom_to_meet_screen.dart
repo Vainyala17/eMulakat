@@ -437,11 +437,14 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                 children: [
                   Text(
                     'Gender*',
-                    style: TextStyle(fontSize: 16,),
+                    style: TextStyle(fontSize: 16),
                   ),
                   ..._genders.map((gender) {
                     return RadioListTile<String>(
-                      title: Text(gender),
+                      title: Text(
+                        gender,
+                        style: TextStyle(fontSize: 14),
+                      ),
                       value: gender,
                       groupValue: _selectedPrisonerGender,
                       onChanged: (value) {
@@ -449,7 +452,10 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                           _selectedPrisonerGender = value;
                         });
                       },
-                      contentPadding: EdgeInsets.zero,
+                      contentPadding: EdgeInsets.zero, // removes horizontal padding
+                      dense: true, // makes tile vertically compact
+                      visualDensity: VisualDensity(horizontal: 0, vertical: -4), // reduces vertical space
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     );
                   }).toList(),
                 ],

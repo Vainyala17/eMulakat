@@ -3,6 +3,7 @@ import 'package:e_mulakat/models/visitor_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import '../../dashboard/evisitor_pass_screen.dart';
 import '../../dashboard/visit/visit_preview_screen.dart';
 import '../../dashboard/visit/whom_to_meet_screen.dart';
 import '../../dashboard/visit/visit_home.dart';
@@ -24,6 +25,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Color _selectedColor = AppColors.primary;
 
   final List<String> _languages = ['English', 'Hindi', 'Marathi'];
+  VisitorModel? selectedVisitor;
+
 
   @override
   void initState() {
@@ -175,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerFatherName: 'Naresh Sharma',
       prisonerAge: 40,
       prisonerGender: 'Male',
-      isPhysicalVisit: true,
+      mode: true,
       status: VisitStatus.rejected,
       startTime: '14:00',
       endTime: '16:30',
@@ -200,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerFatherName: 'Naresh Sharma',
       prisonerAge: 40,
       prisonerGender: 'Male',
-      isPhysicalVisit: true,
+      mode: true,
       status: VisitStatus.approved,
       startTime: '9:30',
       endTime: '11:00',
@@ -225,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerFatherName: 'Naresh Sharma',
       prisonerAge: 40,
       prisonerGender: 'Male',
-      isPhysicalVisit: true,
+      mode: true,
       status: VisitStatus.rejected,
       startTime: '14:00',
       endTime: '16:30',
@@ -250,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerFatherName: 'Naresh Sharma',
       prisonerAge: 40,
       prisonerGender: 'Male',
-      isPhysicalVisit: true,
+      mode: true,
       status: VisitStatus.approved,
       startTime: '5:00',
       endTime: '7:30',
@@ -278,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerFatherName: 'Vinod Gupta',
       prisonerAge: 35,
       prisonerGender: 'Male',
-      isPhysicalVisit: false,
+      mode: false,
       status: VisitStatus.rejected,
       startTime: '4:00',
       endTime: '6:30',
@@ -303,7 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerFatherName: 'Vinod Gupta',
       prisonerAge: 35,
       prisonerGender: 'Male',
-      isPhysicalVisit: false,
+      mode: false,
       status: VisitStatus.pending,
       startTime: '1:00',
       endTime: '2:30',
@@ -328,7 +331,7 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerFatherName: 'Vinod Gupta',
       prisonerAge: 35,
       prisonerGender: 'Male',
-      isPhysicalVisit: false,
+      mode: false,
       status: VisitStatus.rejected,
       startTime: '11:00',
       endTime: '13:30',
@@ -353,7 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerFatherName: 'Vinod Gupta',
       prisonerAge: 35,
       prisonerGender: 'Male',
-      isPhysicalVisit: false,
+      mode: false,
       status: VisitStatus.approved,
       startTime: '15:00',
       endTime: '17:30',
@@ -378,7 +381,7 @@ class _HomeScreenState extends State<HomeScreen> {
       prisonerFatherName: 'Vinod Gupta',
       prisonerAge: 35,
       prisonerGender: 'Male',
-      isPhysicalVisit: false,
+      mode: false,
       status: VisitStatus.rejected,
       startTime: '14:00',
       endTime: '16:30',
@@ -426,9 +429,11 @@ class _HomeScreenState extends State<HomeScreen> {
         itemCount: visits.length,
         itemBuilder: (context, index) {
           final visitor = visits[index];
+          bool isSelected = selectedVisitor == visitor;
           return GestureDetector(
             onTap: () {
               setState(() {
+                selectedVisitor = visitor;
                 isExpandedView = true;
               });
             },
@@ -437,7 +442,10 @@ class _HomeScreenState extends State<HomeScreen> {
               margin: const EdgeInsets.only(right: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
-                side: BorderSide(color: AppColors.primary),
+                side: BorderSide(
+                  color: isSelected ? Colors.white : AppColors.primary,
+                  width: isSelected ? 2 : 1,
+                ),
               ),
               child: Container(
                 width: 100,
@@ -466,9 +474,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     // Day of week
                     Text(
                       getDayOfWeek(visitor.visitDate),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
+                        color: isSelected ? Colors.white : Colors.black,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -476,19 +485,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     // Date (big)
                     Text(
                       visitor.visitDate.day.toString().padLeft(2, '0'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                        color: isSelected ? Colors.white : AppColors.primary,
                       ),
                     ),
 
                     // Month
                     Text(
                       getMonthName(visitor.visitDate),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
+                        color: isSelected ? Colors.white : Colors.black,
                       ),
                     ),
                   ],
@@ -507,163 +517,175 @@ class _HomeScreenState extends State<HomeScreen> {
       itemCount: visits.length,
       itemBuilder: (context, index) {
         final visitor = visits[index];
-        return Card(
-          color: Colors.transparent,
-          elevation: 0,
-          margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.primary,
-                width: 1.2,
-              ),
-            ),
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              children: [
-                // Left vertical date block
-                Container(
-                  width: 70,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        getDayOfWeek(visitor.visitDate),
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        visitor.visitDate.day.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        getMonthName(visitor.visitDate),
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
-                      ),
-                    ],
-                  ),
+        bool isSelected = selectedVisitor == visitor;
+
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              selectedVisitor = visitor; // ✅ Set selected visitor
+            });
+          },
+          child: Card(
+            color: Colors.transparent,
+            elevation: 0,
+            margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.background,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected ? AppColors.primary : AppColors.primary,
+                  width: isSelected ? 2 : 1.2,
                 ),
-
-                const SizedBox(width: 12),
-
-                // Right content block
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Status label
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: statusColor(visitor.status),
-                            borderRadius: BorderRadius.circular(4),
+              ),
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                children: [
+                  // Left vertical date block
+                  Container(
+                    width: 70,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppColors.primary : AppColors.primary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          getDayOfWeek(visitor.visitDate),
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          visitor.visitDate.day.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
                           ),
-                          child: Text(
-                            getStatusText(visitor.status),
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          getMonthName(visitor.visitDate),
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  // Right content block
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Status label
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: statusColor(visitor.status),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              getStatusText(visitor.status),
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 6),
+                        const SizedBox(height: 6),
 
-                      // Time
-                      Row(
-                        children: [
-                          const Icon(Icons.access_time, size: 18, color: AppColors.primary),
-                          const SizedBox(width: 6),
-                          Text(
-                            '${visitor.startTime} - ${visitor.endTime}',
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-
-                      // Visitor name
-                      Row(
-                        children: [
-                          const Icon(Icons.person, size: 18, color: AppColors.primary),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              visitor.visitorName,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-
-                      // ✅ Prison/Jail name
-                      Row(
-                        children: [
-                          const Icon(Icons.location_on, size: 18, color: AppColors.primary),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              visitor.jail,
-                              overflow: TextOverflow.ellipsis,
+                        // Time
+                        Row(
+                          children: [
+                            const Icon(Icons.access_time, size: 18, color: AppColors.primary),
+                            const SizedBox(width: 6),
+                            Text(
+                              '${visitor.startTime} - ${visitor.endTime}',
                               style: const TextStyle(fontSize: 14),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-
-                      // Additional participants
-                      Row(
-                        children: [
-                          const Icon(Icons.group, size: 18, color: AppColors.primary),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              visitor.additionalVisitors > 0
-                                  ? '${visitor.additionalVisitors} additional Visitors'
-                                  : 'No additional Visitors',
-                              style: const TextStyle(fontSize: 14, color: Colors.black),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Arrow icon
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_forward_ios, size: 24, color: AppColors.primary),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => VisitPreviewScreen(),
+                          ],
                         ),
-                      );
-                    },
+                        const SizedBox(height: 6),
+
+                        // Visitor name
+                        Row(
+                          children: [
+                            const Icon(Icons.person, size: 18, color: AppColors.primary),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                visitor.visitorName,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+
+                        // Prison/Jail name
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on, size: 18, color: AppColors.primary),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                visitor.jail,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+
+                        // Additional participants
+                        Row(
+                          children: [
+                            const Icon(Icons.group, size: 18, color: AppColors.primary),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                visitor.additionalVisitors > 0
+                                    ? '${visitor.additionalVisitors} additional Visitors'
+                                    : 'No additional Visitors',
+                                style: const TextStyle(fontSize: 14, color: Colors.black),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+
+                  // Arrow icon
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_forward_ios, size: 24, color: AppColors.primary),
+                      onPressed: () {
+                        setState(() {
+                          selectedVisitor = visitor; // ✅ Set selected visitor
+                        });
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => VisitPreviewScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -753,7 +775,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: Colors.black,
                 ),
               ),
-              SizedBox(height: 50),
+              SizedBox(height: 30),
               Row(
                 children: [
                   _buildVisitTypeCard('Past Visits', pastVisits.length, showPastVisits, () {
@@ -771,7 +793,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   }),
                 ],
               ),
-              SizedBox(height: 60),
+              SizedBox(height: 30),
 
               // Dynamic View
               // Replace the Expanded with a fixed-height container:
@@ -782,7 +804,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     : _buildHorizontalVisitCards(showPastVisits ? pastVisits : upcomingVisits),
               ),
 
-              SizedBox(height: 80),
+              SizedBox(height: 20),
               // E-Pass Button
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 12.0), // Adds space top and bottom
@@ -790,24 +812,58 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: SizedBox(
                     width: 160, // Controls button width
                     child: ElevatedButton(
-                      onPressed: () {
-                        // TODO: Add navigation or action
-                      },
+                      onPressed: selectedVisitor != null ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => eVisitorPassScreen(visitor: selectedVisitor!),
+                          ),
+                        );
+                      }: null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                        backgroundColor: selectedVisitor != null ? AppColors.primary : Color(0xFF7AA9D4),
+                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                       child: Text(
-                        'eVisitor Pass',
-                        style: TextStyle(fontSize: 16, color: Colors.white),
+                        selectedVisitor != null ? 'eVisitor Pass' : 'Select Visit First',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: selectedVisitor != null ? Colors.white : Colors.black,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
+              // ✅ Add selection indicator
+              if (selectedVisitor != null)
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.primary),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: AppColors.primary, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Selected: ${selectedVisitor!.visitorName} - ${getDayOfWeek(selectedVisitor!.visitDate)}',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               SizedBox(height: 20),
             ],
           ),
