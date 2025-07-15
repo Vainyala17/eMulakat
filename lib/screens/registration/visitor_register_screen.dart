@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:e_mulakat/screens/auth/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +12,9 @@ import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/form_section_title.dart';
 import '../../utils/validators.dart';
+import 'package:image/image.dart' as img;
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 class VisitorFormScreen extends StatefulWidget {
   @override
@@ -30,10 +35,17 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
+  final String _dummyOtp = "123456";
   String? _selectedGender;
   String? _selectedRelation;
   String? _selectedIdProof;
   bool _isInternationalVisitor = false;
+  List<num> laplacianKernel = [
+    0,  1,  0,
+    1, -4,  1,
+    0,  1,  0,
+  ];
+
 
   // Separate variables for different images
   File? _passportImage;  // For passport photo
@@ -45,6 +57,8 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
   String? _generatedOtp;
   int _resendCounter = 0;
   bool _canResend = true;
+  Timer? _resendTimer;
+  int _secondsRemaining = 30;
 
   final List<String> _genders = ['Male', 'Female', 'Transgender'];
   final List<String> _relations = ['Father', 'Mother', 'Spouse', 'Brother', 'Sister', 'Son', 'Daughter', 'Friend', 'Other'];
@@ -67,42 +81,152 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
 
   // Generate random OTP
   String _generateOtp() {
-    Random random = Random();
-    String otp = '';
-    for (int i = 0; i < 6; i++) {
-      otp += random.nextInt(10).toString();
-    }
-    return otp;
+    // Return dummy OTP for testing
+    return _dummyOtp;
   }
+
+  void _startResendTimer() {
+    _secondsRemaining = 30;
+    _resendTimer?.cancel();
+    _resendTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (_secondsRemaining > 0) {
+        setState(() {
+          _secondsRemaining--;
+        });
+      } else {
+        timer.cancel();
+        setState(() {
+          _canResend = true;
+        });
+      }
+    });
+  }
+
+  double computeLaplacianVariance(img.Image image) {
+    final grayscale = img.grayscale(image);
+    final filtered = img.convolution(
+      grayscale,
+      filter: laplacianKernel,
+      div: 1,
+    );
+
+    int width = filtered.width;
+    int height = filtered.height;
+    int pixelCount = width * height;
+
+    double sum = 0;
+    double sumSquared = 0;
+
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        final pixel = filtered.getPixel(x, y);
+        final luminance = img.getLuminance(pixel).toDouble();
+        sum += luminance;
+        sumSquared += luminance * luminance;
+      }
+    }
+
+    double mean = sum / pixelCount;
+    double variance = (sumSquared / pixelCount) - (mean * mean);
+    return variance;
+  }
+
+  Future<bool> isImageSharpAndFaceVisible(File file, {double threshold = 1000}) async {
+    // Decode image
+    final bytes = await file.readAsBytes();
+    final image = img.decodeImage(bytes);
+    if (image == null) return false;
+
+    // Sharpness check
+    final variance = computeLaplacianVariance(image);
+    print('Sharpness (variance): $variance');
+    final isSharp = variance > threshold;
+    print("Hello");
+    if (!isSharp) return false;
+
+    // Face detection
+    final inputImage = InputImage.fromFile(file);
+    final faceDetector = FaceDetector(
+      options: FaceDetectorOptions(
+        performanceMode: FaceDetectorMode.fast,
+        enableContours: false,
+        enableClassification: false,
+      ),
+    );
+
+    final faces = await faceDetector.processImage(inputImage);
+    await faceDetector.close();
+
+    final hasFace = faces.isNotEmpty;
+    print('Face detected: $hasFace');
+
+    return hasFace;
+  }
+
+  Future<bool> isIdNumberInDocument(File imageFile, String enteredNumber) async {
+    final inputImage = InputImage.fromFile(imageFile);
+    final recognizer = TextRecognizer();
+    final result = await recognizer.processImage(inputImage);
+    await recognizer.close();
+    print(result.text);
+    final extractedText = result.text.replaceAll(RegExp(r'\s+'), '');
+    print(extractedText);
+    final cleanedInput = enteredNumber.replaceAll(RegExp(r'\s+'), '');
+
+    return extractedText.contains(cleanedInput);
+  }
+
+  bool isImageUnderSizeLimit(File imageFile, {int maxKB = 10000}) {
+    final bytes = imageFile.lengthSync();
+    return bytes <= maxKB * 1024;
+  }
+
 
   // Send OTP function
   void _sendOtp() {
-    if (_mobileController.text.length == 10) {
+    bool isValid = false;
+    String recipient = '';
+
+    if (_isInternationalVisitor) {
+      if (_emailController.text.isNotEmpty &&
+          Validators.validateEmail(_emailController.text) == null) {
+        isValid = true;
+        recipient = _emailController.text;
+      }
+    } else {
+      if (_mobileController.text.length == 10) {
+        isValid = true;
+        recipient = _mobileController.text;
+      }
+    }
+
+    if (isValid) {
       setState(() {
         _generatedOtp = _generateOtp();
         _isOtpSent = true;
         _canResend = false;
+        _resendCounter = 0; // Reset counter on fresh send
       });
 
-      // Show OTP in console for testing (remove in production)
       print('Generated OTP: $_generatedOtp');
-
-      // Show snackbar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('OTP sent to ${_mobileController.text}'),
-          backgroundColor: Colors.green,
+          content: Text(
+            'OTP resent to $recipient',
+            style: TextStyle(color: Colors.black), // <-- Text color
+          ),
+          backgroundColor: Colors.blue, // <-- Background color
         ),
       );
 
-      // Enable resend after 30 seconds
-      Future.delayed(Duration(seconds: 30), () {
-        if (mounted) {
-          setState(() {
-            _canResend = true;
-          });
-        }
-      });
+      _startResendTimer(); // ✅ Start countdown
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please enter a valid ${_isInternationalVisitor ? "email" : "mobile number"}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -114,8 +238,11 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('OTP verified successfully!'),
-          backgroundColor: Colors.green,
+          content: Text(
+            'OTP verified successfully!',
+            style: TextStyle(color: Colors.black), // <-- Text color
+          ),
+          backgroundColor: Color(0xFF7AA9D4),
         ),
       );
     } else {
@@ -140,12 +267,17 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
 
       print('Resent OTP: $_generatedOtp');
 
+      String recipient = _isInternationalVisitor ? _emailController.text : _mobileController.text;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('OTP resent to ${_mobileController.text}'),
-          backgroundColor: Colors.blue,
+          content: Text(
+            'OTP resent to $recipient',
+            style: TextStyle(color: Colors.black), // <-- Text color
+          ),
+          backgroundColor: Colors.blue, // <-- Background color
         ),
       );
+      _startResendTimer();
 
       // Enable resend after 30 seconds
       Future.delayed(Duration(seconds: 30), () {
@@ -155,6 +287,16 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
           });
         }
       });
+    }
+  }
+
+  bool _canSendOtp() {
+    if (_isInternationalVisitor) {
+      return _emailController.text.isNotEmpty &&
+          Validators.validateEmail(_emailController.text) == null &&
+          !_isOtpVerified;
+    } else {
+      return _mobileController.text.length == 10 && !_isOtpVerified;
     }
   }
 
@@ -193,15 +335,77 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
   // Get image function with type parameter
   Future<void> _getImage(ImageSource source, String imageType) async {
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: source);
-    if (image != null) {
-      setState(() {
-        if (imageType == 'passport') {
-          _passportImage = File(image.path);
-        } else if (imageType == 'idproof') {
-          _idProofImage = File(image.path);
+    final XFile? pickedFile = await picker.pickImage(
+      source: source,
+      maxWidth: 1024, // Resize large images
+      maxHeight: 1024,
+      imageQuality: 85, // Reduce image size
+    );
+
+    if (pickedFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No image selected'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    if (pickedFile != null) {
+      final file = File(pickedFile.path);
+      final fileSize = await file.length();
+
+      if (fileSize > 10000 * 1024) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Selected image exceeds 1000KB limit'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+
+      if (imageType == 'passport') {
+        final isValid = await isImageSharpAndFaceVisible(file);
+        if (!isValid) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Photo must be sharp and contain a visible face'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
         }
-      });
+        setState(() {
+          _passportImage = file;
+        });
+
+      } else if (imageType == 'idproof') {
+        if (_idNumberController.text.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Please enter ID number before uploading document'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          return;
+        }
+
+        final isMatch = await isIdNumberInDocument(file, _idNumberController.text);
+        if (!isMatch) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('ID number does not match document'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+
+        setState(() {
+          _idProofImage = file;
+        });
+      }
     }
   }
 
@@ -230,6 +434,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
         ],
       ),
       body: Form(
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         key: _formKey,
         child: SingleChildScrollView(
           padding: EdgeInsets.all(16),
@@ -471,7 +676,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                   controller: _idNumberController,
                   label: 'ID Number*',
                   hint: 'Enter ${_selectedIdProof} Number',
-                  keyboardType: _selectedIdProof == 'Pan Card' ? TextInputType.text : TextInputType.number,
                   validator: (value) => Validators.validateIdNumber(value, _selectedIdProof!, _idLimits[_selectedIdProof!] ?? 0),
                   inputFormatters: [
                     LengthLimitingTextInputFormatter(_idLimits[_selectedIdProof!] ?? 0),
@@ -556,30 +760,56 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 onChanged: (value) {
                   setState(() {
                     _isInternationalVisitor = value ?? false;
-                    if (_isInternationalVisitor) {
-                      _mobileController.clear();
-                      _isOtpSent = false;
-                      _isOtpVerified = false;
-                      _otpController.clear();
-                    } else {
-                      _emailController.clear();
-                    }
+                    // Clear all fields when switching
+                    _emailController.clear();
+                    _mobileController.clear();
+                    _otpController.clear();
+                    _isOtpSent = false;
+                    _isOtpVerified = false;
+                    _resendCounter = 0;
+                    _canResend = true;
                   });
                 },
               ),
 
               // Email (for international visitors or optional for others)
-              if (_isInternationalVisitor || !_isInternationalVisitor)
-                CustomTextField(
-                  controller: _emailController,
-                  label: _isInternationalVisitor ? 'Email ID*' : 'Email ID',
-                  hint: 'Enter Your Email Id',
-                  keyboardType: TextInputType.emailAddress,
-                  validator: _isInternationalVisitor ? Validators.validateEmail : null,
+              if (_isInternationalVisitor) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: CustomTextField(
+                        controller: _emailController,
+                        label: 'Email ID*',
+                        hint: 'Enter Your Email ID',
+                        keyboardType: TextInputType.emailAddress,
+                        validator: Validators.validateEmail,
+                        onChanged: (value) {
+                          setState(() {
+                            if (Validators.validateEmail(value) != null) {
+                              _isOtpSent = false;
+                              _isOtpVerified = false;
+                              _otpController.clear();
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    if (_canSendOtp())
+                      ElevatedButton(
+                        onPressed: _isOtpSent ? null : _sendOtp,
+                        child: Text(_isOtpSent ? 'Sent' : 'Get OTP'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _isOtpSent ? Colors.black : Color(0xFF7AA9D4),
+                          foregroundColor: Colors.black,
+                        ),
+                      ),
+                  ],
                 ),
-              SizedBox(height: 16),
+                SizedBox(height: 16),
+              ],
 
-              // Mobile Number (for non-international visitors)
+              // Mobile Field (for domestic visitors)
               if (!_isInternationalVisitor) ...[
                 Row(
                   children: [
@@ -606,108 +836,119 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                       ),
                     ),
                     SizedBox(width: 10),
-                    if (_mobileController.text.length == 10 && !_isOtpVerified)
+                    if (_canSendOtp())
                       ElevatedButton(
                         onPressed: _isOtpSent ? null : _sendOtp,
                         child: Text(_isOtpSent ? 'Sent' : 'Get OTP'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _isOtpSent ? Colors.black : Colors.blue,
+                          backgroundColor: _isOtpSent ? Colors.black : Color(0xFF7AA9D4),
+                          foregroundColor: Colors.black,
                         ),
                       ),
                   ],
                 ),
                 SizedBox(height: 16),
+              ],
 
-                // OTP Verification Section
-                if (_isOtpSent && !_isOtpVerified) ...[
-                  Row(
-                    children: [
-                      Expanded(
-                        child: CustomTextField(
-                          controller: _otpController,
-                          label: 'Enter OTP*',
-                          hint: 'Enter 6-digit OTP',
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(6),
-                          ],
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter OTP';
-                            }
-                            if (value.length != 6) {
-                              return 'OTP must be 6 digits';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Column(
-                        children: [
-                          ElevatedButton(
-                            onPressed: _otpController.text.length == 6 ? _verifyOtp : null,
-                            child: Text('Verify'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                            ),
-                          ),
-                          SizedBox(height: 5),
-                          TextButton(
-                            onPressed: _canResend && _resendCounter < 3 ? _resendOtp : null,
-                            child: Text(
-                              _canResend ? 'Resend' : 'Wait...',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ),
+              // OTP Verification Section
+              if (_isOtpSent && !_isOtpVerified) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: CustomTextField(
+                        controller: _otpController,
+                        label: 'Enter OTP*',
+                        hint: 'Enter 6-digit OTP',
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(6),
                         ],
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter OTP';
+                          }
+                          if (value.length != 6) {
+                            return 'OTP must be 6 digits';
+                          }
+                          return null;
+                        },
+                        onChanged: (val) {
+                          setState(() {}); // Refresh the verify button state
+                        },
                       ),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-                  if (_resendCounter > 0)
-                    Text(
-                      'Resend attempts: $_resendCounter/3',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
-                ],
-
-                // OTP Verified Message
-                if (_isOtpVerified) ...[
-                  Container(
-                    padding: EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(5),
-                      border: Border.all(color: Colors.green),
-                    ),
-                    child: Row(
+                    SizedBox(width: 10),
+                    Column(
                       children: [
-                        Icon(Icons.check_circle, color: Colors.black),
-                        SizedBox(width: 10),
-                        Text(
-                          'Mobile number verified successfully!',
-                          style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                        ElevatedButton(
+                          onPressed: _otpController.text.length == 6 ? _verifyOtp : null,
+                          child: Text('Verify'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFF7AA9D4),
+                            foregroundColor: Colors.black, // <-- Set text/icon color to white
+                          ),
+                        ),
+                        SizedBox(height: 5),
+                        TextButton(
+                          onPressed: _canResend && _resendCounter < 3 ? _resendOtp : null,
+                          child: Text(
+                            _canResend
+                                ? 'Resend'
+                                : 'Wait ${_secondsRemaining}s',
+                            style: TextStyle(fontSize: 12),
+                          ),
                         ),
                       ],
                     ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                if (_resendCounter > 0)
+                  Text(
+                    'Resend attempts: $_resendCounter/3',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
-                  SizedBox(height: 16),
-                ],
+                SizedBox(height: 10),
               ],
-              SizedBox(height: 10),
+
+              // OTP Verified Message
+              if (_isOtpVerified) ...[
+                Container(
+                  padding: EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(5),
+                    border: Border.all(color: Color(0xFF7AA9D4)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Color(0xFF7AA9D4)),
+                      SizedBox(width: 10),
+                      Text(
+                        _isInternationalVisitor
+                            ? 'Email verified successfully!'
+                            : 'Mobile number verified successfully!',
+                        style: TextStyle(color: Color(0xFF7AA9D4), fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 16),
+              ],
+
+              SizedBox(height: 16),
+
+              // Password Field
               CustomTextField(
+                label: 'Password',
+                hint: 'Enter your password',
+                isRequired: true,
                 controller: _passwordController,
-                label: 'Password*',
-                hint: 'Enter a secure password',
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Password is required';
-                  }
-                  if (value.length < 6) {
-                    return 'Password must be at least 6 characters';
                   }
                   return null;
                 },

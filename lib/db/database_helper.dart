@@ -52,7 +52,7 @@ class DatabaseHelper {
         prisonerFatherName TEXT NOT NULL,
         prisonerAge INTEGER NOT NULL,
         prisonerGender TEXT NOT NULL,
-        isPhysicalVisit INTEGER NOT NULL
+        mode TEXT NOT NULL
       )
     ''');
   }
