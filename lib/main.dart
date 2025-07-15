@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'screens/splash/splash_logo.dart';
 import 'utils/color_scheme.dart';
+import 'package:translator/translator.dart';
+
 
 void main() {
   runApp( eMulakatApp());

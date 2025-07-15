@@ -9,6 +9,8 @@ import '../../dashboard/visit/whom_to_meet_screen.dart';
 import '../../dashboard/visit/visit_home.dart';
 import 'drawer_menu.dart';
 import '../../utils/color_scheme.dart';
+import 'package:translator/translator.dart';
+
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -20,13 +22,38 @@ class _HomeScreenState extends State<HomeScreen> {
   FlutterTts flutterTts = FlutterTts();
   SpeechToText speechToText = SpeechToText();
 
-  String _selectedLanguage = 'English';
   double _fontSize = 16.0;
   Color _selectedColor = AppColors.primary;
+  final translator = GoogleTranslator();
+  String translatedWelcome = '';
+  String translatedInstructions = '';
+  final Map<String, String> _languages = {
+    'English': 'en',
+    'Hindi': 'hi',
+    'Marathi': 'mr',
+  };
 
-  final List<String> _languages = ['English', 'Hindi', 'Marathi'];
+  Future<void> _translateAll(String langCode) async {
+    final translator = GoogleTranslator();
+
+    // Handle "Welcome to E-Mulakat" manually for Hindi
+    if (langCode == 'hi') {
+      translatedWelcome = 'ई-मुलाकात में आपका स्वागत है';
+    } else {
+      final translated1 = await translator.translate('Welcome to E-Mulakat', to: langCode);
+      translatedWelcome = translated1.text;
+    }
+
+    // This will always use auto translation
+    final translated2 = await translator.translate('Prison Visitor Management System', to: langCode);
+    translatedInstructions = translated2.text;
+
+
+    setState(() {});
+  }
+
+
   VisitorModel? selectedVisitor;
-
 
   @override
   void initState() {
@@ -360,7 +387,7 @@ class _HomeScreenState extends State<HomeScreen> {
       status: VisitStatus.approved,
       startTime: '15:00',
       endTime: '17:30',
-      dayOfWeek: 'Mondayday',
+      dayOfWeek: 'Monday',
     ),
     VisitorModel(
       visitorName: 'Shyam Roy',
@@ -670,7 +697,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_forward_ios, size: 24, color: AppColors.primary),
+                      icon: const Icon(Icons.arrow_forward_ios, size: 25, color: AppColors.primary,fontWeight: FontWeight.bold,),
                       onPressed: () {
                         setState(() {
                           selectedVisitor = visitor; // ✅ Set selected visitor
@@ -719,18 +746,16 @@ class _HomeScreenState extends State<HomeScreen> {
           PopupMenuButton<String>(
             icon: Icon(Icons.language),
             onSelected: (language) {
-              setState(() {
-                _selectedLanguage = language;
-              });
+              final targetLangCode = _languages[language] ?? 'en';
+              Future.delayed(Duration.zero, () => _translateAll(targetLangCode));
             },
-            itemBuilder: (context) => _languages.map((language) {
-              return PopupMenuItem(
+            itemBuilder: (context) => _languages.keys.map((language) {
+              return PopupMenuItem<String>(
                 value: language,
                 child: Text(language),
               );
             }).toList(),
           ),
-
           // Speech to Text
           IconButton(
             icon: Icon(speechToText.isListening ? Icons.mic : Icons.mic_none),
@@ -760,7 +785,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Welcome to eMulakat',
+                translatedWelcome.isNotEmpty ? translatedWelcome : 'Welcome to E-Mulakat',
                 style: TextStyle(
                   fontSize: _fontSize + 8,
                   fontWeight: FontWeight.bold,
@@ -769,7 +794,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               SizedBox(height: 15),
               Text(
-                'Prison Visitor Management System',
+                translatedInstructions.isNotEmpty ? translatedInstructions : 'Prison Visitor Management System',
                 style: TextStyle(
                   fontSize: _fontSize + 2,
                   color: Colors.black,
@@ -822,7 +847,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       }: null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: selectedVisitor != null ? AppColors.primary : Color(0xFF7AA9D4),
-                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -830,7 +855,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Text(
                         selectedVisitor != null ? 'eVisitor Pass' : 'Select Visit First',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           color: selectedVisitor != null ? Colors.white : Colors.black,
                         ),
                       ),
