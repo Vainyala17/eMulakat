@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../utils/color_scheme.dart';
 import '../auth/login_screen.dart';
+import 'ProfileScreen.dart';
 
 class DrawerMenu extends StatefulWidget {
   @override
@@ -37,18 +38,54 @@ class _DrawerMenuState extends State<DrawerMenu> {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          UserAccountsDrawerHeader(
+          DrawerHeader(
             decoration: BoxDecoration(color: Colors.white),
-            accountName: Text(
-              'John Doe',
-              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-            ),
-            accountEmail: Text(
-              'abc123@gmail.com',
-              style: TextStyle(color: Colors.black54),
-            ),
-            currentAccountPicture: CircleAvatar(
-              backgroundImage: AssetImage('assets/images/user.png'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundImage: AssetImage('assets/images/user.png'),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: () {
+                          // Navigate to Profile Screen
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => ProfileScreen()),
+                          );
+                        },
+                        child: CircleAvatar(
+                          radius: 12,
+                          backgroundColor: Colors.blue,
+                          child: Icon(Icons.edit, size: 14, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'John Doe',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  'abc123@gmail.com',
+                  style: TextStyle(
+                    color: Colors.black54,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
           ),
 

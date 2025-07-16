@@ -131,7 +131,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     return variance;
   }
 
-  Future<bool> isImageSharpAndFaceVisible(File file, {double threshold = 1000}) async {
+  Future<bool> isImageSharpAndFaceVisible(File file, {double threshold = 200}) async {
     // Decode image
     final bytes = await file.readAsBytes();
     final image = img.decodeImage(bytes);
@@ -180,7 +180,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     final bytes = imageFile.lengthSync();
     return bytes <= maxKB * 1024;
   }
-
 
   // Send OTP function
   void _sendOtp() {
