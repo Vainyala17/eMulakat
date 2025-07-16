@@ -7,6 +7,7 @@ import '../../dashboard/evisitor_pass_screen.dart';
 import '../../dashboard/visit/visit_preview_screen.dart';
 import '../../dashboard/visit/whom_to_meet_screen.dart';
 import '../../dashboard/visit/visit_home.dart';
+import 'chatbot_screen.dart';
 import 'drawer_menu.dart';
 import '../../utils/color_scheme.dart';
 import 'package:translator/translator.dart';
@@ -47,11 +48,8 @@ class _HomeScreenState extends State<HomeScreen> {
     // This will always use auto translation
     final translated2 = await translator.translate('Prison Visitor Management System', to: langCode);
     translatedInstructions = translated2.text;
-
-
     setState(() {});
   }
-
 
   VisitorModel? selectedVisitor;
 
@@ -818,7 +816,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   }),
                 ],
               ),
-              SizedBox(height: 30),
+              SizedBox(height: 20),
 
               // Dynamic View
               // Replace the Expanded with a fixed-height container:
@@ -829,71 +827,73 @@ class _HomeScreenState extends State<HomeScreen> {
                     : _buildHorizontalVisitCards(showPastVisits ? pastVisits : upcomingVisits),
               ),
 
-              SizedBox(height: 20),
+              SizedBox(height: 10),
               // E-Pass Button
               Padding(
-                padding: EdgeInsets.symmetric(vertical: 12.0), // Adds space top and bottom
+                padding: EdgeInsets.symmetric(vertical: 12.0),
                 child: Center(
                   child: SizedBox(
-                    width: 160, // Controls button width
+                    width: 160,
                     child: ElevatedButton(
-                      onPressed: selectedVisitor != null ? () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => eVisitorPassScreen(visitor: selectedVisitor!),
-                          ),
-                        );
-                      }: null,
+                      onPressed: () {
+                        if (selectedVisitor != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => eVisitorPassScreen(visitor: selectedVisitor!),
+                            ),
+                          );
+                        } else {
+                          // Show alert if no visitor is selected
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text('No Visit Selected'),
+                              content: Text('Please select a visit before proceeding.'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text('OK'),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: selectedVisitor != null ? AppColors.primary : Color(0xFF7AA9D4),
+                        backgroundColor: AppColors.primary,
                         padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                       child: Text(
-                        selectedVisitor != null ? 'eVisitor Pass' : 'Select Visit First',
+                        'eVisitor Pass',
                         style: TextStyle(
                           fontSize: 15,
-                          color: selectedVisitor != null ? Colors.white : Colors.black,
+                          color: Colors.white,
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
-              // ✅ Add selection indicator
-              if (selectedVisitor != null)
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8.0),
-                  child: Container(
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.primary),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.check_circle, color: AppColors.primary, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          'Selected: ${selectedVisitor!.visitorName} - ${getDayOfWeek(selectedVisitor!.visitDate)}',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               SizedBox(height: 20),
             ],
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ChatbotScreen()),
+          );
+        },
+        backgroundColor: Color(0xFF5A8BBA),
+        child: Icon(Icons.smart_toy), // 🤖 chatbot icon
+      ),
+
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Color(0xFF5A8BBA),

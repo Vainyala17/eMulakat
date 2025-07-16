@@ -1,4 +1,4 @@
-# e_mulakat
+# eMulakat
 
 A new Flutter project.
 
