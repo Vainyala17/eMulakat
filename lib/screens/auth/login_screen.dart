@@ -1,13 +1,13 @@
 import 'dart:async';
 
-import 'package:e_mulakat/policies/about_us_screen.dart';
-import 'package:e_mulakat/screens/home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math';
+import '../../policies/about_us_screen.dart';
 import '../../policies/contact_us_popup.dart';
 import '../../policies/privacy_policy_screen.dart';
 import '../../policies/terms_of_use_screen.dart';
+import '../home/home_screen.dart';
 import '../registration/visitor_register_screen.dart';
 import 'forgot_password_screen.dart';
 import '../../widgets/custom_textfield.dart';
