@@ -44,21 +44,12 @@ class _eVisitorPassScreenState extends State<eVisitorPassScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(
-          'E-Visitor Pass',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
-            color: Colors.black,
-          ),
-        ),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
+        title: Text('eVisitor Pass'),
         centerTitle: true,
+        backgroundColor: Theme.of(context).primaryColor,
         actions: [
           IconButton(
-            icon: Icon(Icons.help_outline,color:Colors.black),
+            icon: Icon(Icons.help_outline),
             onPressed: () {
               Navigator.push(
                 context,
