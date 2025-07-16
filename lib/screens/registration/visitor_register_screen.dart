@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:e_mulakat/screens/auth/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -15,6 +14,8 @@ import '../../utils/validators.dart';
 import 'package:image/image.dart' as img;
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+
+import '../auth/login_screen.dart';
 
 class VisitorFormScreen extends StatefulWidget {
   @override
