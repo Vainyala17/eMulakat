@@ -206,7 +206,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         padding: EdgeInsets.all(12),
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
         decoration: BoxDecoration(
-          color: isUser ? Colors.grey[500] : Colors.blue[100],
+          color: isUser ? Colors.grey[300] : Colors.blue[100],
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(

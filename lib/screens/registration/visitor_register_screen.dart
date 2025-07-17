@@ -132,7 +132,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     return variance;
   }
 
-  Future<bool> isImageSharpAndFaceVisible(File file, {double threshold = 200}) async {
+  Future<bool> isImageSharpAndFaceVisible(File file, {double threshold = 100}) async {
     // Decode image
     final bytes = await file.readAsBytes();
     final image = img.decodeImage(bytes);
