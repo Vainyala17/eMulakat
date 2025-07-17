@@ -1,11 +1,11 @@
+import 'package:eMulakat/dashboard/visit/visit_home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import '../../dashboard/evisitor_pass_screen.dart';
-import '../../dashboard/grievance/complaint_screen.dart';
+import '../../dashboard/grievance/grievance_home.dart';
+import '../../dashboard/visit/whom_to_meet_screen.dart';
 import '../../models/visitor_model.dart';
-import '../registration/visitor_register_screen.dart';
 
 class ChatbotScreen extends StatefulWidget {
   @override
@@ -16,8 +16,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   List<Map<String, dynamic>> messages = [];
   TextEditingController _controller = TextEditingController();
   bool voiceEnabled = true;
-  String userName = ''; // Stores name after asking
-  bool askedForName = true; // First question control
+  bool askedForName = false;
+  String userName = 'Suresh';// First question control
 
   final visitor = VisitorModel(
     visitorName: 'Shyam Roy',
@@ -58,22 +58,23 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   void _botReply(String userInput) {
+    final input = userInput.toLowerCase();
+
     setState(() {
-      if (askedForName) {
+      // FIRST greeting on app start
+      if (messages.isEmpty) {
         messages.add({
           "from": "bot",
-          "text": "Hello! What's your name?",
+          "text": "Hello $userName!"
         });
-        askedForName = false;
         return;
       }
 
-      if (userName.isEmpty) {
-        // Save name from user
-        userName = userInput.trim();
+      // Greeting response
+      if (input.contains("hello") || input.contains("hi") || input.contains("hey")) {
         messages.add({
           "from": "bot",
-          "text": "Namaste, $userName! I'm your KaraSahayak. How can I help you today?",
+          "text": "Hey $userName! I’m your KaraSahayak. How can I help you today?",
           "quickReplies": [
             "REGISTER A VISITOR",
             "REGISTER A GRIEVANCE",
@@ -85,13 +86,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         return;
       }
 
-      // User clicked a quick reply or typed matching phrase
-      final input = userInput.toLowerCase();
-
-      if (input.contains("register a visitor")) {
+      // Visitor keyword
+      if (input.contains("visitor")) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => VisitorFormScreen()),
+          MaterialPageRoute(builder: (context) => VisitHomeScreen()),
         ).then((_) {
           messages.add({
             "from": "bot",
@@ -108,10 +107,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         return;
       }
 
-      if (input.contains("register a grievance")) {
+      // Grievance keyword
+      if (input.contains("grievance")) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ComplaintScreen()),
+          MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
         ).then((_) {
           messages.add({
             "from": "bot",
@@ -128,14 +128,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         return;
       }
 
-      if (input.contains("show evisitorpass")) {
+      // eVisitorPass
+      if (input.contains("evisitor") || input.contains("pass")) {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => eVisitorPassScreen(visitor: visitor)),
         ).then((_) {
           messages.add({
             "from": "bot",
-            "text": "Welcome back $userName! How can I help you again? Choose from menu option to get help",
+            "text": "Welcome back $userName! How can I help you again? Press on menu option to get help",
             "quickReplies": [
               "REGISTER A VISITOR",
               "REGISTER A GRIEVANCE",
@@ -148,12 +149,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         return;
       }
 
-      if (input.contains("show google map")) {
-        // Open map URL
+      // Google Map
+      if (input.contains("map") || input.contains("google")) {
         launchUrl(Uri.parse("https://www.google.com/maps/place/NutanTek+Solutions+LLP/@19.7251636,60.9691764,4z/data=!3m1!4b1!4m6!3m5!1s0x390ce5db65f6af0f:0xb29ad5bc8aabd76a!8m2!3d21.0680074!4d82.7525294!16s%2Fg%2F11k6fbjb7n?authuser=0&entry=ttu&g_ep=EgoyMDI1MDcxMy4wIKXMDSoASAFQAw%3D%3D"));
         messages.add({
           "from": "bot",
-          "text": "Welcome back $userName! How can I help you again? Choose from menu option to get help",
+          "text": "Welcome back $userName! How can I help you again? Press on menu option to get help",
           "quickReplies": [
             "REGISTER A VISITOR",
             "REGISTER A GRIEVANCE",
@@ -165,19 +166,19 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         return;
       }
 
-      if (input.contains("exit app")) {
-        SystemNavigator.pop(); // Closes the app
+      // Exit
+      if (input.contains("exit")) {
+        SystemNavigator.pop();
         return;
       }
 
-      // If user types something irrelevant
+      // If unrecognized
       messages.add({
         "from": "bot",
-        "text": "Please use the buttons or microphone to continue"
+        "text": "Please try again or type using the keyboard."
       });
     });
   }
-
 
   void _handleQuickReply(String text) {
     _sendMessage(text);
@@ -205,7 +206,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         padding: EdgeInsets.all(12),
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
         decoration: BoxDecoration(
-          color: isUser ? Colors.pink[200] : Colors.blue[100],
+          color: isUser ? Colors.grey[500] : Colors.blue[100],
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -293,44 +294,46 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              reverse: false,
-              padding: EdgeInsets.all(16),
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                return _buildMessage(messages[index]);
-              },
+      body: SafeArea(
+        child:Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                reverse: false,
+                padding: EdgeInsets.all(16),
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  return _buildMessage(messages[index]);
+                },
+              ),
             ),
-          ),
-          Divider(height: 1),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-            child: Row(
-              children: [
-                Icon(Icons.mic, color: Colors.black), // Voice mic icon
-                SizedBox(width: 13),
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: InputDecoration(
-                      hintText: "Type here...",
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            Divider(height: 1),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              child: Row(
+                children: [
+                  Icon(Icons.mic, color: Colors.black), // Voice mic icon
+                  SizedBox(width: 13),
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      decoration: InputDecoration(
+                        hintText: "Type here...",
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(width: 8),
-                IconButton(
-                  icon: Icon(Icons.send, color: Color(0xFF5A8BBA)),
-                  onPressed: () => _sendMessage(_controller.text),
-                )
-              ],
-            ),
-          )
-        ],
-      ),
+                  SizedBox(width: 8),
+                  IconButton(
+                    icon: Icon(Icons.send, color: Color(0xFF5A8BBA)),
+                    onPressed: () => _sendMessage(_controller.text),
+                  )
+                ],
+              ),
+            )
+          ],
+        ),
+      )
     );
   }
 }

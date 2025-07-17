@@ -1,4 +1,9 @@
+import 'package:eMulakat/screens/home/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../policies/about_us_screen.dart';
+import '../../policies/contact_us_popup.dart';
 import '../../utils/color_scheme.dart';
 import '../auth/login_screen.dart';
 import 'ProfileScreen.dart';
@@ -22,17 +27,26 @@ class _DrawerMenuState extends State<DrawerMenu> {
   Widget build(BuildContext context) {
 
     final List<Map<String, dynamic>> drawerItems = [
-      {'icon': Icons.dashboard, 'label': 'Dashboard'},
-      {'icon': Icons.lock, 'label': 'Prison Citizen Services'},
-      {'icon': Icons.info_outline, 'label': 'About Us'},
-      {'icon': Icons.gavel, 'label': 'Legal Aid'},
-      {'icon': Icons.map, 'label': 'Prison Map'},
-      {'icon': Icons.store, 'label': 'Kara Bazaar'},
-      {'icon': Icons.public, 'label': 'India Portal'},
-      {'icon': Icons.phone, 'label': 'Contact Us'},
-      {'icon': Icons.share, 'label': 'Share Us'},
-      {'icon': Icons.star_rate, 'label': 'Rate Us'},
+      {'icon': Icons.dashboard, 'label': 'Dashboard', 'page': HomeScreen()},
+      {'icon': Icons.lock, 'label': 'Prison Citizen Services', },
+      {'icon': Icons.info_outline, 'label': 'About Us', 'page': AboutUsScreen()},
+      {'icon': Icons.gavel, 'label': 'Legal Aid',},
+      {'icon': Icons.map,
+        'label': 'Prison Map',
+        'isUrl': true,
+        'url': 'https://www.google.com/maps/place/NutanTek+Solutions+LLP/@19.7251636,60.9691764,4z/data=!3m1!4b1!4m6!3m5!1s0x390ce5db65f6af0f:0xb29ad5bc8aabd76a!8m2!3d21.0680074!4d82.7525294!16s%2Fg%2F11k6fbjb7n?authuser=0&entry=ttu'},
+      {'icon': Icons.store, 'label': 'Kara Bazaar', },
+      {'icon': Icons.public, 'label': 'India Portal', },
+      {'icon': Icons.phone, 'label': 'Contact Us', 'page':  ContactUsPopup()},
+      {
+        'icon': Icons.share,
+        'label': 'Share Us',
+        'isShare': true,
+        'message': 'Hey! Check out this awesome app: https://play.google.com/store/apps/details?id=com.example.emulakat'
+      },
+      {'icon': Icons.star_rate, 'label': 'Rate Us', 'isRate': true},
     ];
+
 
     return Drawer(
       child: ListView(
@@ -47,6 +61,8 @@ class _DrawerMenuState extends State<DrawerMenu> {
                   children: [
                     CircleAvatar(
                       radius: 40,
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
                       backgroundImage: AssetImage('assets/images/user.png'),
                     ),
                     Positioned(
@@ -62,8 +78,8 @@ class _DrawerMenuState extends State<DrawerMenu> {
                         },
                         child: CircleAvatar(
                           radius: 12,
-                          backgroundColor: Colors.blue,
-                          child: Icon(Icons.edit, size: 14, color: Colors.white),
+                          backgroundColor: Colors.white,
+                          child: Icon(Icons.edit, size: 16, color: Colors.black),
                         ),
                       ),
                     ),
@@ -71,7 +87,7 @@ class _DrawerMenuState extends State<DrawerMenu> {
                 ),
                 SizedBox(height: 10),
                 Text(
-                  'John Doe',
+                  'Suresh Gupta',
                   style: TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.bold,
@@ -79,7 +95,7 @@ class _DrawerMenuState extends State<DrawerMenu> {
                   ),
                 ),
                 Text(
-                  'abc123@gmail.com',
+                  'suresh@nutantek.com ',
                   style: TextStyle(
                     color: Colors.black54,
                     fontSize: 14,
@@ -104,7 +120,93 @@ class _DrawerMenuState extends State<DrawerMenu> {
                     color: _selectedIndex == i ? Color(0xFF3A6895) : Colors.black,
                   ),
                 ),
-                onTap: () => _handleItemTap(i),
+                  onTap: () async {
+                    final item = drawerItems[i];
+                    Navigator.pop(context);
+
+                    if (item['isRate'] == true) {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          double selectedRating = 0;
+
+                          return StatefulBuilder(
+                            builder: (context, setState) {
+                              return AlertDialog(
+                                backgroundColor: Colors.white,
+                                title: Text('Rate Us'),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: List.generate(5, (index) {
+                                        return IconButton(
+                                          icon: Icon(
+                                            index < selectedRating
+                                                ? Icons.star
+                                                : Icons.star_border,
+                                            color: Colors.amber,
+                                            size: 32,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              selectedRating = index + 1.0;
+                                            });
+                                          },
+                                        );
+                                      }),
+                                    ),
+                                    SizedBox(height: 10),
+                                    Text(
+                                      selectedRating == 0
+                                          ? 'Tap stars to rate'
+                                          : 'You rated $selectedRating stars',
+                                      style: TextStyle(fontSize: 14),
+                                    ),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Thanks for rating $selectedRating stars!')),
+                                      );
+                                    },
+                                    child: Text('Submit'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      );
+                    }// Close the drawer
+                    if (item['isUrl'] == true && item['url'] != null) {
+                      final Uri url = Uri.parse(item['url']);
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Could not launch URL')),
+                        );
+                      }
+
+                    } else if (item['isShare'] == true) {
+                      Share.share(item['message'] ?? 'Check out this app!');
+
+                    } else if (item['page'] != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => item['page']),
+                      );
+                    }
+                  }
               ),
             ),
 

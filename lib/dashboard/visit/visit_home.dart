@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../pdf_viewer_screen.dart';
 import '../../screens/home/home_screen.dart';
+import '../grievance/grievance_home.dart';
 import 'whom_to_meet_screen.dart';
 
 class VisitHomeScreen extends StatefulWidget {
@@ -154,11 +155,14 @@ class _VisitHomeScreenState extends State<VisitHomeScreen> {
                     },
                   ),
                   _buildNavItem(
-                    index: 2,
+                    index: 3,
                     icon: Icons.report_problem,
                     label: 'Grievance',
                     onTap: () {
-                      // Already on this screen
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
+                      );
                     },
                   ),
                 ],
