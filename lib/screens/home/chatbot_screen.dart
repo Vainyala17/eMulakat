@@ -18,7 +18,33 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   bool voiceEnabled = true;
   String userName = ''; // Stores name after asking
   bool askedForName = true; // First question control
-  VisitorModel? selectedVisitor;
+
+  final visitor = VisitorModel(
+    visitorName: 'Shyam Roy',
+    fatherName: 'Ram Roy',
+    address: '5th Block, Pune',
+    gender: 'Male',
+    age: 29,
+    relation: 'Wife',
+    idProof: 'Voter ID',
+    idNumber: 'VOT1234567',
+    isInternational: false,
+    state: 'Maharashtra',
+    jail: 'Yerwada Jail',
+    visitDate: DateTime.now().add(Duration(days: 3)),
+    additionalVisitors: 0,
+    additionalVisitorNames: [],
+    prisonerName: 'Sunil Gupta',
+    prisonerFatherName: 'Vinod Gupta',
+    prisonerAge: 35,
+    prisonerGender: 'Male',
+    mode: false,
+    status: VisitStatus.rejected,
+    startTime: '14:00',
+    endTime: '16:30',
+    dayOfWeek: 'Friday',
+  );
+
 
   void _sendMessage(String text) {
     if (text.trim().isEmpty) return;
@@ -105,7 +131,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       if (input.contains("show evisitorpass")) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => eVisitorPassScreen(visitor: selectedVisitor!)),
+          MaterialPageRoute(builder: (context) => eVisitorPassScreen(visitor: visitor)),
         ).then((_) {
           messages.add({
             "from": "bot",
