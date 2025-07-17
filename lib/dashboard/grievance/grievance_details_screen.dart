@@ -601,11 +601,14 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
                     },
                   ),
                   _buildNavItem(
-                    index: 2,
+                    index: 3,
                     icon: Icons.report_problem,
                     label: 'Grievance',
                     onTap: () {
-                      // Already on this screen
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
+                      );
                     },
                   ),
                 ],

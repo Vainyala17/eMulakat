@@ -78,7 +78,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
           ],
         ),
         child: SafeArea(
-          child: Container(
+          child: SizedBox(
             height: 60,
             child: Row(
               children: [
@@ -87,7 +87,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                   icon: Icons.directions_walk,
                   label: 'Visit',
                   onTap: () {
-                    Navigator.push(
+                    Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (context) => VisitHomeScreen()),
                     );
@@ -98,7 +98,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                   icon: Icons.dashboard,
                   label: 'Dashboard',
                   onTap: () {
-                    Navigator.push(
+                    Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (context) => HomeScreen()),
                     );
@@ -109,7 +109,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                   icon: Icons.report_problem,
                   label: 'Grievance',
                   onTap: () {
-                    Navigator.push(
+                    Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
                     );

@@ -153,11 +153,14 @@ class _GrievanceHomeScreenState extends State<GrievanceHomeScreen> {
                     },
                   ),
                   _buildNavItem(
-                    index: 2,
+                    index: 3,
                     icon: Icons.report_problem,
                     label: 'Grievance',
                     onTap: () {
-                      // Already on this screen
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
+                      );
                     },
                   ),
                 ],
