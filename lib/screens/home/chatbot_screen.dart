@@ -252,7 +252,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           icon: Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Visitor Registration'),
+        title: Text('KaraSahayak'),
         centerTitle: true,
         backgroundColor: Theme.of(context).primaryColor,
         actions: [
