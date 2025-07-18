@@ -829,7 +829,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     : _buildHorizontalVisitCards(showPastVisits ? pastVisits : upcomingVisits),
               ),
 
-              SizedBox(height: 40),
+              SizedBox(height: 60),
               // E-Pass Button
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 12.0),

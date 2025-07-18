@@ -1,9 +1,14 @@
+import 'package:eMulakat/policies/kara_bazaar.dart';
+import 'package:eMulakat/policies/legal_aid.dart';
 import 'package:eMulakat/screens/home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../policies/about_us_screen.dart';
 import '../../policies/contact_us_popup.dart';
+import '../../policies/india_portal.dart';
+import '../../policies/prison_citizen_services.dart';
+import '../../policies/prison_map.dart';
 import '../../policies/setting_account_screen.dart';
 import '../../utils/color_scheme.dart';
 import '../auth/login_screen.dart';
@@ -29,15 +34,12 @@ class _DrawerMenuState extends State<DrawerMenu> {
 
     final List<Map<String, dynamic>> drawerItems = [
       {'icon': Icons.dashboard, 'label': 'Dashboard', 'page': HomeScreen()},
-      {'icon': Icons.lock, 'label': 'Prison Citizen Services', },
+      {'icon': Icons.lock, 'label': 'Prison Citizen Services', 'page': PrisonCitizenServicesScreen()},
       {'icon': Icons.info_outline, 'label': 'About Us', 'page': AboutUsScreen()},
-      {'icon': Icons.gavel, 'label': 'Legal Aid',},
-      {'icon': Icons.map,
-        'label': 'Prison Map',
-        'isUrl': true,
-        'url': 'https://www.google.com/maps/place/NutanTek+Solutions+LLP/@19.7251636,60.9691764,4z/data=!3m1!4b1!4m6!3m5!1s0x390ce5db65f6af0f:0xb29ad5bc8aabd76a!8m2!3d21.0680074!4d82.7525294!16s%2Fg%2F11k6fbjb7n?authuser=0&entry=ttu'},
-      {'icon': Icons.store, 'label': 'Kara Bazaar', },
-      {'icon': Icons.public, 'label': 'India Portal', },
+      {'icon': Icons.gavel, 'label': 'Legal Aid', 'page': LegalAidScreen()},
+      {'icon': Icons.map, 'label': 'Prison Map', 'page': PrisonMapScreen()},
+      {'icon': Icons.store, 'label': 'Kara Bazaar', 'page': KaraBazaarScreen() },
+      {'icon': Icons.public, 'label': 'India Portal','page': IndiaPortalScreen()  },
       {'icon': Icons.phone, 'label': 'Contact Us', 'page':  ContactUsPopup()},
       {
         'icon': Icons.share,
@@ -123,7 +125,6 @@ class _DrawerMenuState extends State<DrawerMenu> {
                 ),
                   onTap: () async {
                     final item = drawerItems[i];
-                    Navigator.pop(context);
 
                     if (item['isRate'] == true) {
                       showDialog(
@@ -188,17 +189,7 @@ class _DrawerMenuState extends State<DrawerMenu> {
                         },
                       );
                     }// Close the drawer
-                    if (item['isUrl'] == true && item['url'] != null) {
-                      final Uri url = Uri.parse(item['url']);
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url, mode: LaunchMode.externalApplication);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Could not launch URL')),
-                        );
-                      }
-
-                    } else if (item['isShare'] == true) {
+                    else if (item['isShare'] == true) {
                       Share.share(item['message'] ?? 'Check out this app!');
 
                     } else if (item['page'] != null) {
