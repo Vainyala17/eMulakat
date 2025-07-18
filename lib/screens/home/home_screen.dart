@@ -4,6 +4,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import '../../dashboard/evisitor_pass_screen.dart';
 import '../../dashboard/grievance/grievance_home.dart';
+import '../../dashboard/visit/visit_preview1.dart';
 import '../../dashboard/visit/visit_preview_screen.dart';
 import '../../dashboard/visit/whom_to_meet_screen.dart';
 import '../../dashboard/visit/visit_home.dart';
@@ -704,7 +705,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => VisitPreviewScreen(),
+                            builder: (context) => VisitPreviewScreen1(),
                           ),
                         );
                       },
@@ -817,7 +818,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   }),
                 ],
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 30),
 
               // Dynamic View
               // Replace the Expanded with a fixed-height container:
@@ -828,7 +829,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     : _buildHorizontalVisitCards(showPastVisits ? pastVisits : upcomingVisits),
               ),
 
-              SizedBox(height: 10),
+              SizedBox(height: 40),
               // E-Pass Button
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 12.0),
