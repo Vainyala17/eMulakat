@@ -41,7 +41,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              FormSectionTitle(title: 'Complainant Details'),
+              FormSectionTitle(title: 'Complaints Details'),
               SizedBox(height: 20),
               // Visitor Name
               CustomTextField(

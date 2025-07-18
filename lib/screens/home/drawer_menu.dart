@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../policies/about_us_screen.dart';
 import '../../policies/contact_us_popup.dart';
+import '../../policies/setting_account_screen.dart';
 import '../../utils/color_scheme.dart';
 import '../auth/login_screen.dart';
 import 'ProfileScreen.dart';
@@ -216,7 +217,10 @@ class _DrawerMenuState extends State<DrawerMenu> {
             leading: Icon(Icons.settings),
             title: Text('Settings & account'),
             onTap: () {
-              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AccountSettingsScreen()),
+              );
             },
           ),
 
