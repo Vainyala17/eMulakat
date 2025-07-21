@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math';
@@ -55,21 +56,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   void _resetPassword() async {
     if (_newPasswordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter new password'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Please enter new password'.tr()), backgroundColor: Colors.red),
       );
       return;
     }
 
     if (_newPasswordController.text.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Password must be at least 6 characters'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Password must be at least 6 characters'.tr()), backgroundColor: Colors.red),
       );
       return;
     }
 
     if (_newPasswordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Passwords do not match'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Passwords do not match'.tr()), backgroundColor: Colors.red),
       );
       return;
     }
@@ -82,7 +83,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Password reset successfully!'),
+        content: Text('Password reset successfully!'.tr()),
         backgroundColor: Colors.green,
       ),
     );
@@ -183,10 +184,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Forgot Password'),
+        title: Text('Forgot Password'.tr()),
         centerTitle: true,
         backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
+        foregroundColor: Colors.black,
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -203,14 +204,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 // Instruction Text
                 Text(
                   widget.isInternationalVisitor
-                      ? 'Reset password using Email ID'
-                      : 'Reset password using Mobile Number',
+                      ? 'Reset password using Email ID'.tr()
+                      : 'Reset password using Mobile Number'.tr(),
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
 
                 SizedBox(height: 16),
                 Text(
-                  'Enter your ${widget.isInternationalVisitor ? 'email address' : 'mobile number'} and we\'ll send you a link to reset your password.',
+                  'Enter your ${widget.isInternationalVisitor ? 'email address'.tr() : 'mobile number'} and we\'ll send you a link to reset your password.'.tr(),
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
@@ -220,7 +221,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 // Email or Mobile Field
                 if (widget.isInternationalVisitor)
                   CustomTextField(
-                    label: 'Email',
+                    label: 'Email'.tr(),
                     hint: 'Enter your email',
                     isRequired: true,
                     controller: _emailController,
@@ -229,7 +230,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   )
                 else
                   CustomTextField(
-                    label: 'Mobile No',
+                    label: 'Mobile No'.tr(),
                     hint: 'Enter your mobile number',
                     isRequired: true,
                     controller: _mobileController,
@@ -276,7 +277,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       flex: 2,
                       child: CustomTextField(
                         label: '',
-                        hint: 'Enter captcha',
+                        hint: 'Enter captcha'.tr(),
                         controller: _captchaController,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -309,7 +310,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       MaterialPageRoute(builder: (context) => LoginScreen()),
                     );
                   },
-                  child: Text('Back to Login'),
+                  child: Text('Back to Login'.tr()),
                 ),
               ],
             ),
@@ -335,7 +336,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 _buildNavItem(
                   index: 0,
                   icon: Icons.info_outline,
-                  label: 'About Us',
+                  label: 'About Us'.tr(),
                   onTap: () {
                     ContactUsPopup.show(context);
                   },
@@ -343,7 +344,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 _buildNavItem(
                   index: 1,
                   icon: Icons.shield_outlined,
-                  label: 'Privacy Policy',
+                  label: 'Privacy Policy'.tr(),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -354,7 +355,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 _buildNavItem(
                   index: 2,
                   icon: Icons.support_agent_outlined,
-                  label: 'Contact Us',
+                  label: 'Contact Us'.tr(),
                   onTap: () {
                     ContactUsPopup.show(context);
                   },
@@ -362,7 +363,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 _buildNavItem(
                   index: 3,
                   icon: Icons.article_outlined,
-                  label: 'Terms of Use',
+                  label: 'Terms of Use'.tr(),
                   onTap: () {
                     Navigator.push(
                       context,

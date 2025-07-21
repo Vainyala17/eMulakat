@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -208,11 +209,11 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
         _resendCounter = 0; // Reset counter on fresh send
       });
 
-      print('Generated OTP: $_generatedOtp');
+      print('Generated OTP: $_generatedOtp'.tr());
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'OTP resent to $recipient',
+            'OTP resent to $recipient'.tr(),
             style: TextStyle(color: Colors.black), // <-- Text color
           ),
           backgroundColor: Colors.blue, // <-- Background color
@@ -223,7 +224,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please enter a valid ${_isInternationalVisitor ? "email" : "mobile number"}'),
+          content: Text('Please enter a valid ${_isInternationalVisitor ? "email" : "mobile number"}'.tr()),
           backgroundColor: Colors.red,
         ),
       );
@@ -239,7 +240,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'OTP verified successfully!',
+            'OTP verified successfully!'.tr(),
             style: TextStyle(color: Colors.black), // <-- Text color
           ),
           backgroundColor: Color(0xFF7AA9D4),
@@ -248,7 +249,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Invalid OTP. Please try again.'),
+          content: Text('Invalid OTP. Please try again.'.tr()),
           backgroundColor: Colors.red,
         ),
       );
@@ -265,13 +266,13 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
         _otpController.clear();
       });
 
-      print('Resent OTP: $_generatedOtp');
+      print('Resent OTP: $_generatedOtp'.tr());
 
       String recipient = _isInternationalVisitor ? _emailController.text : _mobileController.text;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'OTP resent to $recipient',
+            'OTP resent to $recipient'.tr(),
             style: TextStyle(color: Colors.black), // <-- Text color
           ),
           backgroundColor: Colors.blue, // <-- Background color
@@ -414,7 +415,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Visitor Registration'),
+        title: Text('Visitor Registration'.tr()),
         centerTitle: true,
         backgroundColor: Theme.of(context).primaryColor,
         actions: [
@@ -440,7 +441,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                FormSectionTitle(title: 'Visitor Details'),
+                FormSectionTitle(title: 'Visitor Details'.tr()),
                 SizedBox(height: 20),
 
                 // Passport Photo Upload
@@ -502,7 +503,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 // Visitor Name
                 CustomTextField(
                   controller: _nameController,
-                  label: 'Visitor Name*',
+                  label: 'Visitor Name*'.tr(),
                   hint: 'Enter your Name',
                   validator: Validators.validateName,
                   inputFormatters: [
@@ -528,7 +529,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 // Father/Husband Name
                 CustomTextField(
                   controller: _fatherNameController,
-                  label: 'Father/Husband Name*',
+                  label: 'Father/Husband Name*'.tr(),
                   hint: 'Enter Father/Husband Name',
                   validator: Validators.validateName,
                   inputFormatters: [
@@ -554,7 +555,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 // Address
                 CustomTextField(
                   controller: _addressController,
-                  label: 'Address*',
+                  label: 'Address*'.tr(),
                   hint: 'Enter Your Address',
                   validator: Validators.validateAddress,
                   inputFormatters: [
@@ -582,7 +583,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Gender*',
+                      'Gender*'.tr(),
                       style: TextStyle(fontSize: 16,),
                     ),
                     ..._genders.map((gender) {
@@ -613,7 +614,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 // Age
                 CustomTextField(
                   controller: _ageController,
-                  label: 'Age*',
+                  label: 'Age*'.tr(),
                   hint: 'Enter Your Age',
                   keyboardType: TextInputType.number,
                   validator: Validators.validateAge,
@@ -673,7 +674,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 if (_selectedIdProof != null && _selectedIdProof != 'Not Available')
                   CustomTextField(
                     controller: _idNumberController,
-                    label: 'ID Number*',
+                    label: 'ID Number*'.tr(),
                     hint: 'Enter ${_selectedIdProof} Number',
                     validator: (value) => Validators.validateIdNumber(value, _selectedIdProof!, _idLimits[_selectedIdProof!] ?? 0),
                     inputFormatters: [
@@ -754,7 +755,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
 
                 // International Visitor Checkbox
                 CheckboxListTile(
-                  title: Text('International Visitor'),
+                  title: Text('International Visitor'.tr()),
                   value: _isInternationalVisitor,
                   onChanged: (value) {
                     setState(() {
@@ -778,7 +779,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                       Expanded(
                         child: CustomTextField(
                           controller: _emailController,
-                          label: 'Email ID*',
+                          label: 'Email ID*'.tr(),
                           hint: 'Enter Your Email ID',
                           keyboardType: TextInputType.emailAddress,
                           validator: Validators.validateEmail,
@@ -797,7 +798,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                       if (_canSendOtp())
                         ElevatedButton(
                           onPressed: _isOtpSent ? null : _sendOtp,
-                          child: Text(_isOtpSent ? 'Sent' : 'Get OTP'),
+                          child: Text(_isOtpSent ? 'Sent'.tr() : 'Get OTP'.tr()),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _isOtpSent ? Colors.black : Color(0xFF7AA9D4),
                             foregroundColor: Colors.black,
@@ -815,7 +816,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                       Expanded(
                         child: CustomTextField(
                           controller: _mobileController,
-                          label: 'Mobile No*',
+                          label: 'Mobile No*'.tr(),
                           hint: 'Enter Your Mobile Number',
                           keyboardType: TextInputType.phone,
                           validator: Validators.validateMobile,
@@ -838,7 +839,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                       if (_canSendOtp())
                         ElevatedButton(
                           onPressed: _isOtpSent ? null : _sendOtp,
-                          child: Text(_isOtpSent ? 'Sent' : 'Get OTP'),
+                          child: Text(_isOtpSent ? 'Sent'.tr() : 'Get OTP'.tr()),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _isOtpSent ? Colors.black : Color(0xFF7AA9D4),
                             foregroundColor: Colors.black,
@@ -856,7 +857,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                       Expanded(
                         child: CustomTextField(
                           controller: _otpController,
-                          label: 'Enter OTP*',
+                          label: 'Enter OTP*'.tr(),
                           hint: 'Enter 6-digit OTP',
                           keyboardType: TextInputType.number,
                           inputFormatters: [
@@ -882,7 +883,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                         children: [
                           ElevatedButton(
                             onPressed: _otpController.text.length == 6 ? _verifyOtp : null,
-                            child: Text('Verify'),
+                            child: Text('Verify'.tr()),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Color(0xFF7AA9D4),
                               foregroundColor: Colors.black, // <-- Set text/icon color to white
@@ -893,8 +894,8 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                             onPressed: _canResend && _resendCounter < 3 ? _resendOtp : null,
                             child: Text(
                               _canResend
-                                  ? 'Resend'
-                                  : 'Wait ${_secondsRemaining}s',
+                                  ? 'Resend'.tr()
+                                  : 'Wait ${_secondsRemaining}s.tr()',
                               style: TextStyle(fontSize: 12),
                             ),
                           ),
@@ -905,7 +906,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                   SizedBox(height: 10),
                   if (_resendCounter > 0)
                     Text(
-                      'Resend attempts: $_resendCounter/3',
+                      'Resend attempts: $_resendCounter/3'.tr(),
                       style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   SizedBox(height: 10),
@@ -926,8 +927,8 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                         SizedBox(width: 10),
                         Text(
                           _isInternationalVisitor
-                              ? 'Email verified successfully!'
-                              : 'Mobile number verified successfully!',
+                              ? 'Email verified successfully!'.tr()
+                              : 'Mobile number verified successfully!'.tr(),
                           style: TextStyle(color: Color(0xFF7AA9D4), fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -940,7 +941,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
 
                 // Password Field
                 CustomTextField(
-                  label: 'Password',
+                  label: 'Password'.tr(),
                   hint: 'Enter your password',
                   isRequired: true,
                   controller: _passwordController,
@@ -956,7 +957,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
 
                 CustomTextField(
                   controller: _confirmPasswordController,
-                  label: 'Confirm Password*',
+                  label: 'Confirm Password*'.tr(),
                   hint: 'Re-enter your password',
                   obscureText: true,
                   validator: (value) {
@@ -972,14 +973,14 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                 SizedBox(height: 30),
                 // Save Button
                 CustomButton(
-                  text: 'Save',
+                  text: 'Save'.tr(),
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       // Check OTP verification for non-international visitors
                       if (!_isInternationalVisitor && !_isOtpVerified) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Please verify your mobile number with OTP'),
+                            content: Text('Please verify your mobile number with OTP'.tr()),
                             backgroundColor: Colors.red,
                           ),
                         );

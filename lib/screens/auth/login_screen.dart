@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math';
@@ -80,22 +80,20 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       if (_captchaController.text.toUpperCase() != _captchaText) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Invalid captcha')),
-        );
+          SnackBar(content: Text('Invalid captcha')),);
         return;
       }
 
       // Check if OTP verification is required and completed
       if (_isInternationalVisitor) {
-        // For international visitors, email must be verified
         if (!_isOtpVerified) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Please verify your email first')),
           );
           return;
         }
-      } else {
-        // For domestic visitors, mobile must be verified
+      }
+      else {
         if (!_isOtpVerified) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Please verify your mobile number first')),
@@ -107,7 +105,6 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _isLoading = true;
       });
-
       // Simulate login process
       await Future.delayed(Duration(seconds: 2));
 
@@ -117,13 +114,10 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // Generate random OTP (but we'll use dummy OTP for testing)
   String _generateOtp() {
-    // Return dummy OTP for testing
     return _dummyOtp;
   }
 
-  // Send OTP function for both email and mobile
   void _sendOtp() {
     bool isValid = false;
     String recipient = '';
@@ -171,8 +165,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-
-  // Verify OTP function
   void _verifyOtp() {
     if (_otpController.text == _generatedOtp) {
       setState(() {
@@ -187,7 +179,8 @@ class _LoginScreenState extends State<LoginScreen> {
           backgroundColor: Color(0xFF7AA9D4),
         ),
       );
-    } else {
+    }
+    else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Invalid OTP. Please try again.'),
@@ -207,13 +200,13 @@ class _LoginScreenState extends State<LoginScreen> {
         _otpController.clear();
       });
 
-      print('Resent OTP: $_generatedOtp');
+      print('Resent OTP: $_generatedOtp'.tr());
 
       String recipient = _isInternationalVisitor ? _emailController.text : _mobileController.text;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'OTP resent to $recipient',
+            'OTP resent to $recipient'.tr(),
             style: TextStyle(color: Colors.black), // <-- Text color
           ),
             backgroundColor: Colors.blue, // <-- Background color
@@ -333,11 +326,33 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Login'),
+        title: Text('Login'.tr()),
         centerTitle: true,
         backgroundColor: Color(0xFF5A8BBA),
-        foregroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        actions: [
+          PopupMenuButton<Locale>(
+            icon: Icon(Icons.language),
+            onSelected: (Locale locale) {
+              context.setLocale(locale); // Change app language
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(value: Locale('en'), child: Text('English')),
+              PopupMenuItem(value: Locale('hi'), child: Text('हिंदी')),
+              PopupMenuItem(value: Locale('mr'), child: Text('मराठी')),
+              PopupMenuItem(value: Locale('ta'), child: Text('தமிழ்')),
+              PopupMenuItem(value: Locale('te'), child: Text('తెలుగు')),
+              PopupMenuItem(value: Locale('kn'), child: Text('ಕನ್ನಡ')),
+              PopupMenuItem(value: Locale('ml'), child: Text('മലയാളം')),
+              PopupMenuItem(value: Locale('gu'), child: Text('ગુજરાતી')),
+              PopupMenuItem(value: Locale('bn'), child: Text('বাংলা')),
+              PopupMenuItem(value: Locale('ur'), child: Text('اردو')),
+              PopupMenuItem(value: Locale('pa'), child: Text('ਪੰਜਾਬੀ')),
+            ],
+          )
+        ],
       ),
+
       body: SafeArea(
         child: SingleChildScrollView(
           physics: BouncingScrollPhysics(),
@@ -351,10 +366,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(height: 40),
                   _buildLogo(),
                   SizedBox(height: 40),
-
                   // International Visitor Checkbox
                   CheckboxListTile(
-                    title: Text('International Visitor'),
+                    title: Text('International Visitor'.tr()),
                     value: _isInternationalVisitor,
                     onChanged: (value) {
                       setState(() {
@@ -379,7 +393,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         Expanded(
                           child: CustomTextField(
                             controller: _emailController,
-                            label: 'Email ID*',
+                            label: 'Email ID*'.tr(),
                             hint: 'Enter Your Email ID',
                             keyboardType: TextInputType.emailAddress,
                             validator: Validators.validateEmail,
@@ -398,7 +412,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (_canSendOtp())
                           ElevatedButton(
                             onPressed: _isOtpSent ? null : _sendOtp,
-                            child: Text(_isOtpSent ? 'Sent' : 'Get OTP'),
+                            child: Text(_isOtpSent ? 'Sent'.tr() : 'Get OTP'.tr()),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _isOtpSent ? Colors.black : Color(0xFF7AA9D4),
                               foregroundColor: Colors.black,
@@ -416,7 +430,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         Expanded(
                           child: CustomTextField(
                             controller: _mobileController,
-                            label: 'Mobile No*',
+                            label: 'Mobile No*'.tr(),
                             hint: 'Enter Your Mobile Number',
                             keyboardType: TextInputType.phone,
                             validator: Validators.validateMobile,
@@ -439,7 +453,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (_canSendOtp())
                           ElevatedButton(
                             onPressed: _isOtpSent ? null : _sendOtp,
-                            child: Text(_isOtpSent ? 'Sent' : 'Get OTP'),
+                            child: Text(_isOtpSent ? 'Sent'.tr(): 'Get OTP'.tr()),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _isOtpSent ? Colors.black : Color(0xFF7AA9D4),
                               foregroundColor: Colors.black,
@@ -457,7 +471,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         Expanded(
                           child: CustomTextField(
                             controller: _otpController,
-                            label: 'Enter OTP*',
+                            label: 'Enter OTP*'.tr(),
                             hint: 'Enter 6-digit OTP',
                             keyboardType: TextInputType.number,
                             inputFormatters: [
@@ -483,7 +497,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             ElevatedButton(
                               onPressed: _otpController.text.length == 6 ? _verifyOtp : null,
-                              child: Text('Verify'),
+                              child: Text('Verify'.tr()),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Color(0xFF7AA9D4),
                                 foregroundColor: Colors.black, // <-- Set text/icon color to white
@@ -494,8 +508,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               onPressed: _canResend && _resendCounter < 3 ? _resendOtp : null,
                               child: Text(
                                 _canResend
-                                    ? 'Resend'
-                                    : 'Wait ${_secondsRemaining}s',
+                                    ? 'Resend'.tr()
+                                    : 'Wait ${_secondsRemaining}s'.tr(),
                                 style: TextStyle(fontSize: 12),
                               ),
                             ),
@@ -511,8 +525,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     SizedBox(height: 10),
                   ],
-
-                  // OTP Verified Message
                   if (_isOtpVerified) ...[
                     Container(
                       padding: EdgeInsets.all(10),
@@ -538,10 +550,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
 
                   SizedBox(height: 16),
-
-                  // Password Field
                   CustomTextField(
-                    label: 'Password',
+                    label: 'Password*'.tr(),
                     hint: 'Enter your password',
                     isRequired: true,
                     controller: _passwordController,
@@ -602,7 +612,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Login Button
                   CustomButton(
-                    text: 'Login',
+                    text: 'Login'.tr(),
                     onPressed: _login,
                     isLoading: _isLoading,
                     width: double.infinity,
@@ -617,7 +627,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         MaterialPageRoute(builder: (context) => VisitorFormScreen()),
                       );
                     },
-                    child: Text('Don\'t have an account? Register'),
+                    child: Text('Don\'t have an account? Register'.tr()),
                   ),
 
                   // Forgot Password Link
@@ -632,7 +642,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       );
                     },
-                    child: Text('Forgot Password?'),
+                    child: Text('Forgot Password?'.tr()),
                   ),
                 ],
               ),
@@ -659,7 +669,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 _buildNavItem(
                   index: 0,
                   icon: Icons.info_outline,
-                  label: 'About Us',
+                  label: 'About Us'.tr(),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -670,7 +680,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 _buildNavItem(
                   index: 1,
                   icon: Icons.shield_outlined,
-                  label: 'Privacy Policy',
+                  label: 'Privacy Policy'.tr(),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -681,7 +691,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 _buildNavItem(
                   index: 2,
                   icon: Icons.support_agent_outlined,
-                  label: 'Contact Us',
+                  label: 'Contact Us'.tr(),
                   onTap: () {
                     ContactUsPopup.show(context);
                   },
@@ -689,7 +699,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 _buildNavItem(
                   index: 3,
                   icon: Icons.article_outlined,
-                  label: 'Terms of Use',
+                  label: 'Terms of Use'.tr(),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -704,6 +714,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
   @override
   void dispose() {
     _resendTimer?.cancel();
