@@ -221,7 +221,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 // Email or Mobile Field
                 if (widget.isInternationalVisitor)
                   CustomTextField(
-                    label: 'Email'.tr(),
+                    label: 'Email ID*'.tr(),
                     hint: 'Enter your email',
                     isRequired: true,
                     controller: _emailController,
@@ -230,7 +230,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   )
                 else
                   CustomTextField(
-                    label: 'Mobile No'.tr(),
+                    label: 'Mobile No*'.tr(),
                     hint: 'Enter your mobile number',
                     isRequired: true,
                     controller: _mobileController,
