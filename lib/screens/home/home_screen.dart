@@ -1,12 +1,10 @@
 
+import 'package:eMulakat/screens/home/visit_detail_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import '../../dashboard/evisitor_pass_screen.dart';
 import '../../dashboard/grievance/grievance_home.dart';
-import '../../dashboard/visit/visit_preview1.dart';
-import '../../dashboard/visit/visit_preview_screen.dart';
-import '../../dashboard/visit/whom_to_meet_screen.dart';
 import '../../dashboard/visit/visit_home.dart';
 import '../../models/visitor_model.dart';
 import 'chatbot_screen.dart';
@@ -144,22 +142,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _listen() async {
-    if (!speechToText.isListening) {
-      bool available = await speechToText.initialize();
-      if (available) {
-        speechToText.listen(
-          onResult: (result) {
-            setState(() {
-              // Handle speech result
-            });
-          },
-        );
-      }
-    } else {
-      speechToText.stop();
-    }
-  }
 
   String getDayOfWeek(DateTime date) {
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -515,28 +497,48 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   ];
 
-  Widget _buildVisitTypeCard(String title, int count, bool selected, VoidCallback onTap) {
+  Widget _buildVisitTypeCard(String title, int count, bool selected, VoidCallback onTap, {Icon? leadingIcon}) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: Card(
-          color: selected ? AppColors.primary : Colors.grey[300],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(
+              color: selected ? AppColors.primary : Colors.grey.shade300,
+              width: selected ? 2 : 1,
+            ),
+          ),
+          elevation: 2,
+          color: selected ? AppColors.primary : Colors.grey.shade300,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(title,
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: selected ? Colors.white : Colors.black)),
-                SizedBox(height: 8),
+                if (leadingIcon != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6.0),
+                    child: leadingIcon,
+                  ),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                      color: Color(0xFF121010),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 CircleAvatar(
                   backgroundColor: Colors.white,
-                  child: Text('$count',
-                      style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold)),
+                  child: Text(
+                    '$count',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -546,10 +548,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+// Also modify your _buildHorizontalVisitCards method to handle the selection:
   Widget _buildHorizontalVisitCards(List<VisitorModel> visits) {
     return Container(
       height: 100,
-      color: Colors.white, // ✅ Set background color to white
+      color: Colors.white,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: visits.length,
@@ -560,11 +563,11 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () {
               setState(() {
                 selectedVisitor = visitor;
-                isExpandedView = true;
+                isExpandedView = true; // Switch to detailed view
               });
             },
             child: Card(
-              color: const Color(0xFFC6DAED), // 🔵 Set dark blue background
+              color: const Color(0xFFC6DAED),
               margin: const EdgeInsets.only(right: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -577,7 +580,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 100,
                 padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                 child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Status badge
                     Container(
@@ -637,188 +640,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
-  Widget _buildVerticalVisitCards(List<VisitorModel> visits) {
-    return ListView.builder(
-      itemCount: visits.length,
-      itemBuilder: (context, index) {
-        final visitor = visits[index];
-        bool isSelected = selectedVisitor == visitor;
-
-        return GestureDetector(
-          onTap: () {
-            setState(() {
-              selectedVisitor = visitor; // ✅ Set selected visitor
-            });
-          },
-          child: Card(
-            color: Colors.transparent,
-            elevation: 0,
-            margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Container(
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.background,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isSelected ? AppColors.primary : AppColors.primary,
-                  width: isSelected ? 2 : 1.2,
-                ),
-              ),
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                children: [
-                  // Left vertical date block
-                  Container(
-                    width: 70,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary : AppColors.primary,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          getDayOfWeek(visitor.visitDate),
-                          style: const TextStyle(color: Colors.white, fontSize: 12),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          visitor.visitDate.day.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          getMonthName(visitor.visitDate),
-                          style: const TextStyle(color: Colors.white, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(width: 12),
-
-                  // Right content block
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Status label
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: statusColor(visitor.status),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              getStatusText(visitor.status),
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-
-                        // Time
-                        Row(
-                          children: [
-                            const Icon(Icons.access_time, size: 18, color: AppColors.primary),
-                            const SizedBox(width: 6),
-                            Text(
-                              '${visitor.startTime} - ${visitor.endTime}',
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-
-                        // Visitor name
-                        Row(
-                          children: [
-                            const Icon(Icons.person, size: 18, color: AppColors.primary),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                visitor.visitorName,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-
-                        // Prison/Jail name
-                        Row(
-                          children: [
-                            const Icon(Icons.location_on, size: 18, color: AppColors.primary),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                visitor.jail,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-
-                        // Additional participants
-                        Row(
-                          children: [
-                            const Icon(Icons.group, size: 18, color: AppColors.primary),
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: Text(
-                                visitor.additionalVisitors > 0
-                                    ? '${visitor.additionalVisitors} additional Visitors'
-                                    : 'No additional Visitors',
-                                style: const TextStyle(fontSize: 14, color: Colors.black),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Arrow icon
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_forward_ios, size: 25, color: AppColors.primary,fontWeight: FontWeight.bold,),
-                      onPressed: () {
-                        setState(() {
-                          selectedVisitor = visitor; // ✅ Set selected visitor
-                        });
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => VisitPreviewScreen1(),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -857,24 +678,22 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           // Text to Speech
-          // In your AppBar actions, replace the TTS IconButton with:
           IconButton(
             icon: Icon(
-              _isTtsEnabled ? Icons.volume_up : Icons.volume_off, // Fixed: Show volume_off when disabled
+              _isTtsEnabled ? Icons.volume_up : Icons.volume_off,
               color: Colors.black,
             ),
             onPressed: () {
               if (!_isTtsEnabled) {
                 setState(() {
-                  _isTtsEnabled = true; // Enable TTS
+                  _isTtsEnabled = true;
                 });
                 _speak('Welcome to eMulakat, Prison Visitor Management System');
               } else {
-                // If TTS is currently enabled, allow manual disable
                 setState(() {
                   _isTtsEnabled = false;
                 });
-                flutterTts.stop(); // Stop any ongoing speech
+                flutterTts.stop();
               }
             },
           ),
@@ -926,112 +745,133 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       drawer: DrawerMenu(),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                translatedWelcome.isNotEmpty ? translatedWelcome : 'Welcome to E-Mulakat',
-                style: TextStyle(
-                  fontSize: _fontSize + 8,
-                  fontWeight: FontWeight.bold,
-                  color: _selectedColor,
-                ),
-              ),
-              SizedBox(height: 15),
-              Text(
-                translatedInstructions.isNotEmpty ? translatedInstructions : 'Prison Visitor Management System',
-                style: TextStyle(
-                  fontSize: _fontSize + 2,
-                  color: Colors.black,
-                ),
-              ),
-              SizedBox(height: 30),
-              Row(
+      body: Column(
+        children: [
+          // Top content (Welcome text and visit type cards) - only show if not in expanded view
+          if (!isExpandedView)
+            Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildVisitTypeCard('Past Visits', pastVisits.length, showPastVisits, () {
-                    setState(() {
-                      showPastVisits = true;
-                      isExpandedView = false;
-                    });
-                  }),
-                  SizedBox(width: 10),
-                  _buildVisitTypeCard('Upcoming Visits', upcomingVisits.length, !showPastVisits, () {
-                    setState(() {
-                      showPastVisits = false;
-                      isExpandedView = false;
-                    });
-                  }),
+                  Text(
+                    translatedWelcome.isNotEmpty ? translatedWelcome : 'Welcome to E-Mulakat',
+                    style: TextStyle(
+                      fontSize: _fontSize + 8,
+                      fontWeight: FontWeight.bold,
+                      color: _selectedColor,
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Text(
+                    translatedInstructions.isNotEmpty ? translatedInstructions : 'Prison Visitor Management System',
+                    style: TextStyle(
+                      fontSize: _fontSize + 2,
+                      color: Colors.black,
+                    ),
+                  ),
+                  SizedBox(height: 40),
+                  Row(
+                    children: [
+                      _buildVisitTypeCard(
+                        'Past Visits',
+                        pastVisits.length,
+                        showPastVisits,
+                            () {
+                          setState(() {
+                            showPastVisits = true;
+                            isExpandedView = false;
+                            selectedVisitor = null;
+                          });
+                        },
+                        leadingIcon: const Icon(Icons.all_inclusive, size: 25), // 👈 Added icon
+                      ),
+                      SizedBox(width: 10),
+                      _buildVisitTypeCard('Upcoming Visits', upcomingVisits.length, !showPastVisits, () {
+                        setState(() {
+                          showPastVisits = false;
+                          isExpandedView = false;
+                          selectedVisitor = null;
+                        });
+                      },
+                        leadingIcon: const Icon(Icons.upcoming, size: 25),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 40),
                 ],
               ),
-              SizedBox(height: 30),
+            ),
 
-              // Dynamic View
-              // Replace the Expanded with a fixed-height container:
-              SizedBox(
-                height: isExpandedView ? 200 : 150, // Adjust as needed
-                child: isExpandedView
-                    ? _buildVerticalVisitCards(showPastVisits ? pastVisits : upcomingVisits)
-                    : _buildHorizontalVisitCards(showPastVisits ? pastVisits : upcomingVisits),
-              ),
+          // Main content area
+          Expanded(
+            child: isExpandedView && selectedVisitor != null
+                ? VisitDetailView(
+              selectedVisitor: selectedVisitor!,
+              pastVisits: pastVisits,
+              upcomingVisits: upcomingVisits,
+              onVisitorSelected: (visitor) {
+                setState(() {
+                  selectedVisitor = visitor;
+                });
+              },
+            )
+                : Container(
+              height: 20,
+              child: _buildHorizontalVisitCards(showPastVisits ? pastVisits : upcomingVisits),
+            ),
+          ),
 
-              SizedBox(height: 60),
-              // E-Pass Button
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: 12.0),
-                child: Center(
-                  child: SizedBox(
-                    width: 160,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (selectedVisitor != null) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => eVisitorPassScreen(visitor: selectedVisitor!),
-                            ),
-                          );
-                        } else {
-                          // Show alert if no visitor is selected
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text('No Visit Selected'),
-                              content: Text('Please select a visit before proceeding.'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text('OK'),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+          // E-Pass Button - always at bottom
+          Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Center(
+              child: SizedBox(
+                width: 160,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (selectedVisitor != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => eVisitorPassScreen(visitor: selectedVisitor!),
                         ),
-                      ),
-                      child: Text(
-                        'eVisitor Pass',
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: Colors.white,
+                      );
+                    } else {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text('No Visit Selected'),
+                          content: Text('Please select a visit before proceeding.'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text('OK'),
+                            ),
+                          ],
                         ),
-                      ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'eVisitor Pass',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.white,
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -1040,10 +880,8 @@ class _HomeScreenState extends State<HomeScreen> {
             MaterialPageRoute(builder: (context) => ChatbotScreen()),
           );
         },
-        backgroundColor: Color(0xFF5A8BBA),
-        child: Icon(Icons.chat_outlined), // 🤖 chatbot icon
+        child: Icon(Icons.chat_outlined,color: Color(0xFFFFFFFF),fontWeight: FontWeight.bold,),
       ),
-
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Color(0xFF5A8BBA),
