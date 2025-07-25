@@ -125,7 +125,7 @@ class _NotificationScreenState extends State<NotificationScreen> with TickerProv
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF8FAFC), // Light grey background
+      backgroundColor: Colors.white, // Light grey background
       body: SafeArea(
         child: Column(
           children: [
