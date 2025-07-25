@@ -148,4 +148,24 @@ class VisitorModel {
         return 'Pending';
     }
   }
+
+}
+class NotificationModel {
+  final String id;
+  final String title;
+  final String message;
+  final DateTime timestamp;
+  final String type; // 'visit', 'grievance', 'system'
+  final bool isRead;
+  final String? actionUrl;
+
+  NotificationModel({
+    required this.id,
+    required this.title,
+    required this.message,
+    required this.timestamp,
+    required this.type,
+    this.isRead = false,
+    this.actionUrl,
+  });
 }

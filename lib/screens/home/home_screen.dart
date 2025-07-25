@@ -14,6 +14,8 @@ import 'drawer_menu.dart';
 import '../../utils/color_scheme.dart';
 import 'package:translator/translator.dart';
 
+import 'notifications_screen.dart';
+
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -22,6 +24,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  bool _isTtsEnabled = false;
+
   FlutterTts flutterTts = FlutterTts();
   SpeechToText speechToText = SpeechToText();
 
@@ -77,8 +81,23 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _speak(String text) async {
+    // Set up completion handler before speaking
+    flutterTts.setCompletionHandler(() {
+      setState(() {
+        _isTtsEnabled = false; // Automatically disable TTS after speaking
+      });
+    });
+
+    // Set up error handler
+    flutterTts.setErrorHandler((msg) {
+      setState(() {
+        _isTtsEnabled = false; // Disable TTS on error
+      });
+    });
+
     await flutterTts.speak(text);
   }
+
 
   Widget _buildNavItem({
     required int index,
@@ -182,6 +201,86 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  List<NotificationModel> notifications = [
+    NotificationModel(
+      id: '1',
+      title: 'Visit Approved',
+      message: 'Your visit request for Arthur Road Jail has been approved for Monday, 15:00-17:30',
+      timestamp: DateTime.now().subtract(Duration(hours: 2)),
+      type: 'visit',
+      isRead: false,
+    ),
+    NotificationModel(
+      id: '2',
+      title: 'Visit Reminder',
+      message: 'You have an upcoming visit tomorrow at Yerwada Jail. Please arrive 30 minutes early.',
+      timestamp: DateTime.now().subtract(Duration(hours: 5)),
+      type: 'visit',
+      isRead: false,
+    ),
+    NotificationModel(
+      id: '3',
+      title: 'Grievance Update',
+      message: 'Your grievance #GR-2024-001 has been reviewed and a response has been provided.',
+      timestamp: DateTime.now().subtract(Duration(days: 1)),
+      type: 'grievance',
+      isRead: true,
+    ),
+    NotificationModel(
+      id: '4',
+      title: 'System Maintenance',
+      message: 'The system will be under maintenance on Sunday from 2:00 AM to 4:00 AM.',
+      timestamp: DateTime.now().subtract(Duration(days: 2)),
+      type: 'system',
+      isRead: false,
+    ),
+    NotificationModel(
+      id: '5',
+      title: 'Visit Cancelled',
+      message: 'Unfortunately, your visit scheduled for today has been cancelled due to security reasons.',
+      timestamp: DateTime.now().subtract(Duration(days: 3)),
+      type: 'visit',
+      isRead: true,
+    ),
+    NotificationModel(
+      id: '6',
+      title: 'Grievance Cancelled',
+      message: 'Unfortunately, your  Grievance scheduled for today has been cancelled due to some reasons.',
+      timestamp: DateTime.now().subtract(Duration(days: 3)),
+      type: 'grievance',
+      isRead: true,
+    ),
+    NotificationModel(
+      id: '7',
+      title: 'System Maintenance',
+      message: 'The system will be under maintenance on Sunday from 5:00 PM to 7:00 PM.',
+      timestamp: DateTime.now().subtract(Duration(hours: 1)),
+      type: 'system',
+      isRead: false,
+    ),
+  ];
+
+  int get unreadNotificationCount {
+    return notifications.where((notification) => !notification.isRead).length;
+  }
+
+// Method to mark notification as read
+  void markNotificationAsRead(String notificationId) {
+    setState(() {
+      final index = notifications.indexWhere((n) => n.id == notificationId);
+      if (index != -1) {
+        notifications[index] = NotificationModel(
+          id: notifications[index].id,
+          title: notifications[index].title,
+          message: notifications[index].message,
+          timestamp: notifications[index].timestamp,
+          type: notifications[index].type,
+          isRead: true,
+          actionUrl: notifications[index].actionUrl,
+        );
+      }
+    });
+  }
   bool showPastVisits = true;
   bool isExpandedView = false;
 
@@ -756,24 +855,73 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             }).toList(),
           ),
-          // Speech to Text
-          IconButton(
-            icon: Icon(speechToText.isListening ? Icons.mic : Icons.mic_none),
-            onPressed: _listen,
-          ),
 
           // Text to Speech
+          // In your AppBar actions, replace the TTS IconButton with:
           IconButton(
-            icon: Icon(Icons.volume_up),
-            onPressed: () => _speak('Welcome to eMulakat , Prison Visitor Management System'),
+            icon: Icon(
+              _isTtsEnabled ? Icons.volume_up : Icons.volume_off, // Fixed: Show volume_off when disabled
+              color: Colors.black,
+            ),
+            onPressed: () {
+              if (!_isTtsEnabled) {
+                setState(() {
+                  _isTtsEnabled = true; // Enable TTS
+                });
+                _speak('Welcome to eMulakat, Prison Visitor Management System');
+              } else {
+                // If TTS is currently enabled, allow manual disable
+                setState(() {
+                  _isTtsEnabled = false;
+                });
+                flutterTts.stop(); // Stop any ongoing speech
+              }
+            },
           ),
 
           // Notification Icon
-          IconButton(
-            icon: Icon(Icons.notifications),
-            onPressed: () {
-              // Handle notifications
-            },
+          Stack(
+            children: [
+              IconButton(
+                icon: Icon(Icons.notifications),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => NotificationScreen(
+                        notifications: notifications,
+                        onNotificationRead: markNotificationAsRead,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              if (unreadNotificationCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      '$unreadNotificationCount',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
