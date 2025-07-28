@@ -1,5 +1,5 @@
 
-import 'package:eMulakat/screens/home/visit_detail_view.dart';
+import 'package:eMulakat/screens/home/vertical_visit_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -12,6 +12,7 @@ import 'drawer_menu.dart';
 import '../../utils/color_scheme.dart';
 import 'package:translator/translator.dart';
 
+import 'horizontal_visit_card.dart';
 import 'notifications_screen.dart';
 
 
@@ -549,96 +550,29 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 // Also modify your _buildHorizontalVisitCards method to handle the selection:
-  Widget _buildHorizontalVisitCards(List<VisitorModel> visits) {
-    return Container(
-      height: 100,
-      color: Colors.white,
+  Widget _buildVisitCardList(List<VisitorModel> visits) {
+    return SizedBox(
+      height: 220,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: visits.length,
         itemBuilder: (context, index) {
           final visitor = visits[index];
-          bool isSelected = selectedVisitor == visitor;
-          return GestureDetector(
+          return HorizontalVisitCard(
+            visitor: visitor,
+            isSelected: selectedVisitor == visitor,
             onTap: () {
               setState(() {
                 selectedVisitor = visitor;
-                isExpandedView = true; // Switch to detailed view
+                isExpandedView = true;
               });
             },
-            child: Card(
-              color: const Color(0xFFC6DAED),
-              margin: const EdgeInsets.only(right: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: BorderSide(
-                  color: isSelected ? Colors.white : AppColors.primary,
-                  width: isSelected ? 2 : 1,
-                ),
-              ),
-              child: Container(
-                width: 100,
-                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Status badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: statusColor(visitor.status),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        getStatusText(visitor.status),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-
-                    // Day of week
-                    Text(
-                      getDayOfWeek(visitor.visitDate),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: isSelected ? Colors.white : Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-
-                    // Date (big)
-                    Text(
-                      visitor.visitDate.day.toString().padLeft(2, '0'),
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: isSelected ? Colors.white : AppColors.primary,
-                      ),
-                    ),
-
-                    // Month
-                    Text(
-                      getMonthName(visitor.visitDate),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: isSelected ? Colors.white : Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           );
         },
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -770,7 +704,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.black,
                     ),
                   ),
-                  SizedBox(height: 40),
+                  SizedBox(height: 30),
                   Row(
                     children: [
                       _buildVisitTypeCard(
@@ -798,7 +732,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 40),
+                  SizedBox(height: 20),
                 ],
               ),
             ),
@@ -816,10 +750,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 });
               },
             )
-                : Container(
-              height: 20,
-              child: _buildHorizontalVisitCards(showPastVisits ? pastVisits : upcomingVisits),
-            ),
+            : _buildVisitCardList(showPastVisits ? pastVisits : upcomingVisits),
           ),
 
           // E-Pass Button - always at bottom
