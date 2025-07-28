@@ -107,7 +107,7 @@ class _VisitDetailViewState extends State<VisitDetailView>
           children: [
             // Left blue date block (exactly like the image)
             Container(
-              width: 110,
+              width: 120,
               height: 120,
               decoration: const BoxDecoration(
                 color: Color(0xFF4A90E2), // Blue color from image
@@ -141,6 +141,15 @@ class _VisitDetailViewState extends State<VisitDetailView>
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    visitor.visitDate.year.toString(),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
