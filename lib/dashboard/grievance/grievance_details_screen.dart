@@ -443,27 +443,33 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
                           'Gender*',
                           style: TextStyle(fontSize: 16),
                         ),
-                        ..._genders.map((gender) {
-                          return RadioListTile<String>(
-                            title: Text(gender),
-                            value: gender,
-                            groupValue: _selectedPrisonerGender,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedPrisonerGender = value;
-                              });
-                            },
-                            contentPadding: EdgeInsets.zero,
-                          );
-                        }).toList(),
-                        if (_selectedPrisonerGender == null)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 12, top: 4),
-                            child: Text(
-                              'Select your gender',
-                              style: TextStyle(color: Colors.grey, fontSize: 12),
-                            ),
-                          ),
+                        SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: _genders.map((gender) {
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Radio<String>(
+                                  value: gender,
+                                  groupValue: _selectedPrisonerGender,
+                                  visualDensity: VisualDensity(horizontal: -4, vertical: -4), // compact look
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,    // reduces touch area
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _selectedPrisonerGender = value;
+                                    });
+                                  },
+                                ),
+                                Text(
+                                  gender,
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(width: 25), // minimal spacing between options
+                              ],
+                            );
+                          }).toList(),
+                        ),
                       ],
                     ),
                     SizedBox(height: 16),
@@ -494,27 +500,30 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
                     CustomTextField(
                       controller: _messageController,
                       label: 'Message*',
-                      hint: 'Enter issue Description',
-                      validator: Validators.validateName,
-                      maxLength: 100,
+                      hint: 'Enter issue description',
+                      maxLines: 5, // 👈 Makes it look like a textarea
+                      maxLength: 500, // Optional: increase limit
+                      validator: (value) {
+                        final pattern = RegExp(r'^[a-zA-Z0-9\s.,;!?()\-]+$');
+                        if (value == null || value.isEmpty) {
+                          return 'Message is required';
+                        } else if (!pattern.hasMatch(value)) {
+                          return 'Only letters, numbers and . , ; ! ? - ( ) are allowed';
+                        }
+                        return null;
+                      },
                       inputFormatters: [
                         TextInputFormatter.withFunction((oldValue, newValue) {
-                          String text = newValue.text;
-                          if (text.isNotEmpty) {
-                            text = text.split(' ').map((word) {
-                              if (word.isNotEmpty) {
-                                return word[0].toUpperCase() + word.substring(1).toLowerCase();
-                              }
-                              return word;
-                            }).join(' ');
+                          // Allow letters, numbers, common punctuation
+                          final allowedPattern = RegExp(r'^[a-zA-Z0-9\s.,;!?()\-]*$');
+                          if (allowedPattern.hasMatch(newValue.text)) {
+                            return newValue;
                           }
-                          return TextEditingValue(
-                            text: text,
-                            selection: TextSelection.collapsed(offset: text.length),
-                          );
+                          return oldValue;
                         }),
                       ],
                     ),
+
                     SizedBox(height: 30),
 
                     // Action Buttons
@@ -535,8 +544,11 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
                                 // Show success message
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Grievance details submitted successfully.'),
-                                    backgroundColor: Colors.green,
+                                    content: Text(
+                                      'Grievance details submitted successfully.',
+                                      style: TextStyle(color: Colors.black), // <-- Text color
+                                    ),
+                                    backgroundColor: Colors.blue,
                                     duration: Duration(seconds: 2),
                                   ),
                                 );

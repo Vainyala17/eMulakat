@@ -240,43 +240,48 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ],
                   ),
 
-                SizedBox(height: 16),
+                SizedBox(height: 35),
 
                 // Captcha Row
                 Row(
                   children: [
-                    Expanded(
-                      flex: 2,
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Center(
-                          child: Text(
-                            _captchaText,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 5,
-                            ),
-                          ),
+                    // Captcha Text Box
+                    Container(
+                      width: 100,
+                      height: 50,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(4),
+                        color: Colors.grey[100],
+                      ),
+                      child: Text(
+                        _captchaText,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 3,
                         ),
                       ),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width:15),
+
+                    // Refresh Button
                     IconButton(
-                      onPressed: _generateCaptcha,
                       icon: Icon(Icons.refresh),
+                      onPressed: _generateCaptcha,
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: 12),
+
+                    // Captcha Input Field
                     Expanded(
-                      flex: 2,
-                      child: CustomTextField(
-                        label: '',
-                        hint: 'Enter captcha'.tr(),
+                      child: TextFormField(
                         controller: _captchaController,
+                        decoration: InputDecoration(
+                          hintText: 'Enter captcha',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Captcha is required';
