@@ -553,7 +553,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   CustomTextField(
                     label: 'Password*'.tr(),
                     hint: 'Enter your password',
-                    isRequired: true,
                     controller: _passwordController,
                     obscureText: true,
                     validator: (value) {
