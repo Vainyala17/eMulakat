@@ -84,7 +84,7 @@ class HorizontalVisitCard extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: isSelected
-                ? [Color(0xFF5A8BBA), Color(0xFF7AA9D4)]
+                ? [Color(0xFF3B6C99), Color(0xFF5A8BBA)] // darker active colors
                 : [Colors.white, Color(0xFFF8F9FA)],
           ),
           borderRadius: BorderRadius.circular(20),

@@ -511,9 +511,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           elevation: 2,
-          color: selected ? AppColors.primary : Colors.grey.shade300,
+          color: selected ? AppColors.primary.withOpacity(0.2) : Colors.grey.shade200,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -525,14 +525,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                       color: Color(0xFF121010),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 CircleAvatar(
                   backgroundColor: Colors.white,
+                  radius: 15, // smaller circle
                   child: Text(
                     '$count',
                     style: TextStyle(
@@ -576,293 +577,317 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: _selectedColor,
-        actions: [
-          // Font Size Controls
-          PopupMenuButton<double>(
-            icon: Icon(Icons.font_download),
-            onSelected: (size) {
-              setState(() {
-                _fontSize = size;
-              });
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(value: 12.0, child: Text('A-')),
-              PopupMenuItem(value: 16.0, child: Text('A')),
-              PopupMenuItem(value: 20.0, child: Text('A+')),
-            ],
-          ),
-
-          // Language Selection
-          PopupMenuButton<String>(
-            icon: Icon(Icons.language),
-            onSelected: (language) {
-              final targetLangCode = _languages[language] ?? 'en';
-              Future.delayed(Duration.zero, () => _translateAll(targetLangCode));
-            },
-            itemBuilder: (context) => _languages.keys.map((language) {
-              return PopupMenuItem<String>(
-                value: language,
-                child: Text(language),
-              );
-            }).toList(),
-          ),
-
-          // Text to Speech
-          IconButton(
-            icon: Icon(
-              _isTtsEnabled ? Icons.volume_up : Icons.volume_off,
-              color: Colors.black,
-            ),
-            onPressed: () {
-              if (!_isTtsEnabled) {
-                setState(() {
-                  _isTtsEnabled = true;
-                });
-                _speak('Welcome to eMulakat, Prison Visitor Management System');
-              } else {
-                setState(() {
-                  _isTtsEnabled = false;
-                });
-                flutterTts.stop();
-              }
-            },
-          ),
-
-          // Notification Icon
-          Stack(
-            children: [
-              IconButton(
-                icon: Icon(Icons.notifications),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NotificationScreen(
-                        notifications: notifications,
-                        onNotificationRead: markNotificationAsRead,
-                      ),
-                    ),
-                  );
-                },
-              ),
-              if (unreadNotificationCount > 0)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    constraints: BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      '$unreadNotificationCount',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+    return WillPopScope(
+      onWillPop: () async {
+        bool exitConfirmed = await showDialog(
+          context: context,
+          builder: (context) =>
+            AlertDialog(
+              title: Text('Exit Confirmation'),
+              content: Text('Please use Logout and close the App.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text('Cancel'),
                 ),
-            ],
-          ),
-        ],
-      ),
-      drawer: DrawerMenu(),
-      body: Column(
-        children: [
-          // Top content (Welcome text and visit type cards) - only show if not in expanded view
-          if (!isExpandedView)
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    translatedWelcome.isNotEmpty ? translatedWelcome : 'Welcome to E-Mulakat',
-                    style: TextStyle(
-                      fontSize: _fontSize + 8,
-                      fontWeight: FontWeight.bold,
-                      color: _selectedColor,
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text('Logout'),
+                ),
+              ],
+            ),
+        );
+        return exitConfirmed;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: _selectedColor,
+          actions: [
+            // Font Size Controls
+            PopupMenuButton<double>(
+              icon: Icon(Icons.font_download),
+              onSelected: (size) {
+                setState(() {
+                  _fontSize = size;
+                });
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(value: 12.0, child: Text('A-')),
+                PopupMenuItem(value: 16.0, child: Text('A')),
+                PopupMenuItem(value: 20.0, child: Text('A+')),
+              ],
+            ),
+
+            // Language Selection
+            PopupMenuButton<String>(
+              icon: Icon(Icons.language),
+              onSelected: (language) {
+                final targetLangCode = _languages[language] ?? 'en';
+                Future.delayed(Duration.zero, () => _translateAll(targetLangCode));
+              },
+              itemBuilder: (context) => _languages.keys.map((language) {
+                return PopupMenuItem<String>(
+                  value: language,
+                  child: Text(language),
+                );
+              }).toList(),
+            ),
+
+            // Text to Speech
+            IconButton(
+              icon: Icon(
+                _isTtsEnabled ? Icons.volume_up : Icons.volume_off,
+                color: Colors.black,
+              ),
+              onPressed: () {
+                if (!_isTtsEnabled) {
+                  setState(() {
+                    _isTtsEnabled = true;
+                  });
+                  _speak('Welcome to eMulakat, Prison Visitor Management System');
+                } else {
+                  setState(() {
+                    _isTtsEnabled = false;
+                  });
+                  flutterTts.stop();
+                }
+              },
+            ),
+
+            // Notification Icon
+            Stack(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.notifications),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => NotificationScreen(
+                          notifications: notifications,
+                          onNotificationRead: markNotificationAsRead,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                if (unreadNotificationCount > 0)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        '$unreadNotificationCount',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
-                  SizedBox(height: 20),
-                  Text(
-                    translatedInstructions.isNotEmpty ? translatedInstructions : 'Prison Visitor Management System',
-                    style: TextStyle(
-                      fontSize: _fontSize + 2,
-                      color: Colors.black,
+              ],
+            ),
+          ],
+        ),
+        drawer: DrawerMenu(),
+        body: Column(
+          children: [
+            // Top content (Welcome text and visit type cards) - only show if not in expanded view
+            if (!isExpandedView)
+              Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      translatedWelcome.isNotEmpty ? translatedWelcome : 'Welcome to E-Mulakat',
+                      style: TextStyle(
+                        fontSize: _fontSize + 8,
+                        fontWeight: FontWeight.bold,
+                        color: _selectedColor,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 30),
-                  Row(
-                    children: [
-                      _buildVisitTypeCard(
-                        'Past Visits',
-                        pastVisits.length,
-                        showPastVisits,
-                            () {
+                    SizedBox(height: 20),
+                    Text(
+                      translatedInstructions.isNotEmpty ? translatedInstructions : 'Prison Visitor Management System',
+                      style: TextStyle(
+                        fontSize: _fontSize + 2,
+                        color: Colors.black,
+                      ),
+                    ),
+                    SizedBox(height: 30),
+                    Row(
+                      children: [
+                        _buildVisitTypeCard(
+                          'Past Visits',
+                          pastVisits.length,
+                          showPastVisits,
+                              () {
+                            setState(() {
+                              showPastVisits = true;
+                              isExpandedView = false;
+                              selectedVisitor = null;
+                            });
+                          },
+                          leadingIcon: const Icon(Icons.all_inclusive, size: 25), // 👈 Added icon
+                        ),
+                        SizedBox(width: 10),
+                        _buildVisitTypeCard('Upcoming Visits', upcomingVisits.length, !showPastVisits, () {
                           setState(() {
-                            showPastVisits = true;
+                            showPastVisits = false;
                             isExpandedView = false;
                             selectedVisitor = null;
                           });
                         },
-                        leadingIcon: const Icon(Icons.all_inclusive, size: 25), // 👈 Added icon
-                      ),
-                      SizedBox(width: 10),
-                      _buildVisitTypeCard('Upcoming Visits', upcomingVisits.length, !showPastVisits, () {
-                        setState(() {
-                          showPastVisits = false;
-                          isExpandedView = false;
-                          selectedVisitor = null;
-                        });
-                      },
-                        leadingIcon: const Icon(Icons.upcoming, size: 25),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-                ],
+                          leadingIcon: const Icon(Icons.upcoming, size: 25),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 30),
+                  ],
+                ),
               ),
+
+            // Main content area
+            Expanded(
+              child: isExpandedView && selectedVisitor != null
+                  ? VisitDetailView(
+                selectedVisitor: selectedVisitor!,
+                pastVisits: pastVisits,
+                upcomingVisits: upcomingVisits,
+                onVisitorSelected: (visitor) {
+                  setState(() {
+                    selectedVisitor = visitor;
+                  });
+                },
+              )
+                  : _buildVisitCardList(showPastVisits ? pastVisits : upcomingVisits),
             ),
 
-          // Main content area
-          Expanded(
-            child: isExpandedView && selectedVisitor != null
-                ? VisitDetailView(
-              selectedVisitor: selectedVisitor!,
-              pastVisits: pastVisits,
-              upcomingVisits: upcomingVisits,
-              onVisitorSelected: (visitor) {
-                setState(() {
-                  selectedVisitor = visitor;
-                });
-              },
-            )
-            : _buildVisitCardList(showPastVisits ? pastVisits : upcomingVisits),
-          ),
-
-          // E-Pass Button - always at bottom
-          Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(
-              child: SizedBox(
-                width: 160,
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (selectedVisitor != null) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => eVisitorPassScreen(visitor: selectedVisitor!),
-                        ),
-                      );
-                    } else {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: Text('No Visit Selected'),
-                          content: Text('Please select a visit before proceeding.'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: Text('OK'),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+            SizedBox(height: 30),
+            // E-Pass Button - always at bottom
+            Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(
+                child: SizedBox(
+                  width: 160,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (selectedVisitor != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => eVisitorPassScreen(visitor: selectedVisitor!),
+                          ),
+                        );
+                      } else {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text('No Visit Selected'),
+                            content: Text('Please select a visit before proceeding.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text('OK'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    'eVisitor Pass',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.white,
+                    child: Text(
+                      'eVisitor Pass',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ChatbotScreen()),
-          );
-        },
-        child: Icon(Icons.chat_outlined,color: Color(0xFFFFFFFF),fontWeight: FontWeight.bold,),
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Color(0xFF5A8BBA),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: Offset(0, -2),
             ),
           ],
         ),
-        child: SafeArea(
-          child: SizedBox(
-            height: 60,
-            child: Row(
-              children: [
-                _buildNavItem(
-                  index: 0,
-                  icon: Icons.directions_walk,
-                  label: 'Visit',
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => VisitHomeScreen()),
-                    );
-                  },
-                ),
-                _buildNavItem(
-                  index: 1,
-                  icon: Icons.dashboard,
-                  label: 'Dashboard',
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => HomeScreen()),
-                    );
-                  },
-                ),
-                _buildNavItem(
-                  index: 3,
-                  icon: Icons.report_problem,
-                  label: 'Grievance',
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
-                    );
-                  },
-                ),
-              ],
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ChatbotScreen()),
+            );
+          },
+          child: Icon(Icons.chat_outlined,color: Color(0xFFFFFFFF),fontWeight: FontWeight.bold,),
+        ),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Color(0xFF5A8BBA),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: Offset(0, -2),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: SizedBox(
+              height: 60,
+              child: Row(
+                children: [
+                  _buildNavItem(
+                    index: 0,
+                    icon: Icons.directions_walk,
+                    label: 'Visit',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => VisitHomeScreen()),
+                      );
+                    },
+                  ),
+                  _buildNavItem(
+                    index: 1,
+                    icon: Icons.dashboard,
+                    label: 'Dashboard',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => HomeScreen()),
+                      );
+                    },
+                  ),
+                  _buildNavItem(
+                    index: 3,
+                    icon: Icons.report_problem,
+                    label: 'Grievance',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),

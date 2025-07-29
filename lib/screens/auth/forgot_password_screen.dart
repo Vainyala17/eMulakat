@@ -223,7 +223,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   CustomTextField(
                     label: 'Email ID*'.tr(),
                     hint: 'Enter your email',
-                    isRequired: true,
                     controller: _emailController,
                     validator: Validators.validateEmail,
                     keyboardType: TextInputType.emailAddress,
@@ -232,7 +231,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   CustomTextField(
                     label: 'Mobile No*'.tr(),
                     hint: 'Enter your mobile number',
-                    isRequired: true,
                     controller: _mobileController,
                     keyboardType: TextInputType.phone,
                     validator: Validators.validateMobile,

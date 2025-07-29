@@ -25,13 +25,15 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
 
   String? _selectedState;
   String? _selectedJail;
+  String? _selectedRelation;
   String? _selectedPrisonerGender;
   String? _selectedPrisonerType;
   int _additionalVisitors = 0;
   List<TextEditingController> _additionalVisitorControllers = [];
 
   final List<String> _genders = ['Male', 'Female', 'Transgender'];
-  final List<String> _visitType = ['Physical Visit', 'Video Conferencing Visit'];
+  final List<String> _relations = ['Father', 'Mother', 'Spouse', 'Brother', 'Sister', 'Son', 'Daughter', 'Friend', 'Other'];
+  final List<String> _visitType = ['Physical ', 'Video Conferencing '];
   final List<String> _states = [
     'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
     'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
@@ -429,60 +431,103 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                   LengthLimitingTextInputFormatter(3), // Limit age to 3 digits
                 ],
               ),
-              SizedBox(height: 16),
+              SizedBox(height: 18),
 
               // Prisoner Gender
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Gender*',
-                    style: TextStyle(fontSize: 16),
+                    'Prisoner Gender*',
+                    style: TextStyle(fontSize: 16,color: Colors.black),
                   ),
-                  ..._genders.map((gender) {
-                    return RadioListTile<String>(
-                      title: Text(
-                        gender,
-                        style: TextStyle(fontSize: 14),
-                      ),
-                      value: gender,
-                      groupValue: _selectedPrisonerGender,
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedPrisonerGender = value;
-                        });
-                      },
-                      contentPadding: EdgeInsets.zero, // removes horizontal padding
-                      dense: true, // makes tile vertically compact
-                      visualDensity: VisualDensity(horizontal: 0, vertical: -4), // reduces vertical space
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    );
-                  }).toList(),
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: _genders.map((gender) {
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Radio<String>(
+                            value: gender,
+                            groupValue: _selectedPrisonerGender,
+                            visualDensity: VisualDensity(horizontal: -4, vertical: -4), // compact look
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,    // reduces touch area
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedPrisonerGender = value;
+                              });
+                            },
+                          ),
+                          Text(
+                            gender,
+                            style: TextStyle(fontSize: 15),
+                          ),
+                          SizedBox(width: 25), // minimal spacing between options
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 ],
               ),
-              SizedBox(height: 16),
 
+              SizedBox(height: 18),
+
+              DropdownButtonFormField<String>(
+                value: _selectedRelation,
+                decoration: InputDecoration(
+                  labelText: 'Select Relation*',
+                  border: OutlineInputBorder(),
+                ),
+                items: _relations.map((relation) {
+                  return DropdownMenuItem(
+                    value: relation,
+                    child: Text(relation),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedRelation = value;
+                  });
+                },
+                validator: (value) => value == null ? 'Please select relation' : null,
+              ),
+              SizedBox(height: 18),
               // Visit Mode
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Select Visit Type*',
-                    style: TextStyle(fontSize: 16,),
+                    style: TextStyle(fontSize: 16,color: Colors.black),
                   ),
-                  ..._visitType.map((gender) {
-                    return RadioListTile<String>(
-                      title: Text(gender),
-                      value: gender,
-                      groupValue: _selectedPrisonerType,
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedPrisonerType = value;
-                        });
-                      },
-                      contentPadding: EdgeInsets.zero,
-                    );
-                  }).toList(),
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: _visitType.map((gender) {
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Radio<String>(
+                            value: gender,
+                            groupValue: _selectedPrisonerType,
+                            visualDensity: VisualDensity(horizontal: -4, vertical: -4), // compact look
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,    // reduces touch area
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedPrisonerType = value;
+                              });
+                            },
+                          ),
+                          Text(
+                            gender,
+                            style: TextStyle(fontSize: 15),
+                          ),
+                          SizedBox(width: 25), // minimal spacing between options
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 ],
               ),
 

@@ -39,7 +39,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
 
   final String _dummyOtp = "123456";
   String? _selectedGender;
-  String? _selectedRelation;
   String? _selectedIdProof;
   bool _isInternationalVisitor = false;
   List<num> laplacianKernel = [
@@ -63,7 +62,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
   int _secondsRemaining = 30;
 
   final List<String> _genders = ['Male', 'Female', 'Transgender'];
-  final List<String> _relations = ['Father', 'Mother', 'Spouse', 'Brother', 'Sister', 'Son', 'Daughter', 'Friend', 'Other'];
   final List<String> _idProofs = ['Aadhar Card', 'Pan Card', 'Driving License', 'Passport', 'Voter ID', 'Others', 'Not Available'];
 
   final Map<String, int> _idLimits = {
@@ -415,7 +413,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Visitor Registration'.tr()),
+        title: Text('Create Profile'.tr()),
         centerTitle: true,
         backgroundColor: Theme.of(context).primaryColor,
         actions: [
@@ -441,7 +439,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                FormSectionTitle(title: 'Visitor Details'.tr()),
+                FormSectionTitle(title: 'Personal Details'.tr()),
                 SizedBox(height: 20),
 
                 // Passport Photo Upload
@@ -584,31 +582,38 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                   children: [
                     Text(
                       'Gender*'.tr(),
-                      style: TextStyle(fontSize: 16,),
+                      style: TextStyle(fontSize: 16),
                     ),
-                    ..._genders.map((gender) {
-                      return RadioListTile<String>(
-                        title: Text(gender),
-                        value: gender,
-                        groupValue: _selectedGender,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedGender = value;
-                          });
-                        },
-                        contentPadding: EdgeInsets.zero,
-                      );
-                    }).toList(),
-                    if (_selectedGender == null)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 12, top: 4),
-                        child: Text(
-                          'Select your gender',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
-                        ),
-                      ),
+                    SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: _genders.map((gender) {
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Radio<String>(
+                              value: gender,
+                              groupValue: _selectedGender,
+                              visualDensity: VisualDensity(horizontal: -4, vertical: -4), // compact look
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,    // reduces touch area
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedGender = value;
+                                });
+                              },
+                            ),
+                            Text(
+                              gender,
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            SizedBox(width: 25), // minimal spacing between options
+                          ],
+                        );
+                      }).toList(),
+                    ),
                   ],
                 ),
+
                 SizedBox(height: 16),
 
                 // Age
@@ -622,28 +627,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                     FilteringTextInputFormatter.digitsOnly,
                     LengthLimitingTextInputFormatter(3),
                   ],
-                ),
-                SizedBox(height: 16),
-
-                // Relation
-                DropdownButtonFormField<String>(
-                  value: _selectedRelation,
-                  decoration: InputDecoration(
-                    labelText: 'Select Relation',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: _relations.map((relation) {
-                    return DropdownMenuItem(
-                      value: relation,
-                      child: Text(relation),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedRelation = value;
-                    });
-                  },
-                  validator: (value) => value == null ? 'Please select relation' : null,
                 ),
                 SizedBox(height: 16),
 
@@ -937,13 +920,10 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                   SizedBox(height: 16),
                 ],
 
-                SizedBox(height: 16),
-
                 // Password Field
                 CustomTextField(
-                  label: 'Password'.tr(),
+                  label: 'Password*'.tr(),
                   hint: 'Enter your password',
-                  isRequired: true,
                   controller: _passwordController,
                   obscureText: true,
                   validator: (value) {
