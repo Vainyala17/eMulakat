@@ -363,9 +363,9 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  SizedBox(height: 40),
+                  SizedBox(height: 20),
                   _buildLogo(),
-                  SizedBox(height: 40),
+                  SizedBox(height: 20),
                   // International Visitor Checkbox
                   CheckboxListTile(
                     title: Text('International Visitor'.tr()),
@@ -546,7 +546,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 16),
                   ],
 
                   SizedBox(height: 16),
@@ -562,41 +561,48 @@ class _LoginScreenState extends State<LoginScreen> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: 24),
 
                   // Captcha
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      // Captcha Text Box
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        width: 100,
                         height: 50,
+                        alignment: Alignment.center,
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey),
                           borderRadius: BorderRadius.circular(4),
+                          color: Colors.grey[100],
                         ),
-                        child: Center(
-                          child: Text(
-                            _captchaText,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 5,
-                            ),
+                        child: Text(
+                          _captchaText,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 3,
                           ),
                         ),
                       ),
-                      SizedBox(width: 8),
+                      SizedBox(width: 15),
+
+                      // Refresh Button
                       IconButton(
-                        onPressed: _generateCaptcha,
                         icon: Icon(Icons.refresh),
+                        onPressed: _generateCaptcha,
                       ),
-                      SizedBox(width: 8),
+                      SizedBox(width: 12),
+
+                      // Captcha Input Field
                       Expanded(
-                        child: CustomTextField(
-                          label: '',
-                          hint: 'Enter captcha',
+                        child: TextFormField(
                           controller: _captchaController,
+                          decoration: InputDecoration(
+                            hintText: 'Enter captcha',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                          ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Captcha is required';
