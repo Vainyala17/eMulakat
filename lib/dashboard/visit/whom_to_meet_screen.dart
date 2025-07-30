@@ -217,6 +217,23 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     });
   }
 
+  Future<bool> _onWillPop() async {
+    return await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Exit App'),
+        content: const Text('Please use Logout and close the App'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false), // stay
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    ) ??
+        false;
+  }
+
   void _updateAdditionalVisitorControllers() {
     if (_additionalVisitors > _additionalVisitorControllers.length) {
       for (int i = _additionalVisitorControllers.length; i < _additionalVisitors; i++) {
@@ -232,327 +249,332 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FormSectionTitle(title: 'Whom to Meet'),
-              SizedBox(height: 20),
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child:Scaffold(
+        backgroundColor: Colors.white,
+        body: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FormSectionTitle(title: 'Whom to Meet'),
+                SizedBox(height: 20),
 
-              // State Selection
-              DropdownButtonFormField<String>(
-                value: _selectedState,
-                decoration: InputDecoration(
-                  labelText: 'State*',
-                  border: OutlineInputBorder(),
+                // State Selection
+                DropdownButtonFormField<String>(
+                  value: _selectedState,
+                  decoration: InputDecoration(
+                    labelText: 'State*',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: _states.map((state) {
+                    return DropdownMenuItem(
+                      value: state,
+                      child: Text(state),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedState = value;
+                      _selectedJail = null;
+                    });
+                  },
+                  validator: (value) => value == null ? 'Please select a state' : null,
                 ),
-                items: _states.map((state) {
-                  return DropdownMenuItem(
-                    value: state,
-                    child: Text(state),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedState = value;
-                    _selectedJail = null;
-                  });
-                },
-                validator: (value) => value == null ? 'Please select a state' : null,
-              ),
-              SizedBox(height: 16),
-
-              // Jail Selection
-              DropdownButtonFormField<String>(
-                value: _selectedJail,
-                decoration: InputDecoration(
-                  labelText: 'Jail*',
-                  border: OutlineInputBorder(),
-                ),
-                items: _selectedState != null && _jailsByState[_selectedState] != null
-                    ? _jailsByState[_selectedState]!.map((jail) {
-                  return DropdownMenuItem(
-                    value: jail,
-                    child: Text(jail),
-                  );
-                }).toList()
-                    : [],
-                onChanged: (value) {
-                  setState(() {
-                    _selectedJail = value;
-                  });
-                },
-                validator: (value) => value == null ? 'Please select a jail' : null,
-              ),
-              SizedBox(height: 16),
-
-              // Visit Date
-              TextFormField(
-                controller: _visitDateController,
-                decoration: InputDecoration(
-                  labelText: 'Visit Date*',
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.calendar_today),
-                ),
-                readOnly: true,
-                onTap: () async {
-                  DateTime? pickedDate = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(Duration(days: 30)),
-                  );
-                  if (pickedDate != null) {
-                    _visitDateController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
-                  }
-                },
-                validator: (value) => value!.isEmpty ? 'Please select visit date' : null,
-              ),
-              SizedBox(height: 16),
-              // Additional Visitors
-              CustomTextField(
-                controller: _additionalVisitorsController,
-                label: 'Additional Visitors',
-                hint: 'Enter number of additional visitors',
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(10), // Limit age to 10 digits
-                ],
-              ),
-              SizedBox(height: 16),
-
-              // Additional Visitor Names (Dynamic)
-              if (_additionalVisitors > 0) ...[
-                FormSectionTitle(title: 'Additional Visitor Names'),
                 SizedBox(height: 16),
-                for (int i = 0; i < _additionalVisitors; i++)
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 16),
-                    child: CustomTextField(
-                      controller: _additionalVisitorControllers[i],
-                      label: 'Additional Visitor ${i + 1} Name*',
-                      hint: 'Enter visitor name',
-                      validator: Validators.validateName,
-                      inputFormatters: [
-                        TextInputFormatter.withFunction((oldValue, newValue) {
-                          // Convert first letter of each word to uppercase
-                          String text = newValue.text;
-                          if (text.isNotEmpty) {
-                            text = text.split(' ').map((word) {
-                              if (word.isNotEmpty) {
-                                return word[0].toUpperCase() + word.substring(1).toLowerCase();
-                              }
-                              return word;
-                            }).join(' ');
-                          }
-                          return TextEditingValue(
-                            text: text,
-                            selection: TextSelection.collapsed(offset: text.length),
-                          );
-                        }),
-                      ],
-                    ),
+
+                // Jail Selection
+                DropdownButtonFormField<String>(
+                  value: _selectedJail,
+                  decoration: InputDecoration(
+                    labelText: 'Jail*',
+                    border: OutlineInputBorder(),
                   ),
-              ],
-
-              SizedBox(height: 20),
-              FormSectionTitle(title: 'Prisoner Details'),
-              SizedBox(height: 20),
-
-              // Prisoner Name
-              CustomTextField(
-                controller: _prisonerNameController,
-                label: 'Prisoner Name*',
-                hint: 'Enter prisoner Name',
-                validator: Validators.validateName,
-                inputFormatters: [
-                  TextInputFormatter.withFunction((oldValue, newValue) {
-                    // Convert first letter of each word to uppercase
-                    String text = newValue.text;
-                    if (text.isNotEmpty) {
-                      text = text.split(' ').map((word) {
-                        if (word.isNotEmpty) {
-                          return word[0].toUpperCase() + word.substring(1).toLowerCase();
-                        }
-                        return word;
-                      }).join(' ');
-                    }
-                    return TextEditingValue(
-                      text: text,
-                      selection: TextSelection.collapsed(offset: text.length),
+                  items: _selectedState != null && _jailsByState[_selectedState] != null
+                      ? _jailsByState[_selectedState]!.map((jail) {
+                    return DropdownMenuItem(
+                      value: jail,
+                      child: Text(jail),
                     );
-                  }),
-                ],
-              ),
-              SizedBox(height: 16),
-
-              // Prisoner Father Name
-              CustomTextField(
-                controller: _prisonerFatherNameController,
-                label: 'Father/Husband Name*',
-                hint: 'Enter Father/Husband Name',
-                validator: Validators.validateName,
-                inputFormatters: [
-                  TextInputFormatter.withFunction((oldValue, newValue) {
-                    // Convert first letter of each word to uppercase
-                    String text = newValue.text;
-                    if (text.isNotEmpty) {
-                      text = text.split(' ').map((word) {
-                        if (word.isNotEmpty) {
-                          return word[0].toUpperCase() + word.substring(1).toLowerCase();
-                        }
-                        return word;
-                      }).join(' ');
-                    }
-                    return TextEditingValue(
-                      text: text,
-                      selection: TextSelection.collapsed(offset: text.length),
-                    );
-                  }),
-                ],
-              ),
-              SizedBox(height: 16),
-
-              // Prisoner Age
-              CustomTextField(
-                controller: _prisonerAgeController,
-                label: 'Prisoner Age*',
-                hint: 'Enter prisoner Age',
-                keyboardType: TextInputType.number,
-                validator: Validators.validateAge,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(3), // Limit age to 3 digits
-                ],
-              ),
-              SizedBox(height: 18),
-
-              // Prisoner Gender
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Prisoner Gender*',
-                    style: TextStyle(fontSize: 16,color: Colors.black),
-                  ),
-                  SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: _genders.map((gender) {
-                      return Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Radio<String>(
-                            value: gender,
-                            groupValue: _selectedPrisonerGender,
-                            visualDensity: VisualDensity(horizontal: -4, vertical: -4), // compact look
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,    // reduces touch area
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedPrisonerGender = value;
-                              });
-                            },
-                          ),
-                          Text(
-                            gender,
-                            style: TextStyle(fontSize: 15),
-                          ),
-                          SizedBox(width: 25), // minimal spacing between options
-                        ],
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 18),
-
-              DropdownButtonFormField<String>(
-                value: _selectedRelation,
-                decoration: InputDecoration(
-                  labelText: 'Select Relation*',
-                  border: OutlineInputBorder(),
+                  }).toList()
+                      : [],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedJail = value;
+                    });
+                  },
+                  validator: (value) => value == null ? 'Please select a jail' : null,
                 ),
-                items: _relations.map((relation) {
-                  return DropdownMenuItem(
-                    value: relation,
-                    child: Text(relation),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedRelation = value;
-                  });
-                },
-                validator: (value) => value == null ? 'Please select relation' : null,
-              ),
-              SizedBox(height: 18),
-              // Visit Mode
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Select Visit Type*',
-                    style: TextStyle(fontSize: 16,color: Colors.black),
+                SizedBox(height: 16),
+
+                // Visit Date
+                TextFormField(
+                  controller: _visitDateController,
+                  decoration: InputDecoration(
+                    labelText: 'Visit Date*',
+                    border: OutlineInputBorder(),
+                    suffixIcon: Icon(Icons.calendar_today),
                   ),
-                  SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: _visitType.map((gender) {
-                      return Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Radio<String>(
-                            value: gender,
-                            groupValue: _selectedPrisonerType,
-                            visualDensity: VisualDensity(horizontal: -4, vertical: -4), // compact look
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,    // reduces touch area
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedPrisonerType = value;
-                              });
-                            },
-                          ),
-                          Text(
-                            gender,
-                            style: TextStyle(fontSize: 15),
-                          ),
-                          SizedBox(width: 25), // minimal spacing between options
+                  readOnly: true,
+                  onTap: () async {
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(Duration(days: 30)),
+                    );
+                    if (pickedDate != null) {
+                      _visitDateController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
+                    }
+                  },
+                  validator: (value) => value!.isEmpty ? 'Please select visit date' : null,
+                ),
+                SizedBox(height: 16),
+                // Additional Visitors
+                CustomTextField(
+                  controller: _additionalVisitorsController,
+                  label: 'Additional Visitors',
+                  hint: 'Enter number of additional visitors',
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(10), // Limit age to 10 digits
+                  ],
+                ),
+                SizedBox(height: 16),
+
+                // Additional Visitor Names (Dynamic)
+                if (_additionalVisitors > 0) ...[
+                  FormSectionTitle(title: 'Additional Visitor Names'),
+                  SizedBox(height: 16),
+                  for (int i = 0; i < _additionalVisitors; i++)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 16),
+                      child: CustomTextField(
+                        controller: _additionalVisitorControllers[i],
+                        label: _additionalVisitors == 1
+                            ? 'Additional Visitor Name*'
+                            : 'Additional Visitor Name-${i + 1}*',
+                        hint: 'Enter visitor name',
+                        validator: Validators.validateName,
+                        inputFormatters: [
+                          TextInputFormatter.withFunction((oldValue, newValue) {
+                            // Convert first letter of each word to uppercase
+                            String text = newValue.text;
+                            if (text.isNotEmpty) {
+                              text = text.split(' ').map((word) {
+                                if (word.isNotEmpty) {
+                                  return word[0].toUpperCase() + word.substring(1).toLowerCase();
+                                }
+                                return word;
+                              }).join(' ');
+                            }
+                            return TextEditingValue(
+                              text: text,
+                              selection: TextSelection.collapsed(offset: text.length),
+                            );
+                          }),
                         ],
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 30),
-
-              // Action Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: CustomButton(
-                      text: 'Save',
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => VisitHomeScreen()),
-                          );
-                        }
-                      },
+                      ),
                     ),
-                  ),
                 ],
-              ),
-            ],
+
+                SizedBox(height: 20),
+                FormSectionTitle(title: 'Prisoner Details'),
+                SizedBox(height: 20),
+
+                // Prisoner Name
+                CustomTextField(
+                  controller: _prisonerNameController,
+                  label: 'Prisoner Name*',
+                  hint: 'Enter prisoner Name',
+                  validator: Validators.validateName,
+                  inputFormatters: [
+                    TextInputFormatter.withFunction((oldValue, newValue) {
+                      // Convert first letter of each word to uppercase
+                      String text = newValue.text;
+                      if (text.isNotEmpty) {
+                        text = text.split(' ').map((word) {
+                          if (word.isNotEmpty) {
+                            return word[0].toUpperCase() + word.substring(1).toLowerCase();
+                          }
+                          return word;
+                        }).join(' ');
+                      }
+                      return TextEditingValue(
+                        text: text,
+                        selection: TextSelection.collapsed(offset: text.length),
+                      );
+                    }),
+                  ],
+                ),
+                SizedBox(height: 16),
+
+                // Prisoner Father Name
+                CustomTextField(
+                  controller: _prisonerFatherNameController,
+                  label: 'Father/Husband Name*',
+                  hint: 'Enter Father/Husband Name',
+                  validator: Validators.validateName,
+                  inputFormatters: [
+                    TextInputFormatter.withFunction((oldValue, newValue) {
+                      // Convert first letter of each word to uppercase
+                      String text = newValue.text;
+                      if (text.isNotEmpty) {
+                        text = text.split(' ').map((word) {
+                          if (word.isNotEmpty) {
+                            return word[0].toUpperCase() + word.substring(1).toLowerCase();
+                          }
+                          return word;
+                        }).join(' ');
+                      }
+                      return TextEditingValue(
+                        text: text,
+                        selection: TextSelection.collapsed(offset: text.length),
+                      );
+                    }),
+                  ],
+                ),
+                SizedBox(height: 16),
+
+                // Prisoner Age
+                CustomTextField(
+                  controller: _prisonerAgeController,
+                  label: 'Prisoner Age*',
+                  hint: 'Enter prisoner Age',
+                  keyboardType: TextInputType.number,
+                  validator: Validators.validateAge,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(3), // Limit age to 3 digits
+                  ],
+                ),
+                SizedBox(height: 18),
+
+                // Prisoner Gender
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Prisoner Gender*',
+                      style: TextStyle(fontSize: 16,color: Colors.black),
+                    ),
+                    SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: _genders.map((gender) {
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Radio<String>(
+                              value: gender,
+                              groupValue: _selectedPrisonerGender,
+                              visualDensity: VisualDensity(horizontal: -4, vertical: -4), // compact look
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,    // reduces touch area
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedPrisonerGender = value;
+                                });
+                              },
+                            ),
+                            Text(
+                              gender,
+                              style: TextStyle(fontSize: 15),
+                            ),
+                            SizedBox(width: 25), // minimal spacing between options
+                          ],
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 18),
+
+                DropdownButtonFormField<String>(
+                  value: _selectedRelation,
+                  decoration: InputDecoration(
+                    labelText: 'Select Relation*',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: _relations.map((relation) {
+                    return DropdownMenuItem(
+                      value: relation,
+                      child: Text(relation),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedRelation = value;
+                    });
+                  },
+                  validator: (value) => value == null ? 'Please select relation' : null,
+                ),
+                SizedBox(height: 18),
+                // Visit Mode
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Select Visit Type*',
+                      style: TextStyle(fontSize: 16,color: Colors.black),
+                    ),
+                    SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: _visitType.map((gender) {
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Radio<String>(
+                              value: gender,
+                              groupValue: _selectedPrisonerType,
+                              visualDensity: VisualDensity(horizontal: -4, vertical: -4), // compact look
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,    // reduces touch area
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedPrisonerType = value;
+                                });
+                              },
+                            ),
+                            Text(
+                              gender,
+                              style: TextStyle(fontSize: 15),
+                            ),
+                            SizedBox(width: 25), // minimal spacing between options
+                          ],
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 30),
+
+                // Action Buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: CustomButton(
+                        text: 'Save',
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => VisitHomeScreen()),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
