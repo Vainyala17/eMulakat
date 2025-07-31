@@ -8,6 +8,10 @@ import '../grievance/grievance_home.dart';
 import 'whom_to_meet_screen.dart';
 
 class VisitHomeScreen extends StatefulWidget {
+  final bool fromChatbot;
+
+  const VisitHomeScreen({Key? key, this.fromChatbot = false}) : super(key: key);
+
   @override
   _VisitHomeScreenState createState() => _VisitHomeScreenState();
 }
@@ -15,7 +19,14 @@ class VisitHomeScreen extends StatefulWidget {
 class _VisitHomeScreenState extends State<VisitHomeScreen> {
   int _selectedIndex = 0;
 
+
   Future<bool> _onWillPop() async {
+    // If came from chatbot, allow normal back navigation
+    if (widget.fromChatbot) {
+      return true; // Allow back navigation to chatbot
+    }
+
+    // Otherwise show alert (normal app flow)
     return await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -28,10 +39,18 @@ class _VisitHomeScreenState extends State<VisitHomeScreen> {
           ),
         ],
       ),
-    ) ??
-        false;
+    ) ?? false;
   }
 
+  void _handleAppBarBack() {
+    if (widget.fromChatbot) {
+      // If came from chatbot, go back to chatbot (preserves chat history)
+      Navigator.pop(context);
+    } else {
+      // Normal app flow - show alert
+      _onWillPop();
+    }
+  }
 
   Widget _buildNavItem({
     required int index,
@@ -92,6 +111,11 @@ class _VisitHomeScreenState extends State<VisitHomeScreen> {
             centerTitle: true,
             backgroundColor: Color(0xFF5A8BBA),
             foregroundColor: Colors.black,
+            // ✅ Custom leading button for AppBar back navigation
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: _handleAppBarBack, // Custom back button logic
+            ),
             actions: [
               IconButton(
                 icon: Icon(Icons.help_outline),
