@@ -7,6 +7,10 @@ import 'complaint_screen.dart';
 import 'grievance_preview_screen.dart';
 
 class GrievanceHomeScreen extends StatefulWidget {
+  final bool fromChatbot; // ✅ Flag to track if came from chatbot
+
+  const GrievanceHomeScreen({Key? key, this.fromChatbot = false}) : super(key: key);
+
   @override
   _GrievanceHomeScreenState createState() => _GrievanceHomeScreenState();
 }
@@ -14,8 +18,14 @@ class GrievanceHomeScreen extends StatefulWidget {
 class _GrievanceHomeScreenState extends State<GrievanceHomeScreen> {
   int _selectedIndex = 0;
 
-
+  // ✅ This handles SYSTEM back button (physical/gesture)
   Future<bool> _onWillPop() async {
+    // If came from chatbot, allow normal back navigation
+    if (widget.fromChatbot) {
+      return true; // Allow back navigation to chatbot
+    }
+
+    // Otherwise show alert (normal app flow)
     return await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -28,10 +38,19 @@ class _GrievanceHomeScreenState extends State<GrievanceHomeScreen> {
           ),
         ],
       ),
-    ) ??
-        false;
+    ) ?? false;
   }
 
+  // ✅ This handles APPBAR back button click
+  void _handleAppBarBack() {
+    if (widget.fromChatbot) {
+      // If came from chatbot, go back to chatbot (preserves chat history)
+      Navigator.pop(context);
+    } else {
+      // Normal app flow - show alert
+      _onWillPop();
+    }
+  }
 
   Widget _buildNavItem({
     required int index,
@@ -77,6 +96,7 @@ class _GrievanceHomeScreenState extends State<GrievanceHomeScreen> {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -84,13 +104,18 @@ class _GrievanceHomeScreenState extends State<GrievanceHomeScreen> {
       initialIndex: 0,
       child: WillPopScope(
         onWillPop: _onWillPop,
-        child:Scaffold(
+        child: Scaffold(
           backgroundColor: Colors.white,
           appBar: AppBar(
             title: const Text('Grievance'),
             centerTitle: true,
             backgroundColor: Color(0xFF5A8BBA),
             foregroundColor: Colors.black,
+            // ✅ Custom leading button for AppBar back navigation
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: _handleAppBarBack, // Custom back button logic
+            ),
             actions: [
               IconButton(
                 icon: Icon(Icons.help_outline),
@@ -111,7 +136,7 @@ class _GrievanceHomeScreenState extends State<GrievanceHomeScreen> {
               child: Container(
                 color: Colors.white, // ✅ Background color
                 child: const TabBar(
-                  indicatorColor:  Colors.black,
+                  indicatorColor: Colors.black,
                   labelStyle: TextStyle(               // ✅ Font style for selected tab
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -194,5 +219,3 @@ class _GrievanceHomeScreenState extends State<GrievanceHomeScreen> {
     );
   }
 }
-
-
