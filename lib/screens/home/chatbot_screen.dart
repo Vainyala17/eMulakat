@@ -26,7 +26,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   String _voiceText = '';
   bool _showVoiceDialog = false;
 
-  String userName = 'User';
+  String userName = 'Suresh';
+  String userId = ''; // Add user ID for chat history separation
   List<KeywordModel> keywords = [];
   bool isLoading = true;
 
@@ -68,6 +69,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     await _loadKeywordsData();
     _initializeSpeech();
     await _loadChatHistory();
+
+    // Only send initial greeting if no chat history exists
     if (messages.isEmpty) {
       _sendInitialGreeting();
     }
@@ -77,6 +80,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       userName = prefs.getString('user_name') ?? 'User';
+      userId = prefs.getString('user_id') ?? prefs.getString('username') ?? 'default_user';
     });
   }
 
@@ -106,35 +110,54 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   Future<void> _loadChatHistory() async {
-    var chatHistory = HiveService.getChatHistory();
-    if (chatHistory != null && chatHistory.inputOutput.isNotEmpty) {
-      List<Map<String, dynamic>> loadedMessages = [];
+    try {
+      var chatHistory = HiveService.getChatHistory(userId);
 
-      for (var msg in chatHistory.inputOutput) {
-        // Add user message if it exists
-        if (msg.userInput.isNotEmpty) {
-          loadedMessages.add({
-            "from": "user",
-            "text": msg.userInput,
-            "timestamp": msg.timestamp,
-          });
+      if (chatHistory != null && chatHistory.inputOutput.isNotEmpty) {
+        List<Map<String, dynamic>> loadedMessages = [];
+
+        for (var msg in chatHistory.inputOutput) {
+          // Add user message if it exists
+          if (msg.userInput.isNotEmpty) {
+            loadedMessages.add({
+              "from": "user",
+              "text": msg.userInput,
+              "timestamp": msg.timestamp,
+            });
+          }
+
+          // Add bot message if it exists
+          if (msg.botOutput.isNotEmpty) {
+            bool shouldShowOptions = msg.botOutput.contains("How can I help you") ||
+                msg.botOutput.contains("following options") ||
+                msg.botOutput.contains("Welcome back");
+
+            loadedMessages.add({
+              "from": "bot",
+              "text": msg.botOutput,
+              "timestamp": msg.timestamp,
+              "quickReplies": shouldShowOptions ? _getQuickReplies() : null,
+            });
+          }
         }
 
-        // Add bot message if it exists
-        if (msg.botOutput.isNotEmpty) {
-          loadedMessages.add({
-            "from": "bot",
-            "text": msg.botOutput,
-            "timestamp": msg.timestamp,
-            "quickReplies": msg.botOutput.contains("How can I help you") ||
-                msg.botOutput.contains("following options") ? _getQuickReplies() : null,
-          });
-        }
+        setState(() {
+          messages = loadedMessages;
+        });
+
+        // Auto scroll to bottom after loading messages
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients && messages.isNotEmpty) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+        });
       }
-
-      setState(() {
-        messages = loadedMessages;
-      });
+    } catch (e) {
+      print('Error loading chat history: $e');
     }
   }
 
@@ -163,9 +186,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
     _botReply(text);
     _controller.clear();
-
-    // Save to Hive after processing
-    _saveChatToHive();
 
     // Auto scroll to bottom
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -204,29 +224,37 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     });
   }
 
-  void _saveChatToHive() {
-    // Clear existing chat history
-    HiveService.clearChatHistory();
+  void _saveChatToHive() async {
+    try {
+      // Clear existing chat history for this user
+      await HiveService.clearChatHistory(userId);
 
-    // Group messages in pairs (user-bot)
-    for (int i = 0; i < messages.length; i++) {
-      String userInput = "";
-      String botOutput = "";
+      // Save messages in pairs (user-bot) or individual messages
+      for (int i = 0; i < messages.length; i++) {
+        String userInput = "";
+        String botOutput = "";
+        DateTime timestamp = messages[i]["timestamp"] ?? DateTime.now();
 
-      if (messages[i]["from"] == "user") {
-        userInput = messages[i]["text"];
-        // Check if next message is from bot
-        if (i + 1 < messages.length && messages[i + 1]["from"] == "bot") {
-          botOutput = messages[i + 1]["text"];
-          i++; // Skip the bot message in next iteration
+        if (messages[i]["from"] == "user") {
+          userInput = messages[i]["text"];
+
+          // Check if next message is from bot
+          if (i + 1 < messages.length && messages[i + 1]["from"] == "bot") {
+            botOutput = messages[i + 1]["text"];
+            timestamp = messages[i + 1]["timestamp"] ?? timestamp;
+            i++; // Skip the bot message in next iteration
+          }
+        } else if (messages[i]["from"] == "bot") {
+          botOutput = messages[i]["text"];
         }
-      } else if (messages[i]["from"] == "bot") {
-        botOutput = messages[i]["text"];
-      }
 
-      if (userInput.isNotEmpty || botOutput.isNotEmpty) {
-        HiveService.addChatMessage(userInput, botOutput);
+        // Save the message pair or individual message
+        if (userInput.isNotEmpty || botOutput.isNotEmpty) {
+          await HiveService.addChatMessage(userId, userInput, botOutput, timestamp);
+        }
       }
+    } catch (e) {
+      print('Error saving chat to Hive: $e');
     }
   }
 
@@ -372,11 +400,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     _sendMessage(text);
   }
 
-  void _clearChat() {
+  void _clearChat() async {
     setState(() {
       messages.clear();
     });
-    HiveService.clearChatHistory();
+    await HiveService.clearChatHistory(userId);
     _sendInitialGreeting();
   }
 
@@ -389,7 +417,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   void _showVoicePopup() {
     setState(() => _showVoiceDialog = true);
     _startListening(); // Auto-start listening when popup opens
-
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -558,8 +585,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     });
   }
 
-  // Replace your _startListening method with this safer version:
-
   void _startListening() async {
     if (!voiceEnabled) return;
 
@@ -607,9 +632,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       });
     }
   }
-
-
-// Also update your _stopListening method to be safer:
 
   void _stopListening() {
     try {
@@ -726,7 +748,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             color: Colors.white,
             fontWeight: FontWeight.w600,
             fontSize: 20,
-
           ),
         ),
         centerTitle: true,
@@ -792,7 +813,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               children: [
                 IconButton(
                   icon: Icon(
-                    voiceEnabled ? Icons.mic_off : Icons.mic, // FIXED: Show mic when enabled
+                    voiceEnabled ? Icons.mic : Icons.mic_off,
                     color: voiceEnabled ? Color(0xFF5A8BBA) : Colors.grey,
                     size: 28,
                   ),

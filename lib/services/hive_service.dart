@@ -34,19 +34,22 @@ class HiveService {
     return keywordsBox.values.toList();
   }
 
-  // Chat History Box Operations
+  // Chat History Box Operations with User-Specific Storage
   static Box<ChatHistoryModel> get chatHistoryBox => Hive.box<ChatHistoryModel>(CHATHISTORY_BOX);
 
-  static Future<void> saveChatHistory(ChatHistoryModel chatHistory) async {
-    await chatHistoryBox.put('current_chat', chatHistory);
+  // Get chat history for a specific user
+  static ChatHistoryModel? getChatHistory(String userId) {
+    return chatHistoryBox.get('chat_$userId');
   }
 
-  static ChatHistoryModel? getChatHistory() {
-    return chatHistoryBox.get('current_chat');
+  // Save chat history for a specific user
+  static Future<void> saveChatHistory(String userId, ChatHistoryModel chatHistory) async {
+    await chatHistoryBox.put('chat_$userId', chatHistory);
   }
 
-  static Future<void> addChatMessage(String userInput, String botOutput) async {
-    var currentHistory = getChatHistory();
+  // Add a chat message for a specific user
+  static Future<void> addChatMessage(String userId, String userInput, String botOutput, [DateTime? timestamp]) async {
+    var currentHistory = getChatHistory(userId);
 
     if (currentHistory == null) {
       currentHistory = ChatHistoryModel(
@@ -59,14 +62,34 @@ class HiveService {
       ChatMessageModel(
         userInput: userInput,
         botOutput: botOutput,
-        timestamp: DateTime.now(),
+        timestamp: timestamp ?? DateTime.now(),
       ),
     );
 
-    await saveChatHistory(currentHistory);
+    await saveChatHistory(userId, currentHistory);
   }
 
-  static Future<void> clearChatHistory() async {
+  // Clear chat history for a specific user
+  static Future<void> clearChatHistory(String userId) async {
+    await chatHistoryBox.delete('chat_$userId');
+  }
+
+  // Clear all chat histories (for debugging or admin purposes)
+  static Future<void> clearAllChatHistories() async {
     await chatHistoryBox.clear();
+  }
+
+  // Get all user IDs who have chat history
+  static List<String> getAllChatUsers() {
+    return chatHistoryBox.keys
+        .where((key) => key.toString().startsWith('chat_'))
+        .map((key) => key.toString().substring(5)) // Remove 'chat_' prefix
+        .toList();
+  }
+
+  // Check if user has existing chat history
+  static bool hasExistingChat(String userId) {
+    var history = getChatHistory(userId);
+    return history != null && history.inputOutput.isNotEmpty;
   }
 }

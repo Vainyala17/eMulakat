@@ -4,21 +4,25 @@ import '../models/keyword_model.dart';
 import 'hive_service.dart';
 
 class ApiService {
-  static const String BASE_URL = 'https://raw.githubusercontent.com/Vainyala17/firstAPI/main/karasahayak.json';
+  static const String BASE_URL = 'http://localhost:5000/api/kskeywords';
 
-  // Fetch keywords from GitHub raw JSON and store in Hive
+  // Fetch keywords from API and store in Hive
   static Future<List<KeywordModel>> fetchKeywords() async {
     try {
+      print('Fetching keywords from: $BASE_URL');
+
       final response = await http.get(
         Uri.parse(BASE_URL),
         headers: {
           'Content-Type': 'application/json',
         },
-      );
+      ).timeout(Duration(seconds: 10)); // Add timeout
+
+      print('API Response Status: ${response.statusCode}');
+      print('API Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-
         List<KeywordModel> keywords = [];
 
         // Parse your JSON structure
@@ -48,16 +52,39 @@ class ApiService {
           }
         });
 
-        // Save to Hive
-        await HiveService.saveKeywords(keywords);
+        if (keywords.isNotEmpty) {
+          // Save to Hive only if we got valid data
+          await HiveService.saveKeywords(keywords);
+          print('Successfully saved ${keywords.length} keywords to Hive');
+        }
 
         return keywords;
       } else {
+        print('API returned error status: ${response.statusCode}');
         throw Exception('Failed to load keywords: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching keywords: $e');
-      return HiveService.getKeywords(); // return local copy
+      print('Error fetching keywords from API: $e');
+
+      // Return cached data from Hive if API fails
+      var cachedKeywords = HiveService.getKeywords();
+      print('Returning ${cachedKeywords.length} cached keywords from Hive');
+      return cachedKeywords;
+    }
+  }
+
+  // Optional: Test API connectivity
+  static Future<bool> testConnection() async {
+    try {
+      final response = await http.get(
+        Uri.parse(BASE_URL),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(Duration(seconds: 5));
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('API connection test failed: $e');
+      return false;
     }
   }
 }

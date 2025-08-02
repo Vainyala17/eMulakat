@@ -209,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
             'OTP resent to $recipient'.tr(),
             style: TextStyle(color: Colors.black), // <-- Text color
           ),
-            backgroundColor: Colors.blue, // <-- Background color
+          backgroundColor: Colors.blue, // <-- Background color
         ),
       );
       _startResendTimer();
