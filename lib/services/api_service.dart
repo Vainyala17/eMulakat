@@ -4,7 +4,9 @@ import '../models/keyword_model.dart';
 import 'hive_service.dart';
 
 class ApiService {
-  static const String BASE_URL = 'http://localhost:5000/api/kskeywords';
+  static const String AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OTA5ZGNmMGExMWRhYTc1ZDI0NTVjNSIsInVzZXJuYW1lIjoidmFpbnlhbGExIiwiaWF0IjoxNzU0MzM2NTE5LCJleHAiOjE3NTQzMzc0MTl9.s2UqdEiuyd7C9Hb_wdqjMuLDhkMFwVw8m4WVzQOg6n8';
+  static const String BASE_URL = 'http://192.168.0.106:5000/api/kskeywords';
+
 
   // FIXED: Enhanced fetch keywords with better error handling and validation
   static Future<List<KeywordModel>> fetchKeywords() async {
@@ -15,7 +17,9 @@ class ApiService {
         Uri.parse(BASE_URL),
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer $AUTH_TOKEN',
         },
+
       ).timeout(Duration(seconds: 10)); // Add timeout
 
       print('API Response Status: ${response.statusCode}');
@@ -132,7 +136,11 @@ class ApiService {
     try {
       final response = await http.get(
         Uri.parse(BASE_URL),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $AUTH_TOKEN',
+        },
+
       ).timeout(Duration(seconds: 5));
 
       if (response.statusCode == 200) {
@@ -200,7 +208,11 @@ class ApiService {
     try {
       final response = await http.get(
         Uri.parse(BASE_URL),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $AUTH_TOKEN',
+        },
+
       ).timeout(Duration(seconds: 5));
 
       bool isConnected = response.statusCode == 200;
@@ -217,7 +229,11 @@ class ApiService {
     try {
       final response = await http.get(
         Uri.parse(BASE_URL),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $AUTH_TOKEN',
+        },
+
       ).timeout(Duration(seconds: 5));
 
       if (response.statusCode == 200) {
@@ -238,7 +254,11 @@ class ApiService {
     try {
       final response = await http.get(
         Uri.parse(BASE_URL),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $AUTH_TOKEN',
+        },
+
       ).timeout(Duration(seconds: 10));
 
       print('\n=== API DEBUG INFO ===');
