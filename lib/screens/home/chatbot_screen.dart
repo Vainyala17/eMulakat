@@ -27,7 +27,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   bool _showVoiceDialog = false;
 
   String userName = 'Suresh';
-  String userId = ''; // Add user ID for chat history separation
+  String userId = '';
   List<KeywordModel> keywords = [];
   bool isLoading = true;
 
@@ -84,26 +84,54 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     });
   }
 
+  // FIXED: Better keyword loading with proper debugging
   Future<void> _loadKeywordsData() async {
     setState(() => isLoading = true);
 
     try {
+      print('=== LOADING KEYWORDS DEBUG ===');
+
+      // Clear existing keywords
+      keywords.clear();
+
       // First try to fetch from API
       keywords = await ApiService.fetchKeywords();
+      print('Fetched ${keywords.length} keywords from API');
 
-      // If API fails, get from Hive cache
+      // If API failed, try to get from Hive cache
       if (keywords.isEmpty) {
+        print('API returned empty, trying Hive cache...');
         keywords = HiveService.getKeywords();
+        print('Retrieved ${keywords.length} keywords from Hive cache');
       }
 
-      // Debug: Print loaded keywords
-      print('Loaded ${keywords.length} keywords:');
-      for (var keyword in keywords) {
-        print('Display: ${keyword.displayOptions}, Keywords: ${keyword.keywordsGlossary}, Action: ${keyword.appMethodToCall}');
+      // Debug keywords that were loaded
+      print('=== FINAL KEYWORDS LOADED ===');
+      print('Total keywords: ${keywords.length}');
+
+      for (int i = 0; i < keywords.length; i++) {
+        var keyword = keywords[i];
+        print('[$i] Display: "${keyword.displayOptions}"');
+        print('[$i] Keywords: ${keyword.keywordsGlossary}');
+        print('[$i] Action: "${keyword.actionToPerform}"');
+        print('[$i] Method: "${keyword.appMethodToCall}"');
+        print('---');
       }
+
+      // Additional debugging
+      HiveService.debugKeywordsBox();
+
+      if (keywords.isEmpty) {
+        print('❌ WARNING: No keywords loaded! This will cause "No options available"');
+      } else {
+        print('✅ Successfully loaded ${keywords.length} keywords');
+      }
+
     } catch (e) {
-      print('Error loading keywords: $e');
+      print('❌ Error loading keywords: $e');
+      // Try one more time from Hive
       keywords = HiveService.getKeywords();
+      print('Fallback: Retrieved ${keywords.length} keywords from Hive');
     }
 
     setState(() => isLoading = false);
@@ -163,13 +191,38 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   void _initializeSpeech() async {
     _speech = stt.SpeechToText();
-    bool available = await _speech.initialize(
-      onError: (val) => print('Speech Error: $val'),
-      onStatus: (val) => print('Speech Status: $val'),
-    );
 
-    if (!available) {
-      setState(() => voiceEnabled = false);
+    try {
+      bool available = await _speech.initialize(
+        onError: (val) {
+          print('Speech initialization error: $val');
+          setState(() {
+            voiceEnabled = false;
+          });
+        },
+        onStatus: (val) {
+          print('Speech initialization status: $val');
+        },
+      );
+
+      setState(() {
+        voiceEnabled = available;
+      });
+
+      if (!available) {
+        print('Speech recognition not available on this device');
+      } else {
+        print('Speech recognition initialized successfully');
+
+        // Check available locales (optional - for debugging)
+        var locales = await _speech.locales();
+        print('Available locales: ${locales.map((l) => l.localeId).toList()}');
+      }
+    } catch (e) {
+      print('Error initializing speech: $e');
+      setState(() {
+        voiceEnabled = false;
+      });
     }
   }
 
@@ -258,60 +311,87 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     }
   }
 
+  // FIXED: Dynamic quick replies generation from API data
   List<String> _getQuickReplies() {
+    print('Generating quick replies from ${keywords.length} keywords');
+
     if (keywords.isEmpty) {
-      return ['Register a Visitor', 'Register Grievance', 'Show Gate Pass', 'Show Map', 'Exit App'];
+      print('❌ No keywords available for quick replies');
+      return ['No options available'];
     }
-    return keywords.map((k) => k.displayOptions).toList();
+
+    // Return display options from API
+    List<String> replies = keywords.map((k) => k.displayOptions).toList();
+    print('Generated ${replies.length} quick replies: $replies');
+    return replies;
   }
 
+  // FIXED: Enhanced bot reply with better keyword matching
   void _botReply(String userInput) {
     final input = userInput.toLowerCase().trim();
 
+    print('=== BOT REPLY DEBUG ===');
     print('User input: "$input"');
     print('Available keywords: ${keywords.length}');
 
-    // Check against keywords with more flexible matching
-    for (KeywordModel keyword in keywords) {
-      bool matchFound = false;
+    // Enhanced keyword matching
+    KeywordModel? matchedKeyword;
 
-      // Check keywords glossary with exact and partial matching
-      for (String keywordStr in keyword.keywordsGlossary) {
+    for (var keyword in keywords) {
+      if (matchedKeyword != null) break; // Already found a match
+
+      // Check display options first (exact and partial matching)
+      String displayOption = keyword.displayOptions.toLowerCase().trim();
+      if (input == displayOption ||
+          input.contains(displayOption) ||
+          displayOption.contains(input)) {
+        print('✅ Display option match found: "${displayOption}"');
+        matchedKeyword = keyword;
+        break;
+      }
+
+      // Check keywords glossary with flexible matching
+      for (var keywordStr in keyword.keywordsGlossary) {
         String cleanKeyword = keywordStr.toLowerCase().trim();
 
-        // Exact match or contains match
-        if (input == cleanKeyword || input.contains(cleanKeyword)) {
-          print('Match found for "${cleanKeyword}" in input "${input}"');
-          matchFound = true;
+        // Exact match
+        if (input == cleanKeyword) {
+          print('✅ Exact keyword match found: "${cleanKeyword}"');
+          matchedKeyword = keyword;
           break;
         }
 
-        // Check for individual words
-        List<String> inputWords = input.split(' ');
-        List<String> keywordWords = cleanKeyword.split(' ');
+        // Contains match
+        if (input.contains(cleanKeyword) || cleanKeyword.contains(input)) {
+          print('✅ Contains match found: "${cleanKeyword}" in input "${input}"');
+          matchedKeyword = keyword;
+          break;
+        }
 
-        // If keyword is a single word, check if it exists in input
-        if (keywordWords.length == 1 && inputWords.contains(keywordWords[0])) {
-          print('Single word match found: "${keywordWords[0]}"');
-          matchFound = true;
+        // Word-based matching
+        List<String> inputWords = input.split(' ').where((word) => word.isNotEmpty).toList();
+        List<String> keywordWords = cleanKeyword.split(' ').where((word) => word.isNotEmpty).toList();
+
+        bool wordMatch = keywordWords.any((kw) =>
+            inputWords.any((iw) => iw == kw || iw.contains(kw) || kw.contains(iw)));
+
+        if (wordMatch) {
+          print('✅ Word-based match found: "${cleanKeyword}"');
+          matchedKeyword = keyword;
           break;
         }
       }
 
-      // Also check display options
-      if (!matchFound) {
-        String displayOption = keyword.displayOptions.toLowerCase();
-        if (input.contains(displayOption) || input == displayOption) {
-          print('Display option match found: "${displayOption}"');
-          matchFound = true;
-        }
-      }
+      if (matchedKeyword != null) break;
+    }
 
-      if (matchFound) {
-        _addBotMessage("Sure! Let me help you with that.");
-        _executeAction(keyword);
-        return;
-      }
+    print('=== END BOT REPLY DEBUG ===');
+
+    // If match found, execute action
+    if (matchedKeyword != null) {
+      _addBotMessage("Sure! Let me help you with ${matchedKeyword.displayOptions}.");
+      _executeAction(matchedKeyword);
+      return;
     }
 
     // Greeting responses
@@ -329,42 +409,80 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     return greetings.any((greeting) => input.contains(greeting));
   }
 
+  // FIXED: Enhanced action execution with better error handling
   void _executeAction(KeywordModel keyword) {
-    switch (keyword.appMethodToCall) {
-      case 'registerVisitor':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => VisitHomeScreen(fromChatbot: true)),
-        ).then((_) => _showReturnMessage());
-        break;
+    print('=== EXECUTE ACTION DEBUG ===');
+    print('Keyword Display: "${keyword.displayOptions}"');
+    print('Keyword Method: "${keyword.appMethodToCall}"');
+    print('Keyword Action: "${keyword.actionToPerform}"');
 
-      case 'registerGrievance':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => GrievanceHomeScreen(fromChatbot: true)),
-        ).then((_) => _showReturnMessage());
-        break;
+    String pageName = keyword.appMethodToCall.trim();
+    print('Trimmed pageName: "$pageName"');
 
-      case 'showGatepass':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => eVisitorPassScreen(visitor: visitor)),
-        ).then((_) => _showReturnMessage());
-        break;
+    try {
+      switch (pageName) {
+        case 'VisitHomeScreen':
+          print('✅ Navigating to VisitHomeScreen');
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => VisitHomeScreen(fromChatbot: true)),
+          ).then((_) {
+            _showReturnMessage();
+          }).catchError((error) {
+            print('❌ Navigation error to VisitHomeScreen: $error');
+            _addBotMessage("Sorry, I couldn't open ${keyword.displayOptions}. Please try again later.", showOptions: true);
+          });
+          break;
 
-      case 'showGoogleMap':
-        _launchGoogleMap();
-        _showReturnMessage();
-        break;
+        case 'GrievanceHomeScreen':
+          print('✅ Navigating to GrievanceHomeScreen');
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => GrievanceHomeScreen(fromChatbot: true)),
+          ).then((_) {
+            _showReturnMessage();
+          }).catchError((error) {
+            print('❌ Navigation error to GrievanceHomeScreen: $error');
+            _addBotMessage("Sorry, I couldn't open ${keyword.displayOptions}. Please try again later.", showOptions: true);
+          });
+          break;
 
-      case 'exitKaraSahayak':
-      case 'exit_to_dashboard':
-        Navigator.pop(context);
-        break;
+        case 'eVisitorPassScreen':
+          print('✅ Navigating to eVisitorPassScreen');
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => eVisitorPassScreen(visitor: visitor)),
+          ).then((_) {
+            _showReturnMessage();
+          }).catchError((error) {
+            print('❌ Navigation error to eVisitorPassScreen: $error');
+            _addBotMessage("Sorry, I couldn't open ${keyword.displayOptions}. Please try again later.", showOptions: true);
+          });
+          break;
 
-      default:
-        _addBotMessage("Action not implemented yet: ${keyword.appMethodToCall}");
+        case 'GoogleMapScreen':
+        case 'showGoogleMap':
+          print('✅ Opening Google Maps');
+          _launchGoogleMap();
+          _showReturnMessage();
+          break;
+
+        case 'ExitApp':
+        case 'exitKaraSahayak':
+          print('✅ Exiting app');
+          Navigator.pop(context);
+          break;
+
+        default:
+          print('❌ Unknown action: $pageName');
+          _addBotMessage("Sorry, '${keyword.displayOptions}' feature is not available right now. Please try another option.", showOptions: true);
+      }
+    } catch (e) {
+      print('❌ Error executing action for ${keyword.displayOptions}: $e');
+      _addBotMessage("Sorry, I couldn't open ${keyword.displayOptions}. Please try again later.", showOptions: true);
     }
+
+    print('=== END EXECUTE ACTION DEBUG ===');
   }
 
   void _showReturnMessage() {
@@ -375,7 +493,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   void _launchGoogleMap() async {
     // Using a more standard Google Maps URL format
-    const url = "https://www.google.com/maps/place/NutanTek+Solutions+LLP/@19.7251636,60.9691764,4z/data=!3m1!4b1!4m6!3m5!1s0x390ce5db65f6af0f:0xb29ad5bc8aabd76a!8m2!3d21.0680074!4d82.7525294!16s%2Fg%2F11k6fbjb7n?authuser=0&entry=ttu&g_ep=EgoyMDI1MDcyOS4wIKXMDSoASAFQAw%3D%3D";
+    const url = "https://www.google.com/maps/place/NutanTek+Solutions+LLP/@19.7251636,60.9691764,4z/data=!3m1!4b1!4m6!3m5!1s0x390ce5db65f6af0f:0xb29ad5bc8aabd76a!8m2!3d21.0680074!4d82.7525294!16s%2Fg%2F11k6fbjb7n?authuser=0&entry=ttu&g_ep=EgoyMDI1MDczMC4wIKXMDSoASAFQAw%3D%3D";
 
     try {
       if (await canLaunch(url)) {
@@ -527,44 +645,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       ),
                       textAlign: TextAlign.center,
                     ),
-
-                    // Always show the captured text area
-                    SizedBox(height: 20),
-                    Container(
-                      width: double.infinity,
-                      constraints: BoxConstraints(minHeight: 80),
-                      padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFF5A8BBA).withOpacity(0.1), Colors.grey[50]!],
-                        ),
-                        borderRadius: BorderRadius.circular(15),
-                        border: Border.all(color: Color(0xFF5A8BBA).withOpacity(0.3)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "What you're saying:",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            _voiceText.isEmpty ? "..." : _voiceText,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: _voiceText.isEmpty ? Colors.grey[400] : Color(0xFF5A8BBA),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
                     SizedBox(height: 20),
                   ],
                 ),
@@ -589,9 +669,35 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     if (!voiceEnabled) return;
 
     try {
-      bool available = await _speech.initialize();
+      // Stop any existing listening session first
+      if (_speech.isListening) {
+        await _speech.stop();
+      }
+
+      // Initialize speech if not already done
+      bool available = await _speech.initialize(
+        onError: (val) {
+          print('Speech Error: $val');
+          setState(() {
+            _isListening = false;
+          });
+        },
+        onStatus: (val) {
+          print('Speech Status: $val');
+          if (val == 'done' || val == 'notListening') {
+            setState(() {
+              _isListening = false;
+            });
+          }
+        },
+      );
+
       if (!available) {
         print('Speech recognition not available');
+        setState(() {
+          voiceEnabled = false;
+          _isListening = false;
+        });
         return;
       }
 
@@ -600,31 +706,50 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         _voiceText = '';
       });
 
+      // Start listening with proper configuration
       await _speech.listen(
         onResult: (result) {
+          print('Voice recognition result: ${result.recognizedWords}');
+          print('Is final result: ${result.finalResult}');
+
           setState(() {
             _voiceText = result.recognizedWords;
           });
-          print('Voice recognition result: ${result.recognizedWords}');
 
+          // Only process final results to avoid premature closing
           if (result.finalResult && _voiceText.trim().isNotEmpty) {
-            // Automatically close the dialog and trigger action
-            Navigator.of(context).pop(); // closes the dialog
-            _sendMessage(_voiceText);
-            _stopListening();
+            print('Final result received, processing...');
 
-            setState(() {
-              _isListening = false;
-              _showVoiceDialog = false;
-              _voiceText = '';
+            // Stop listening
+            _speech.stop();
+
+            // Close dialog after a short delay
+            Future.delayed(Duration(milliseconds: 500), () {
+              if (Navigator.canPop(context)) {
+                Navigator.of(context).pop();
+              }
+              _sendMessage(_voiceText);
+
+              setState(() {
+                _isListening = false;
+                _showVoiceDialog = false;
+                _voiceText = '';
+              });
             });
           }
         },
-        listenFor: Duration(seconds: 10),
-        pauseFor: Duration(seconds: 3),
+        listenFor: Duration(seconds: 30), // Increased listening duration
+        pauseFor: Duration(seconds: 5),   // Increased pause duration
         partialResults: true,
-        localeId: 'en_IN',
+        onSoundLevelChange: (level) {
+          // Optional: You can use this to show sound level indication
+          print('Sound level: $level');
+        },
+        cancelOnError: true,
+        listenMode: stt.ListenMode.confirmation,
+        localeId: 'en_IN', // You can also try 'en_US' if 'en_IN' doesn't work well
       );
+
     } catch (e) {
       print('Error in _startListening: $e');
       setState(() {
@@ -635,13 +760,18 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   void _stopListening() {
     try {
-      if (_isListening && _speech.isListening) {
+      if (_speech.isListening) {
         _speech.stop();
+        print('Speech listening stopped');
       }
-      setState(() => _isListening = false);
+      setState(() {
+        _isListening = false;
+      });
     } catch (e) {
       print('Error in _stopListening: $e');
-      setState(() => _isListening = false);
+      setState(() {
+        _isListening = false;
+      });
     }
   }
 
@@ -661,14 +791,17 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             end: Alignment.bottomRight,
           )
               : LinearGradient(
-            colors: [Color(0xFF5A8BBA).withOpacity(0.1), Colors.blue[50]!],
+            // Dark background for bot messages
+            colors: [Color(0xFF5E81AE), Color(0xFF668CB8)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Color(0xFF5A8BBA).withOpacity(0.1),
+              color: isUser
+                  ? Color(0xFF7DBCED).withOpacity(0.1)
+                  : Colors.black.withOpacity(0.2),
               blurRadius: 8,
               offset: Offset(0, 2),
             ),
@@ -681,7 +814,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               message["text"] ?? "",
               style: TextStyle(
                 fontSize: 16,
-                color: isUser ? Colors.black : Color(0xFF5A8BBA),
+                color: isUser ? Colors.black : Colors.white, // White text for dark background
                 height: 1.4,
               ),
             ),
@@ -697,26 +830,31 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                         decoration: BoxDecoration(
+                          // Light colored buttons
                           gradient: LinearGradient(
-                            colors: [Color(0xFF5A8BBA), Color(0xFF5A8BBA).withOpacity(0.8)],
+                            colors: [Color(0xFF9AC7F3), Colors.grey[100]!],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                           borderRadius: BorderRadius.circular(25),
                           boxShadow: [
                             BoxShadow(
-                              color: Color(0xFF5A8BBA).withOpacity(0.3),
+                              color: Colors.black.withOpacity(0.1),
                               blurRadius: 6,
                               offset: Offset(0, 2),
                             ),
                           ],
+                          border: Border.all(
+                            color: Color(0xFF5A8BBA).withOpacity(0.3),
+                            width: 1,
+                          ),
                         ),
                         child: Text(
                           reply,
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFF2C3E50), // Dark text on light buttons
                             fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -762,24 +900,52 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             onPressed: _refreshChat,
             tooltip: 'Refresh Chat',
           ),
-          PopupMenuItem(
-            value: 'toggle_voice',
-            child: Row(
-              children: [
-                Icon(
-                  voiceEnabled ? Icons.mic_off : Icons.mic,
-                  color: Colors.white,
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'toggle_voice') {
+                setState(() {
+                  voiceEnabled = !voiceEnabled;
+                });
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              PopupMenuItem(
+                value: 'toggle_voice',
+                child: Row(
+                  children: [
+                    Icon(
+                      voiceEnabled ? Icons.mic_off : Icons.mic,
+                      color: Colors.black54,
+                    ),
+                    SizedBox(width: 8),
+                    Text(voiceEnabled ? 'Disable Voice' : 'Enable Voice'),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
+            icon: Icon(Icons.more_vert, color: Colors.white),
           ),
         ],
       ),
       body: isLoading
           ? Center(
-        child: CircularProgressIndicator(
-          color: Color(0xFF5A8BBA),
-          strokeWidth: 3,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              color: Color(0xFF5A8BBA),
+              strokeWidth: 3,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Loading KaraSahayak...',
+              style: TextStyle(
+                color: Color(0xFF5A8BBA),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       )
           : Column(

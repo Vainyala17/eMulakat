@@ -20,18 +20,47 @@ class HiveService {
     await Hive.openBox<ChatHistoryModel>(CHATHISTORY_BOX);
   }
 
-  // Keywords Box Operations
+  // Keywords Box Operations - FIXED: Use consistent box name
   static Box<KeywordModel> get keywordsBox => Hive.box<KeywordModel>(KEYWORDS_BOX);
 
+  // FIXED: Use consistent box name and proper error handling
   static Future<void> saveKeywords(List<KeywordModel> keywords) async {
-    await keywordsBox.clear();
-    for (int i = 0; i < keywords.length; i++) {
-      await keywordsBox.put(i, keywords[i]);
+    try {
+      // Use the same box name consistently
+      final box = keywordsBox;
+
+      // Clear existing data first
+      await box.clear();
+
+      // Add all keywords
+      for (int i = 0; i < keywords.length; i++) {
+        await box.put(i, keywords[i]);
+        print('Saved keyword $i: ${keywords[i].displayOptions} -> ${keywords[i].appMethodToCall}');
+      }
+
+      print('Successfully saved ${keywords.length} keywords to Hive');
+    } catch (e) {
+      print('Error saving keywords to Hive: $e');
+      throw e;
     }
   }
 
+  // FIXED: Use consistent box name
   static List<KeywordModel> getKeywords() {
-    return keywordsBox.values.toList();
+    try {
+      final box = keywordsBox;
+      List<KeywordModel> keywords = box.values.toList();
+
+      print('Retrieved ${keywords.length} keywords from Hive:');
+      for (int i = 0; i < keywords.length; i++) {
+        print('[$i] ${keywords[i].displayOptions} -> ${keywords[i].appMethodToCall}');
+      }
+
+      return keywords;
+    } catch (e) {
+      print('Error getting keywords from Hive: $e');
+      return [];
+    }
   }
 
   // Chat History Box Operations with User-Specific Storage
@@ -91,5 +120,24 @@ class HiveService {
   static bool hasExistingChat(String userId) {
     var history = getChatHistory(userId);
     return history != null && history.inputOutput.isNotEmpty;
+  }
+
+  // ADDED: Debug method to check box contents
+  static void debugKeywordsBox() {
+    try {
+      final box = keywordsBox;
+      print('=== KEYWORDS BOX DEBUG ===');
+      print('Box name: ${box.name}');
+      print('Box length: ${box.length}');
+      print('Box keys: ${box.keys.toList()}');
+      print('Box is open: ${box.isOpen}');
+
+      if (box.isNotEmpty) {
+        print('First keyword: ${box.getAt(0)?.displayOptions}');
+      }
+      print('=== END DEBUG ===');
+    } catch (e) {
+      print('Error in debugKeywordsBox: $e');
+    }
   }
 }
