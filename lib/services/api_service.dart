@@ -4,7 +4,7 @@ import '../models/keyword_model.dart';
 import 'hive_service.dart';
 
 class ApiService {
-  static const String AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OTA5ZGNmMGExMWRhYTc1ZDI0NTVjNSIsInVzZXJuYW1lIjoidmFpbnlhbGExIiwiaWF0IjoxNzU0MzM2NTE5LCJleHAiOjE3NTQzMzc0MTl9.s2UqdEiuyd7C9Hb_wdqjMuLDhkMFwVw8m4WVzQOg6n8';
+  static const String AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OTA5ZGNmMGExMWRhYTc1ZDI0NTVjNSIsInVzZXJuYW1lIjoidmFpbnlhbGExIiwiaWF0IjoxNzU0MzM3NzkzLCJleHAiOjE3NTQzMzg2OTN9.TPpjuUC2cNgDwfbc3rJNsZ8vT_ejFWRVz6QyW2QgSys';
   static const String BASE_URL = 'http://192.168.0.106:5000/api/kskeywords';
 
 

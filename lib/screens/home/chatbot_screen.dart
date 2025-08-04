@@ -467,6 +467,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           _showReturnMessage();
           break;
 
+        case 'HelpDocScreen':
+          print('✅ Opening FAQs Page');
+          _launchHelpDoc();
+          _showReturnMessage();
+          break;
+
         case 'ExitApp':
         case 'exitKaraSahayak':
           print('✅ Exiting app');
@@ -491,6 +497,20 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     });
   }
 
+  void _launchHelpDoc() async {
+    const url = "https://eprisons.nic.in/CitiZenService/Login/FAQ";
+
+    try {
+      if (await canLaunch(url)) {
+        await launch(url);
+        print('FAQ page launched successfully');
+      } else {
+        print('Could not launch FAQ page');
+      }
+    } catch (e) {
+      print('Error launching FAQ page: $e');
+    }
+  }
   void _launchGoogleMap() async {
     // Using a more standard Google Maps URL format
     const url = "https://www.google.com/maps/place/NutanTek+Solutions+LLP/@19.7251636,60.9691764,4z/data=!3m1!4b1!4m6!3m5!1s0x390ce5db65f6af0f:0xb29ad5bc8aabd76a!8m2!3d21.0680074!4d82.7525294!16s%2Fg%2F11k6fbjb7n?authuser=0&entry=ttu&g_ep=EgoyMDI1MDczMC4wIKXMDSoASAFQAw%3D%3D";
