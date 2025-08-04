@@ -108,6 +108,8 @@ class ApiService {
         print('Response body: ${response.body}');
         throw Exception('Failed to load keywords: ${response.statusCode}');
       }
+      // In your ApiService class, replace the error handling section:
+
     } catch (e) {
       print('❌ Error fetching keywords from API: $e');
 
@@ -117,11 +119,8 @@ class ApiService {
       print('📦 Returning ${cachedKeywords.length} cached keywords from Hive');
 
       if (cachedKeywords.isEmpty) {
-        print('⚠️ Warning: No cached keywords available');
-
-        // FALLBACK: Return hardcoded keywords if everything fails
-        print('🆘 Using fallback hardcoded keywords');
-        return _getFallbackKeywords();
+        print('⚠️ Warning: No cached keywords available and API failed');
+        throw Exception('No keywords available: API failed and no cache found');
       }
 
       return cachedKeywords;
@@ -129,40 +128,40 @@ class ApiService {
   }
 
   // ADDED: Fallback keywords in case API and cache both fail
-  static List<KeywordModel> _getFallbackKeywords() {
-    return [
-      KeywordModel(
-        displayOptions: "Register a Visitor",
-        keywordsGlossary: ["visitor", "register visitor", "new visitor", "add visitor", "visitor registration"],
-        actionToPerform: "Launch the Visitor's Registration Form and fill up the form using Speech to Text feature",
-        appMethodToCall: "VisitHomeScreen",
-      ),
-      KeywordModel(
-        displayOptions: "Register a Grievance",
-        keywordsGlossary: ["grievance", "complaint", "register grievance", "file complaint", "grievance registration"],
-        actionToPerform: "Launch the Grievance Registration Form and fill up the form using Speech to Text feature",
-        appMethodToCall: "GrievanceHomeScreen",
-      ),
-      KeywordModel(
-        displayOptions: "Show the latest eGatepass",
-        keywordsGlossary: ["eGatepass", "gatepass", "getpass", "gate pass", "get pass", "show gatepass", "latest gatepass", "visitor pass", "entry pass"],
-        actionToPerform: "Display the latest generated eGatepass for the visitor",
-        appMethodToCall: "eVisitorPassScreen",
-      ),
-      KeywordModel(
-        displayOptions: "Show Prison to visit on Google Map",
-        keywordsGlossary: ["map", "google map", "location", "prison location", "directions", "navigate", "route", "address"],
-        actionToPerform: "Read the Google Map coordinates of the Prison to be visited and launch the Google Map",
-        appMethodToCall: "GoogleMapScreen",
-      ),
-      KeywordModel(
-        displayOptions: "Exit KaraSahayak",
-        keywordsGlossary: ["exit", "close", "stop", "bye", "exit karasahayak", "close chatbot", "quit", "leave"],
-        actionToPerform: "Exit the KaraSahayak and redirect to Dashboard UI",
-        appMethodToCall: "ExitApp",
-      ),
-    ];
-  }
+ // static List<KeywordModel> _getFallbackKeywords() {
+ //    return [
+ //      KeywordModel(
+ //        displayOptions: "Register a Visitor",
+ //        keywordsGlossary: ["visitor", "register visitor", "new visitor", "add visitor", "visitor registration"],
+ //        actionToPerform: "Launch the Visitor's Registration Form and fill up the form using Speech to Text feature",
+ //        appMethodToCall: "VisitHomeScreen",
+ //      ),
+ //      KeywordModel(
+ //        displayOptions: "Register a Grievance",
+ //        keywordsGlossary: ["grievance", "complaint", "register grievance", "file complaint", "grievance registration"],
+ //        actionToPerform: "Launch the Grievance Registration Form and fill up the form using Speech to Text feature",
+ //        appMethodToCall: "GrievanceHomeScreen",
+ //      ),
+ //      KeywordModel(
+ //        displayOptions: "Show the latest eGatepass",
+ //        keywordsGlossary: ["eGatepass", "gatepass", "getpass", "gate pass", "get pass", "show gatepass", "latest gatepass", "visitor pass", "entry pass"],
+ //        actionToPerform: "Display the latest generated eGatepass for the visitor",
+ //        appMethodToCall: "eVisitorPassScreen",
+ //      ),
+ //      KeywordModel(
+ //        displayOptions: "Show Prison to visit on Google Map",
+ //        keywordsGlossary: ["map", "google map", "location", "prison location", "directions", "navigate", "route", "address"],
+ //        actionToPerform: "Read the Google Map coordinates of the Prison to be visited and launch the Google Map",
+ //        appMethodToCall: "GoogleMapScreen",
+ //      ),
+ //      KeywordModel(
+ //        displayOptions: "Exit KaraSahayak",
+ //        keywordsGlossary: ["exit", "close", "stop", "bye", "exit karasahayak", "close chatbot", "quit", "leave"],
+ //        actionToPerform: "Exit the KaraSahayak and redirect to Dashboard UI",
+ //        appMethodToCall: "ExitApp",
+ //      ),
+ //    ];
+ //  }
 
   // Enhanced method to validate API response structure
   static Future<bool> validateApiResponse() async {
@@ -312,13 +311,13 @@ class ApiService {
     try {
       // Clear Hive cache first
       await HiveService.keywordsBox.clear();
-      print('🗑️ Cleared Hive cache');
+      print(' Cleared Hive cache');
 
       // Fetch fresh data from API
       return await fetchKeywords();
     } catch (e) {
-      print('❌ Error in force refresh: $e');
-      return _getFallbackKeywords();
+      print(' Error in force refresh: $e');
+      throw Exception('Force refresh failed: Unable to fetch keywords from API and cache was cleared');
     }
   }
 }
