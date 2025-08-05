@@ -307,4 +307,5 @@ class ApiService {
       throw Exception('Force refresh failed: Unable to fetch keywords from API and cache was cleared');
     }
   }
+
 }
