@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../models/visitor_model.dart';
 import '../pdf_viewer_screen.dart';
+import '../services/auth_service.dart';
 import '../utils/color_scheme.dart';
 
 class eVisitorPassScreen extends StatefulWidget {
@@ -19,6 +20,11 @@ class _eVisitorPassScreenState extends State<eVisitorPassScreen> {
   List<String> _selectedInstructions = [];
 
 
+  @override
+  void initState() {
+    super.initState();
+    AuthService.checkAndHandleSession(context); // 👈 1 line only
+  }
 
   final List<String> instructions = [
     'Carry original ID proof',
@@ -488,7 +494,6 @@ class _eVisitorPassScreenState extends State<eVisitorPassScreen> {
       ),
     );
   }
-
 
   Widget _buildInstructionsSection() {
     return Container(

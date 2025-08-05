@@ -9,6 +9,7 @@ import '../../dashboard/grievance/grievance_home.dart';
 import '../../models/keyword_model.dart';
 import '../../models/visitor_model.dart';
 import '../../services/api_service.dart';
+import '../../services/auth_service.dart';
 import '../../services/hive_service.dart';
 
 class ChatbotScreen extends StatefulWidget {
@@ -62,6 +63,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   void initState() {
     super.initState();
     _initializeApp();
+    AuthService.checkAndHandleSession(context);
   }
 
   Future<void> _initializeApp() async {
@@ -327,6 +329,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   // FIXED: Enhanced bot reply with better keyword matching
+  // FIXED: Enhanced bot reply with better keyword matching
   void _botReply(String userInput) {
     final input = userInput.toLowerCase().trim();
 
@@ -334,55 +337,173 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     print('User input: "$input"');
     print('Available keywords: ${keywords.length}');
 
-    // Enhanced keyword matching
+    // Enhanced keyword matching with priority order
     KeywordModel? matchedKeyword;
 
+    // PRIORITY 1: Exact display option match (highest priority)
     for (var keyword in keywords) {
-      if (matchedKeyword != null) break; // Already found a match
-
-      // Check display options first (exact and partial matching)
       String displayOption = keyword.displayOptions.toLowerCase().trim();
-      if (input == displayOption ||
-          input.contains(displayOption) ||
-          displayOption.contains(input)) {
-        print('✅ Display option match found: "${displayOption}"');
+      if (input == displayOption) {
+        print('✅ Exact display option match found: "${displayOption}"');
         matchedKeyword = keyword;
         break;
       }
+    }
 
-      // Check keywords glossary with flexible matching
-      for (var keywordStr in keyword.keywordsGlossary) {
-        String cleanKeyword = keywordStr.toLowerCase().trim();
-
-        // Exact match
-        if (input == cleanKeyword) {
-          print('✅ Exact keyword match found: "${cleanKeyword}"');
-          matchedKeyword = keyword;
-          break;
+    // PRIORITY 2: Exact keyword match from glossary
+    if (matchedKeyword == null) {
+      for (var keyword in keywords) {
+        for (var keywordStr in keyword.keywordsGlossary) {
+          String cleanKeyword = keywordStr.toLowerCase().trim();
+          if (input == cleanKeyword) {
+            print('✅ Exact keyword match found: "${cleanKeyword}"');
+            matchedKeyword = keyword;
+            break;
+          }
         }
+        if (matchedKeyword != null) break;
+      }
+    }
 
-        // Contains match
-        if (input.contains(cleanKeyword) || cleanKeyword.contains(input)) {
-          print('✅ Contains match found: "${cleanKeyword}" in input "${input}"');
-          matchedKeyword = keyword;
-          break;
-        }
+    // PRIORITY 3: Multi-word phrase matching (more specific)
+    if (matchedKeyword == null) {
+      List<String> inputWords = input.split(' ').where((word) => word.length > 2).toList();
 
-        // Word-based matching
-        List<String> inputWords = input.split(' ').where((word) => word.isNotEmpty).toList();
-        List<String> keywordWords = cleanKeyword.split(' ').where((word) => word.isNotEmpty).toList();
+      if (inputWords.length >= 2) { // Only for multi-word inputs
+        for (var keyword in keywords) {
+          // Check display options
+          String displayOption = keyword.displayOptions.toLowerCase().trim();
+          List<String> displayWords = displayOption.split(' ').where((word) => word.length > 2).toList();
 
-        bool wordMatch = keywordWords.any((kw) =>
-            inputWords.any((iw) => iw == kw || iw.contains(kw) || kw.contains(iw)));
+          // Calculate word overlap percentage
+          int matchCount = 0;
+          for (String word in inputWords) {
+            if (displayWords.any((dw) => dw.contains(word) || word.contains(dw))) {
+              matchCount++;
+            }
+          }
 
-        if (wordMatch) {
-          print('✅ Word-based match found: "${cleanKeyword}"');
-          matchedKeyword = keyword;
-          break;
+          // Require at least 60% word match for multi-word phrases
+          double matchPercentage = matchCount / inputWords.length;
+          if (matchPercentage >= 0.6) {
+            print('✅ Multi-word phrase match found: "${displayOption}" (${(matchPercentage * 100).round()}% match)');
+            matchedKeyword = keyword;
+            break;
+          }
+
+          // Check keywords glossary
+          for (var keywordStr in keyword.keywordsGlossary) {
+            String cleanKeyword = keywordStr.toLowerCase().trim();
+            List<String> keywordWords = cleanKeyword.split(' ').where((word) => word.length > 2).toList();
+
+            matchCount = 0;
+            for (String word in inputWords) {
+              if (keywordWords.any((kw) => kw.contains(word) || word.contains(kw))) {
+                matchCount++;
+              }
+            }
+
+            matchPercentage = matchCount / inputWords.length;
+            if (matchPercentage >= 0.6) {
+              print('✅ Multi-word keyword match found: "${cleanKeyword}" (${(matchPercentage * 100).round()}% match)');
+              matchedKeyword = keyword;
+              break;
+            }
+          }
+          if (matchedKeyword != null) break;
         }
       }
+    }
 
-      if (matchedKeyword != null) break;
+    // PRIORITY 4: Partial contains matching (more flexible)
+    if (matchedKeyword == null) {
+      for (var keyword in keywords) {
+        // Check display options
+        String displayOption = keyword.displayOptions.toLowerCase().trim();
+        if (input.contains(displayOption) && displayOption.length > 3) {
+          print('✅ Display option contains match found: "${displayOption}"');
+          matchedKeyword = keyword;
+          break;
+        }
+        if (displayOption.contains(input) && input.length > 3) {
+          print('✅ Input contained in display option: "${displayOption}"');
+          matchedKeyword = keyword;
+          break;
+        }
+
+        // Check keywords glossary
+        for (var keywordStr in keyword.keywordsGlossary) {
+          String cleanKeyword = keywordStr.toLowerCase().trim();
+          if (input.contains(cleanKeyword) && cleanKeyword.length > 3) {
+            print('✅ Keyword contains match found: "${cleanKeyword}"');
+            matchedKeyword = keyword;
+            break;
+          }
+          if (cleanKeyword.contains(input) && input.length > 3) {
+            print('✅ Input contained in keyword: "${cleanKeyword}"');
+            matchedKeyword = keyword;
+            break;
+          }
+        }
+        if (matchedKeyword != null) break;
+      }
+    }
+
+    // PRIORITY 5: Single word matching (lowest priority, most restrictive)
+    if (matchedKeyword == null) {
+      List<String> inputWords = input.split(' ').where((word) => word.length > 3).toList(); // Only longer words
+
+      for (var keyword in keywords) {
+        // Check display options
+        String displayOption = keyword.displayOptions.toLowerCase().trim();
+        List<String> displayWords = displayOption.split(' ').where((word) => word.length > 3).toList();
+
+        // For single word matching, require exact word match or very close match
+        bool hasStrongMatch = false;
+        for (String inputWord in inputWords) {
+          for (String displayWord in displayWords) {
+            if (inputWord == displayWord ||
+                (inputWord.length > 4 && displayWord.length > 4 &&
+                    (inputWord.contains(displayWord) || displayWord.contains(inputWord)))) {
+              hasStrongMatch = true;
+              break;
+            }
+          }
+          if (hasStrongMatch) break;
+        }
+
+        if (hasStrongMatch) {
+          print('✅ Strong single word match found: "${displayOption}"');
+          matchedKeyword = keyword;
+          break;
+        }
+
+        // Check keywords glossary with same logic
+        for (var keywordStr in keyword.keywordsGlossary) {
+          String cleanKeyword = keywordStr.toLowerCase().trim();
+          List<String> keywordWords = cleanKeyword.split(' ').where((word) => word.length > 3).toList();
+
+          hasStrongMatch = false;
+          for (String inputWord in inputWords) {
+            for (String keywordWord in keywordWords) {
+              if (inputWord == keywordWord ||
+                  (inputWord.length > 4 && keywordWord.length > 4 &&
+                      (inputWord.contains(keywordWord) || keywordWord.contains(inputWord)))) {
+                hasStrongMatch = true;
+                break;
+              }
+            }
+            if (hasStrongMatch) break;
+          }
+
+          if (hasStrongMatch) {
+            print('✅ Strong single keyword match found: "${cleanKeyword}"');
+            matchedKeyword = keyword;
+            break;
+          }
+        }
+        if (matchedKeyword != null) break;
+      }
     }
 
     print('=== END BOT REPLY DEBUG ===');
@@ -409,6 +530,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     return greetings.any((greeting) => input.contains(greeting));
   }
 
+  // FIXED: Enhanced action execution with better error handling
   // FIXED: Enhanced action execution with better error handling
   void _executeAction(KeywordModel keyword) {
     print('=== EXECUTE ACTION DEBUG ===');
@@ -490,6 +612,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
     print('=== END EXECUTE ACTION DEBUG ===');
   }
+
 
   void _showReturnMessage() {
     Future.delayed(Duration(milliseconds: 500), () {
@@ -731,18 +854,14 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         onResult: (result) {
           print('Voice recognition result: ${result.recognizedWords}');
           print('Is final result: ${result.finalResult}');
-
           setState(() {
             _voiceText = result.recognizedWords;
           });
-
           // Only process final results to avoid premature closing
           if (result.finalResult && _voiceText.trim().isNotEmpty) {
             print('Final result received, processing...');
-
             // Stop listening
             _speech.stop();
-
             // Close dialog after a short delay
             Future.delayed(Duration(milliseconds: 500), () {
               if (Navigator.canPop(context)) {
@@ -812,7 +931,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           )
               : LinearGradient(
             // Dark background for bot messages
-            colors: [Color(0xFF5E81AE), Color(0xFF668CB8)],
+            colors: [Color(0xFF5A8BBA), Color(0xFF80B0EC)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
