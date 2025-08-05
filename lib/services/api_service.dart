@@ -6,7 +6,6 @@ import 'auth_service.dart';
 import 'hive_service.dart';
 
 class ApiService {
-  //static const String AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OTA5ZGNmMGExMWRhYTc1ZDI0NTVjNSIsInVzZXJuYW1lIjoidmFpbnlhbGExIiwiaWF0IjoxNzU0Mzk1NDMyLCJleHAiOjE3NTQzOTYzMzJ9.D1FFO9b66an81Df6DcxY7TGx5jNJWT8OERRGJzEN6_g';
   static const String BASE_URL = 'http://192.168.0.106:5000/api/kskeywords';
 
   // FIXED: Enhanced fetch keywords with better error handling and validation
