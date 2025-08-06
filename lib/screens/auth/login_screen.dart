@@ -140,7 +140,8 @@ class _LoginScreenState extends State<LoginScreen> {
         : _mobileController.text.trim();
 
     // Special case for sir's number - skip OTP verification
-    bool isSpecialCase = !_isInternationalVisitor && userInput == "7702000723";
+    bool isSpecialCase = !_isInternationalVisitor &&
+        (userInput == "7702000723" || userInput == "9767731178");
 
     if (!isSpecialCase && !_isOtpVerified) {
       _showErrorMessage(_isInternationalVisitor
