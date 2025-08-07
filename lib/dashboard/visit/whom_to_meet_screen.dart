@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../dashboard/visit/visit_home.dart';
 import '../../pdf_viewer_screen.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/form_section_title.dart';
@@ -215,6 +216,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
         _updateAdditionalVisitorControllers();
       });
     });
+    AuthService.checkAndHandleSession(context);
   }
 
   Future<bool> _onWillPop() async {

@@ -1,22 +1,27 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart';
 import '../models/keyword_model.dart';
+import 'auth_service.dart';
 import 'hive_service.dart';
 
 class ApiService {
-  static const String BASE_URL = 'http://localhost:5000/api/kskeywords';
+  static const String BASE_URL = 'http://192.168.0.106:5000/api/kskeywords';
+
 
   // FIXED: Enhanced fetch keywords with better error handling and validation
   static Future<List<KeywordModel>> fetchKeywords() async {
     try {
+      final token = await AuthService.getToken();
       print('Fetching keywords from: $BASE_URL');
 
       final response = await http.get(
         Uri.parse(BASE_URL),
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
         },
-      ).timeout(Duration(seconds: 10)); // Add timeout
+      ).timeout(Duration(seconds: 10));// Add timeout
 
       print('API Response Status: ${response.statusCode}');
       print('API Response Body: ${response.body}');
@@ -181,9 +186,13 @@ class ApiService {
   // Enhanced method to validate API response structure
   static Future<bool> validateApiResponse() async {
     try {
+      final token = await AuthService.getToken();
       final response = await http.get(
         Uri.parse(BASE_URL),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
       ).timeout(Duration(seconds: 5));
 
       if (response.statusCode == 200) {
@@ -249,9 +258,13 @@ class ApiService {
   // Optional: Test API connectivity
   static Future<bool> testConnection() async {
     try {
+      final token = await AuthService.getToken();
       final response = await http.get(
         Uri.parse(BASE_URL),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
       ).timeout(Duration(seconds: 5));
 
       bool isConnected = response.statusCode == 200;
@@ -266,9 +279,13 @@ class ApiService {
   // Method to get keywords count from API without full parsing
   static Future<int> getKeywordsCount() async {
     try {
+      final token = await AuthService.getToken();
       final response = await http.get(
         Uri.parse(BASE_URL),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
       ).timeout(Duration(seconds: 5));
 
       if (response.statusCode == 200) {
@@ -287,9 +304,13 @@ class ApiService {
   // Debug method to print API response structure
   static Future<void> debugApiResponse() async {
     try {
+      final token = await AuthService.getToken();
       final response = await http.get(
         Uri.parse(BASE_URL),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
       ).timeout(Duration(seconds: 10));
 
       print('\n=== API DEBUG INFO ===');
@@ -335,4 +356,5 @@ class ApiService {
       return _getFallbackKeywords();
     }
   }
+
 }
