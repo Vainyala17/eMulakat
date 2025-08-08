@@ -498,8 +498,10 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   ];
 
-  Widget _buildVisitTypeCard(String title, int count, bool selected, VoidCallback onTap, {Icon? leadingIcon}) {
-    return Expanded(
+  Widget _buildVisitTypeCard(String title, int count, bool selected, VoidCallback onTap, {Image? leadingIcon}) {
+    return SizedBox(
+      width: 150,
+      height: 150,
       child: GestureDetector(
         onTap: onTap,
         child: Card(
@@ -525,7 +527,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                       color: Color(0xFF121010),
                   ),
@@ -533,7 +535,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 6),
                 CircleAvatar(
                   backgroundColor: Colors.white,
-                  radius: 15, // smaller circle
+                  radius: 18, // smaller circle
                   child: Text(
                     '$count',
                     style: TextStyle(
@@ -712,7 +714,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      translatedWelcome.isNotEmpty ? translatedWelcome : 'Welcome to E-Mulakat',
+                      translatedWelcome.isNotEmpty ? translatedWelcome : 'Welcome to eMulakat',
                       style: TextStyle(
                         fontSize: _fontSize + 8,
                         fontWeight: FontWeight.bold,
@@ -728,32 +730,55 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     SizedBox(height: 30),
-                    Row(
-                      children: [
-                        _buildVisitTypeCard(
-                          'Past Visits',
-                          pastVisits.length,
-                          showPastVisits,
-                              () {
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child:Row(
+                        children: [
+                          _buildVisitTypeCard('Meeting', pastVisits.length, showPastVisits, () {
                             setState(() {
                               showPastVisits = true;
                               isExpandedView = false;
                               selectedVisitor = null;
                             });
                           },
-                          leadingIcon: const Icon(Icons.all_inclusive, size: 25), // 👈 Added icon
-                        ),
-                        SizedBox(width: 10),
-                        _buildVisitTypeCard('Upcoming Visits', upcomingVisits.length, !showPastVisits, () {
-                          setState(() {
-                            showPastVisits = false;
-                            isExpandedView = false;
-                            selectedVisitor = null;
-                          });
-                        },
-                          leadingIcon: const Icon(Icons.upcoming, size: 25),
-                        ),
-                      ],
+                            leadingIcon: Image.asset(
+                              'assets/images/meeting.png',
+                              width: 40,
+                              height: 40,
+                            ),
+                            // 👈 Added icon
+                          ),
+                          SizedBox(width: 10),
+                          _buildVisitTypeCard('Parole', upcomingVisits.length, !showPastVisits, () {
+                            setState(() {
+                              showPastVisits = false;
+                              isExpandedView = false;
+                              selectedVisitor = null;
+                            });
+                          },
+                            leadingIcon: Image.asset(
+                              'assets/images/parole.png',
+                              width: 40,
+                              height: 40,
+                            ),
+
+                          ),
+                          SizedBox(width: 10),
+                          _buildVisitTypeCard('Grievance', upcomingVisits.length, !showPastVisits, () {
+                            setState(() {
+                              showPastVisits = false;
+                              isExpandedView = false;
+                              selectedVisitor = null;
+                            });
+                          },
+                            leadingIcon: Image.asset(
+                              'assets/images/grievance.png',
+                              width: 40,
+                              height:40,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     SizedBox(height: 30),
                   ],
@@ -854,9 +879,20 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Row(
                 children: [
                   _buildNavItem(
+                    index: 1,
+                    icon: Icons.dashboard,
+                    label: 'Dashboard',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => HomeScreen()),
+                      );
+                    },
+                  ),
+                  _buildNavItem(
                     index: 0,
                     icon: Icons.directions_walk,
-                    label: 'Visit',
+                    label: 'Meeting',
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
@@ -866,8 +902,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   _buildNavItem(
                     index: 1,
-                    icon: Icons.dashboard,
-                    label: 'Dashboard',
+                    icon: Icons.gavel,
+                    label: 'Parole',
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
