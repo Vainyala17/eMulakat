@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../pdf_viewer_screen.dart';
 import '../../screens/home/home_screen.dart';
+import '../../services/auth_service.dart';
 import '../visit/visit_home.dart';
 import 'complaint_screen.dart';
 import 'grievance_preview_screen.dart';
@@ -17,6 +18,13 @@ class GrievanceHomeScreen extends StatefulWidget {
 
 class _GrievanceHomeScreenState extends State<GrievanceHomeScreen> {
   int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    AuthService.checkAndHandleSession(context); // 👈 1 line only
+  }
+
 
   // ✅ This handles SYSTEM back button (physical/gesture)
   Future<bool> _onWillPop() async {

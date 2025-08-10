@@ -333,6 +333,115 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
     initializeStt();
   }
 
+  // Authentication methods
+  Future<void> checkAuthentication() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? specialUser = prefs.getString('special_user');
+
+      if (specialUser == "7702000723") {
+        setState(() {
+          isAuthenticated = true;
+          isAuthChecking = false;
+        });
+        return;
+      }
+
+      bool isValid = await AuthService.isTokenValid();
+
+      if (mounted) {
+        setState(() {
+          isAuthenticated = isValid;
+          isAuthChecking = false;
+        });
+
+        if (!isValid) {
+          await AuthService.clearTokens();
+          showSessionExpiredDialog();
+        }
+      }
+    } catch (e) {
+      print('Auth check error: $e');
+      if (mounted) {
+        setState(() {
+          isAuthenticated = false;
+          isAuthChecking = false;
+        });
+        showAuthErrorDialog();
+      }
+    }
+  }
+
+  void showSessionExpiredDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text('Session Expired'),
+        content: Text('Your session has expired. Please login again.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              redirectToLogin();
+            },
+            child: Text('Login'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void showAuthErrorDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text('Authentication Error'),
+        content: Text('Unable to verify your session. Please login again.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              redirectToLogin();
+            },
+            child: Text('Login'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void redirectToLogin() {
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      '/login',
+          (route) => false,
+    );
+  }
+
+  Future<void> handleLogout() async {
+    bool confirmLogout = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Logout Confirmation'),
+        content: Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmLogout == true) {
+      await AuthService.logout(context); // <-- this is important
+    }
+  }
   // TTS and Speech methods
   Future<void> initializeTts() async {
     await flutterTts.setLanguage("en-US");
@@ -487,7 +596,6 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
       ),
     );
   }
-
   Widget buildVisitTypeCard(String title, int count, bool selected, VoidCallback onTap, {Image? leadingIcon}) {
     return SizedBox(
       width: 150,
@@ -563,5 +671,24 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
         },
       ),
     );
+  }
+
+  // Session management
+  void startPeriodicSessionCheck() {
+    Timer.periodic(Duration(minutes: 5), (timer) async {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      bool isValid = await AuthService.isTokenValid();
+      if (!isValid) {
+        timer.cancel();
+        await AuthService.clearTokens();
+        if (mounted) {
+          showSessionExpiredDialog();
+        }
+      }
+    });
   }
 }
