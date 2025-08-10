@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../dashboard/evisitor_pass_screen.dart';
 import '../../dashboard/grievance/grievance_home.dart';
+import '../../dashboard/visit/whom_to_meet_screen.dart';
 import '../../models/keyword_model.dart';
 import '../../models/visitor_model.dart';
 import '../../services/api_service.dart';
@@ -63,7 +64,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   void initState() {
     super.initState();
     _initializeApp();
-    AuthService.checkAndHandleSession(context);
+    //AuthService.checkAndHandleSession(context);
   }
 
   Future<void> _initializeApp() async {

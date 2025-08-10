@@ -1106,21 +1106,24 @@
 //   }
 // }
 
-
 import 'dart:async';
-import 'package:eMulakat/screens/home/parole_screen.dart';
-import 'package:eMulakat/screens/home/vertical_visit_card.dart';
 import 'package:flutter/material.dart';
 import '../../dashboard/evisitor_pass_screen.dart';
 import '../../dashboard/grievance/grievance_home.dart';
+import '../../dashboard/parole/parole_home.dart';
 import '../../dashboard/visit/visit_home.dart';
+import '../../dashboard/visit/whom_to_meet_screen.dart';
+import '../../models/visitor_model.dart';
 import 'chatbot_screen.dart';
 import 'drawer_menu.dart';
 import '../../utils/color_scheme.dart';
 import 'notifications_screen.dart';
-import 'home_screen_logic.dart'; // Import the logic file
+import 'home_screen_logic.dart';
 
 class HomeScreen extends StatefulWidget {
+  final int selectedIndex;
+
+  const HomeScreen({Key? key, this.selectedIndex = 0, }) : super(key: key);
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -1128,98 +1131,24 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with HomeScreenLogic {
   @override
   Widget build(BuildContext context) {
-    // Show loading screen while checking authentication
-    if (isAuthChecking) {
-      return Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Checking authentication...',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // Show error screen if not authenticated
-    if (!isAuthenticated) {
-      return Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.lock_outline,
-                size: 64,
-                color: Colors.grey[400],
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Authentication Required',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[700],
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Please login to access the dashboard',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
-              ),
-              SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: redirectToLogin,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                ),
-                child: Text(
-                  'Go to Login',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
     return WillPopScope(
       onWillPop: () async {
         bool exitConfirmed = await showDialog(
           context: context,
-          builder: (context) =>
-              AlertDialog(
-                title: Text('Exit Confirmation'),
-                content: Text('Please use Logout and close the App.'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: Text('Logout'),
-                  ),
-                ],
+          builder: (context) => AlertDialog(
+            title: Text('Exit Confirmation'),
+            content: Text('Please use Logout and close the App.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text('Cancel'),
               ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text('Logout'),
+              ),
+            ],
+          ),
         );
         return exitConfirmed;
       },
@@ -1326,163 +1255,297 @@ class _HomeScreenState extends State<HomeScreen> with HomeScreenLogic {
           ],
         ),
         drawer: DrawerMenu(),
-        body: Column(
+        body: Stack(
           children: [
-            // Top content (Welcome text and visit type cards) - only show if not in expanded view
-            if (!isExpandedView)
-              Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      translatedWelcome.isNotEmpty ? translatedWelcome : 'Welcome to eMulakat',
-                      style: TextStyle(
-                        fontSize: fontSize + 8,
-                        fontWeight: FontWeight.bold,
-                        color: selectedColor,
-                      ),
+            // Main scrollable content
+            SingleChildScrollView(
+              padding: EdgeInsets.only(bottom: 80), // Add padding for floating button
+              child: Column(
+                children: [
+                  // Welcome Section
+                  Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          translatedWelcome.isNotEmpty ? translatedWelcome : 'Welcome to eMulakat',
+                          style: TextStyle(
+                            fontSize: fontSize + 8,
+                            fontWeight: FontWeight.bold,
+                            color: selectedColor,
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        Text(
+                          translatedInstructions.isNotEmpty ? translatedInstructions : 'Prison Visitor Management System',
+                          style: TextStyle(
+                            fontSize: fontSize + 2,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 20),
-                    Text(
-                      translatedInstructions.isNotEmpty ? translatedInstructions : 'Prison Visitor Management System',
-                      style: TextStyle(
-                        fontSize: fontSize + 2,
-                        color: Colors.black,
-                      ),
-                    ),
-                    SizedBox(height: 30),
-                    SingleChildScrollView(
+                  ),
+
+                  // Visit Type Cards Section
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
-                      child:Row(
+                      child: Row(
                         children: [
-                          buildVisitTypeCard('Meeting', pastVisits.length, showPastVisits, () {
-                            setState(() {
-                              showPastVisits = true;
-                              isExpandedView = false;
-                              selectedVisitor = null;
-                            });
-                          },
+                          buildVisitTypeCard(
+                            'Meeting',
+                            statusCounts['Meeting']?['Total'] ?? 0,
+                            selectedVisitType == 'Meeting',
+                                () {
+                              setState(() {
+                                selectedVisitType = 'Meeting';
+                                selectedStatus = 'All';
+                              });
+                            },
                             leadingIcon: Image.asset(
                               'assets/images/meeting.png',
                               width: 40,
                               height: 40,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Icon(Icons.meeting_room, size: 40, color: AppColors.primary);
+                              },
                             ),
-                            // 👈 Added icon
                           ),
                           SizedBox(width: 10),
-                          buildVisitTypeCard('Parole', upcomingVisits.length, !showPastVisits, () {
-                            setState(() {
-                              showPastVisits = false;
-                              isExpandedView = false;
-                              selectedVisitor = null;
-                            });
-                          },
+                          buildVisitTypeCard(
+                            'Parole',
+                            statusCounts['Parole']?['Total'] ?? 0,
+                            selectedVisitType == 'Parole',
+                                () {
+                              setState(() {
+                                selectedVisitType = 'Parole';
+                                selectedStatus = 'All';
+                              });
+                            },
                             leadingIcon: Image.asset(
                               'assets/images/parole.png',
                               width: 40,
                               height: 40,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Icon(Icons.gavel, size: 40, color: AppColors.primary);
+                              },
                             ),
-
                           ),
                           SizedBox(width: 10),
-                          buildVisitTypeCard('Grievance', upcomingVisits.length, !showPastVisits, () {
-                            setState(() {
-                              showPastVisits = false;
-                              isExpandedView = false;
-                              selectedVisitor = null;
-                            });
-                          },
+                          buildVisitTypeCard(
+                            'Grievance',
+                            statusCounts['Grievance']?['Total'] ?? 0,
+                            selectedVisitType == 'Grievance',
+                                () {
+                              setState(() {
+                                selectedVisitType = 'Grievance';
+                                selectedStatus = 'All';
+                              });
+                            },
                             leadingIcon: Image.asset(
                               'assets/images/grievance.png',
                               width: 40,
-                              height:40,
+                              height: 40,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Icon(Icons.report_problem, size: 40, color: AppColors.primary);
+                              },
                             ),
                           ),
                         ],
                       ),
                     ),
-                    SizedBox(height: 30),
-                  ],
-                ),
-              ),
+                  ),
 
-            // Main content area
-            Expanded(
-              child: isExpandedView && selectedVisitor != null
-                  ? VisitDetailView(
-                selectedVisitor: selectedVisitor!,
-                pastVisits: pastVisits,
-                upcomingVisits: upcomingVisits,
-                onVisitorSelected: (visitor) {
-                  setState(() {
-                    selectedVisitor = visitor;
-                  });
-                },
-              )
-                  : buildVisitCardList(showPastVisits ? pastVisits : upcomingVisits),
-            ),
+                  SizedBox(height: 30),
 
-            SizedBox(height: 30),
-            // E-Pass Button - always at bottom
-            Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Center(
-                child: SizedBox(
-                  width: 160,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (selectedVisitor != null) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => eVisitorPassScreen(visitor: selectedVisitor!),
-                          ),
-                        );
-                      } else {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text('No Visit Selected'),
-                            content: Text('Please select a visit before proceeding.'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: Text('OK'),
+                  // Status Cards Section
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Column(
+                        children: [
+                          // First row - Pending and Upcoming
+                          Row(
+                            children: [
+                              buildStatusCard(
+                                'Pending',
+                                statusCounts[selectedVisitType]?['Pending'] ?? 0,
+                                'pending',
+                                selectedStatus == 'Pending',
+                                    () {
+                                  setState(() {
+                                    selectedStatus = selectedStatus == 'Pending' ? 'All' : 'Pending';
+                                  });
+                                },
+                              ),
+                              buildStatusCard(
+                                'Upcoming',
+                                statusCounts[selectedVisitType]?['Upcoming'] ?? 0,
+                                'upcoming',
+                                selectedStatus == 'Upcoming',
+                                    () {
+                                  setState(() {
+                                    selectedStatus = selectedStatus == 'Upcoming' ? 'All' : 'Upcoming';
+                                  });
+                                },
                               ),
                             ],
                           ),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Text(
-                      'eVisitor Pass',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.white,
+                          SizedBox(height: 12),
+                          // Second row - Completed and Expired
+                          Row(
+                            children: [
+                              buildStatusCard(
+                                'Completed',
+                                statusCounts[selectedVisitType]?['Completed'] ?? 0,
+                                'completed',
+                                selectedStatus == 'Completed',
+                                    () {
+                                  setState(() {
+                                    selectedStatus = selectedStatus == 'Completed' ? 'All' : 'Completed';
+                                  });
+                                },
+                              ),
+                              buildStatusCard(
+                                'Expired',
+                                statusCounts[selectedVisitType]?['Expired'] ?? 0,
+                                'expired',
+                                selectedStatus == 'Expired',
+                                    () {
+                                  setState(() {
+                                    selectedStatus = selectedStatus == 'Expired' ? 'All' : 'Expired';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 12),
+                          // Third row - Total
+                          Row(
+                            children: [
+                              Expanded(child: SizedBox()), // Empty space
+                              buildStatusCard(
+                                'Total',
+                                statusCounts[selectedVisitType]?['Total'] ?? 0,
+                                'total',
+                                selectedStatus == 'All',
+                                    () {
+                                  setState(() {
+                                    selectedStatus = 'All';
+                                  });
+                                },
+                              ),
+                              Expanded(child: SizedBox()), // Empty space
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
+
+                  SizedBox(height: 30),
+
+                  // Visits List Section
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${selectedStatus == 'All' ? 'All' : selectedStatus} ${selectedVisitType}',
+                          style: TextStyle(
+                            fontSize: fontSize + 4,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        buildVerticalVisitsList(),
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(height: 30),
+
+                  // E-Pass Button
+                  Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Center(
+                      child: SizedBox(
+                        width: 160,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            List<VisitorModel> filteredVisits = getFilteredVisits();
+                            if (filteredVisits.isNotEmpty) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => eVisitorPassScreen(visitor: filteredVisits.first),
+                                ),
+                              );
+                            } else {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('No Visit Available'),
+                                  content: Text('No ${selectedStatus.toLowerCase()} ${selectedVisitType.toLowerCase()} available for e-pass generation.'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: Text('OK'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            'eVisitor Pass',
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Fixed Floating Action Button
+            Positioned(
+              right: 16,
+              bottom: 16,
+              child: FloatingActionButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ChatbotScreen()),
+                  );
+                },
+                backgroundColor: AppColors.primary,
+                child: Icon(Icons.chat_outlined, color: Colors.white),
               ),
             ),
           ],
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ChatbotScreen()),
-            );
-          },
-          child: Icon(Icons.chat_outlined, color: Color(0xFFFFFFFF)),
         ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
@@ -1501,35 +1564,37 @@ class _HomeScreenState extends State<HomeScreen> with HomeScreenLogic {
               child: Row(
                 children: [
                   buildNavItem(
-                    index: 1,
+                    index: 0,
                     icon: Icons.dashboard,
                     label: 'Dashboard',
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => HomeScreen()),
-                      );
-                    },
-                  ),
-                  buildNavItem(
-                    index: 0,
-                    icon: Icons.directions_walk,
-                    label: 'Meeting',
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => VisitHomeScreen()),
+                        MaterialPageRoute(builder: (context) => HomeScreen(selectedIndex: 0)),
                       );
                     },
                   ),
                   buildNavItem(
                     index: 1,
+                    icon: Icons.directions_walk,
+                    label: 'Meeting',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => VisitHomeScreen(selectedIndex: 1)),
+                      );
+                    },
+                  ),
+                  buildNavItem(
+                    index: 2,
                     icon: Icons.gavel,
                     label: 'Parole',
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => ParoleScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => ParoleHomeScreen(selectedIndex: 2),
+                        ),
                       );
                     },
                   ),
@@ -1540,7 +1605,7 @@ class _HomeScreenState extends State<HomeScreen> with HomeScreenLogic {
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
+                        MaterialPageRoute(builder: (context) => GrievanceHomeScreen(selectedIndex: 3)),
                       );
                     },
                   ),

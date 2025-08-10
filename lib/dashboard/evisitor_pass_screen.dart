@@ -23,7 +23,7 @@ class _eVisitorPassScreenState extends State<eVisitorPassScreen> {
   @override
   void initState() {
     super.initState();
-    AuthService.checkAndHandleSession(context); // 👈 1 line only
+    //AuthService.checkAndHandleSession(context); // 👈 1 line only
   }
 
   final List<String> instructions = [

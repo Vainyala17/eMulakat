@@ -1,30 +1,24 @@
 
-import 'package:eMulakat/dashboard/visit/visit_preview_screen.dart';
+import 'package:eMulakat/dashboard/grievance/complaint_screen.dart';
+import 'package:eMulakat/dashboard/parole/parole_screen.dart';
+import 'package:eMulakat/dashboard/visit/visit_home.dart';
 import 'package:flutter/material.dart';
 
 import '../../pdf_viewer_screen.dart';
 import '../../screens/home/home_screen.dart';
-import '../../services/auth_service.dart';
 import '../grievance/grievance_home.dart';
-import '../parole/parole_home.dart';
-import 'whom_to_meet_screen.dart';
 
-class VisitHomeScreen extends StatefulWidget {
+class ParoleHomeScreen extends StatefulWidget {
   final bool fromChatbot;
   final int selectedIndex;
 
-  const VisitHomeScreen({
-    Key? key,
-    this.fromChatbot = false,
-    this.selectedIndex = 0,
-  }) : super(key: key);
+  const ParoleHomeScreen({Key? key, this.fromChatbot = false, this.selectedIndex =0}) : super(key: key);
 
   @override
-  _VisitHomeScreenState createState() => _VisitHomeScreenState();
+  _ParoleHomeScreenState createState() => _ParoleHomeScreenState();
 }
 
-
-class _VisitHomeScreenState extends State<VisitHomeScreen> {
+class _ParoleHomeScreenState extends State<ParoleHomeScreen> {
   late int _selectedIndex;
 
   @override
@@ -32,7 +26,6 @@ class _VisitHomeScreenState extends State<VisitHomeScreen> {
     super.initState();
     _selectedIndex = widget.selectedIndex;
   }
-
 
   Future<bool> _onWillPop() async {
     // If came from chatbot, allow normal back navigation
@@ -79,6 +72,7 @@ class _VisitHomeScreenState extends State<VisitHomeScreen> {
         onTap: () {
           setState(() {
             _selectedIndex = index;
+            ;
           });
           onTap();
         },
@@ -128,14 +122,13 @@ class _VisitHomeScreenState extends State<VisitHomeScreen> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-          title: const Text('Visit'),
+          title: const Text('Parole'),
           centerTitle: true,
           backgroundColor: const Color(0xFF5A8BBA),
           foregroundColor: Colors.black,
@@ -161,7 +154,7 @@ class _VisitHomeScreenState extends State<VisitHomeScreen> {
         ),
 
         // ✅ Only show your meet form screen here
-        body: MeetFormScreen(),
+        body: ParoleScreen(),
 
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
