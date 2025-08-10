@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../dashboard/visit/visit_home.dart';
 import '../../pdf_viewer_screen.dart';
+import '../../screens/home/home_screen.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_button.dart';
@@ -11,6 +12,10 @@ import '../../widgets/form_section_title.dart';
 import '../../utils/validators.dart';
 
 class MeetFormScreen extends StatefulWidget {
+  final bool fromChatbot;
+
+  const MeetFormScreen({Key? key, this.fromChatbot = false}) : super(key: key);
+
   @override
   _MeetFormScreenState createState() => _MeetFormScreenState();
 }
@@ -216,7 +221,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
         _updateAdditionalVisitorControllers();
       });
     });
-    AuthService.checkAndHandleSession(context);
+    //AuthService.checkAndHandleSession(context);
   }
 
   Future<bool> _onWillPop() async {
@@ -234,6 +239,58 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
       ),
     ) ??
         false;
+  }
+  void showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // prevent dismissing by tapping outside
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check_circle, color: Colors.green, size: 60),
+              SizedBox(height: 16),
+              Text(
+                "Success",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              Text(
+                "Your data has been successfully saved!",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+              ),
+              SizedBox(height: 16),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop(); // close dialog
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomeScreen()),
+                  );
+                },
+                child: Text(
+                  "OK",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.black, // ✅ Correct way
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _updateAdditionalVisitorControllers() {
@@ -565,16 +622,13 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                         text: 'Save',
                         onPressed: () {
                           if (_formKey.currentState!.validate()) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (context) => VisitHomeScreen()),
-                            );
+                            showSuccessDialog(context);
                           }
                         },
                       ),
                     ),
                   ],
-                ),
+                )
               ],
             ),
           ),

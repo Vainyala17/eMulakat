@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkExistingSession();
+      // _checkExistingSession();
       _generateCaptcha();
     });
   }
@@ -82,15 +82,15 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
 // Add this method to check if user is already logged in (call in initState)
-  void _checkExistingSession() async {
-    String? token = await AuthService.getToken();
-    print("🧪 Token on login screen: $token");
-
-    bool isValid = await AuthService.isTokenValid();
-    if (isValid) {
-      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-    }
-  }
+//   void _checkExistingSession() async {
+//     String? token = await AuthService.getToken();
+//     print("🧪 Token on login screen: $token");
+//
+//     bool isValid = await AuthService.isTokenValid();
+//     if (isValid) {
+//       Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+//     }
+//   }
 
 
 
@@ -137,8 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
         : _mobileController.text.trim();
 
     // Special case for sir's number - skip OTP verification
-    bool isSpecialCase = !_isInternationalVisitor &&
-        (userInput == "7702000723" || userInput == "9767731178");
+    bool isSpecialCase = !_isInternationalVisitor;
 
     if (!isSpecialCase && !_isOtpVerified) {
       _showErrorMessage(_isInternationalVisitor
@@ -149,57 +148,63 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    try {
-      if (isSpecialCase) {
-        // Handle special case - direct login without token
-        print('Special case login for: $userInput');
-        await AuthService.clearTokens(); // Clear any existing tokens
+    // try {
+    //   if (isSpecialCase) {
+    //     // Handle special case - direct login without token
+    //     print('Special case login for: $userInput');
+    //     await AuthService.clearTokens(); // Clear any existing tokens
+    //
+    //     // You might want to save some identifier for this special user
+    //     SharedPreferences prefs = await SharedPreferences.getInstance();
+    //     await prefs.setString('special_user', userInput);
+    //
+    //     if (mounted) {
+    //       Navigator.pushReplacement(
+    //         context,
+    //         MaterialPageRoute(builder: (_) => HomeScreen()),
+    //       );
+    //     }
+    //   } else {
+    //     // Regular JWT token-based login
+    //     print('Regular login attempt for: $userInput');
+    //
+    //     var result = await AuthService.loginUser(userInput, _passwordController.text);
+    //
+    //     if (result['success'] == true) {
+    //       print('Login successful');
+    //
+    //       if (mounted) {
+    //         _showSuccessMessage('Login successful!');
+    //
+    //         // Navigate to home screen
+    //         Navigator.pushReplacement(
+    //           context,
+    //           MaterialPageRoute(builder: (_) => HomeScreen()),
+    //         );
+    //       }
+    //     } else {
+    //       print('Login failed: ${result['message']}');
+    //       if (mounted) {
+    //         _showErrorMessage(result['message'] ?? 'Login failed. Please try again.');
+    //       }
+    //     }
+    //   }
+    // } catch (e) {
+    //   print('Login exception: $e');
+    //   if (mounted) {
+    //     _showErrorMessage('An unexpected error occurred. Please try again.');
+    //   }
+    // } finally {
+    //   if (mounted) {
+    //     setState(() => _isLoading = false);
+    //   }
+    // }
+    // Simulate login process
+    await Future.delayed(Duration(seconds: 2));
 
-        // You might want to save some identifier for this special user
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('special_user', userInput);
-
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => HomeScreen()),
-          );
-        }
-      } else {
-        // Regular JWT token-based login
-        print('Regular login attempt for: $userInput');
-
-        var result = await AuthService.loginUser(userInput, _passwordController.text);
-
-        if (result['success'] == true) {
-          print('Login successful');
-
-          if (mounted) {
-            _showSuccessMessage('Login successful!');
-
-            // Navigate to home screen
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => HomeScreen()),
-            );
-          }
-        } else {
-          print('Login failed: ${result['message']}');
-          if (mounted) {
-            _showErrorMessage(result['message'] ?? 'Login failed. Please try again.');
-          }
-        }
-      }
-    } catch (e) {
-      print('Login exception: $e');
-      if (mounted) {
-        _showErrorMessage('An unexpected error occurred. Please try again.');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => HomeScreen()),
+    );
   }
 
   String _generateOtp() {
@@ -451,9 +456,9 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  SizedBox(height: 20),
+                  SizedBox(height: 40),
                   _buildLogo(),
-                  SizedBox(height: 20),
+                  SizedBox(height: 30),
                   CheckboxListTile(
                     title: Text('International Visitor'),
                     value: _isInternationalVisitor,
@@ -470,7 +475,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       });
                     },
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: 20),
 
                   // Email Field (for international visitors)
                   if (_isInternationalVisitor) ...[
@@ -506,7 +511,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: 20),
                   ],
 
                   // Mobile Field (for domestic visitors)
@@ -547,7 +552,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: 20),
                   ],
 
                   // OTP Verification Section
@@ -603,7 +608,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 10),
+                    SizedBox(height: 20),
                     if (_resendCounter > 0)
                       Text(
                         'Resend attempts: $_resendCounter/3',
@@ -633,7 +638,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ],
-                  SizedBox(height: 24),
+                  SizedBox(height: 30),
                   // Captcha
                   Row(
                     children: [
@@ -684,7 +689,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: 30),
 
                   // Login Button
                   CustomButton(
@@ -693,7 +698,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     isLoading: _isLoading,
                     width: double.infinity,
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height:20),
                 ],
               ),
             ),
