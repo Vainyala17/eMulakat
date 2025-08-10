@@ -10,8 +10,6 @@ import '../../policies/privacy_policy_screen.dart';
 import '../../policies/terms_of_use_screen.dart';
 import '../../services/auth_service.dart';
 import '../home/home_screen.dart';
-import '../registration/visitor_register_screen.dart';
-import 'forgot_password_screen.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_button.dart';
 import '../../utils/validators.dart';
@@ -27,7 +25,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _mobileController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _otpController = TextEditingController();
   final _captchaController = TextEditingController();
 
@@ -636,22 +633,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ],
-
-                  SizedBox(height: 16),
-                  CustomTextField(
-                    label: 'Password*',
-                    hint: 'Enter your password',
-                    controller: _passwordController,
-                    obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Password is required';
-                      }
-                      return null;
-                    },
-                  ),
                   SizedBox(height: 24),
-
                   // Captcha
                   Row(
                     children: [
@@ -712,32 +694,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                   ),
                   SizedBox(height: 16),
-
-                  // Register Link
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => VisitorFormScreen()),
-                      );
-                    },
-                    child: Text('Don\'t have an account? Register'),
-                  ),
-
-                  // Forgot Password Link
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ForgotPasswordScreen(
-                            isInternationalVisitor: _isInternationalVisitor,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Text('Forgot Password?'),
-                  ),
                 ],
               ),
             ),

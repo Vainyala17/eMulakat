@@ -1108,6 +1108,7 @@
 
 
 import 'dart:async';
+import 'package:eMulakat/screens/home/parole_screen.dart';
 import 'package:eMulakat/screens/home/vertical_visit_card.dart';
 import 'package:flutter/material.dart';
 import '../../dashboard/evisitor_pass_screen.dart';
@@ -1204,20 +1205,21 @@ class _HomeScreenState extends State<HomeScreen> with HomeScreenLogic {
       onWillPop: () async {
         bool exitConfirmed = await showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Exit Confirmation'),
-            content: Text('Please use Logout and close the App.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text('Cancel'),
+          builder: (context) =>
+              AlertDialog(
+                title: Text('Exit Confirmation'),
+                content: Text('Please use Logout and close the App.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: Text('Logout'),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text('Logout'),
-              ),
-            ],
-          ),
         );
         return exitConfirmed;
       },
@@ -1334,7 +1336,7 @@ class _HomeScreenState extends State<HomeScreen> with HomeScreenLogic {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      translatedWelcome.isNotEmpty ? translatedWelcome : 'Welcome to E-Mulakat',
+                      translatedWelcome.isNotEmpty ? translatedWelcome : 'Welcome to eMulakat',
                       style: TextStyle(
                         fontSize: fontSize + 8,
                         fontWeight: FontWeight.bold,
@@ -1350,36 +1352,55 @@ class _HomeScreenState extends State<HomeScreen> with HomeScreenLogic {
                       ),
                     ),
                     SizedBox(height: 30),
-                    Row(
-                      children: [
-                        buildVisitTypeCard(
-                          'Past Visits',
-                          pastVisits.length,
-                          showPastVisits,
-                              () {
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child:Row(
+                        children: [
+                          buildVisitTypeCard('Meeting', pastVisits.length, showPastVisits, () {
                             setState(() {
                               showPastVisits = true;
                               isExpandedView = false;
                               selectedVisitor = null;
                             });
                           },
-                          leadingIcon: const Icon(Icons.all_inclusive, size: 25),
-                        ),
-                        SizedBox(width: 10),
-                        buildVisitTypeCard(
-                          'Upcoming Visits',
-                          upcomingVisits.length,
-                          !showPastVisits,
-                              () {
+                            leadingIcon: Image.asset(
+                              'assets/images/meeting.png',
+                              width: 40,
+                              height: 40,
+                            ),
+                            // 👈 Added icon
+                          ),
+                          SizedBox(width: 10),
+                          buildVisitTypeCard('Parole', upcomingVisits.length, !showPastVisits, () {
                             setState(() {
                               showPastVisits = false;
                               isExpandedView = false;
                               selectedVisitor = null;
                             });
                           },
-                          leadingIcon: const Icon(Icons.upcoming, size: 25),
-                        ),
-                      ],
+                            leadingIcon: Image.asset(
+                              'assets/images/parole.png',
+                              width: 40,
+                              height: 40,
+                            ),
+
+                          ),
+                          SizedBox(width: 10),
+                          buildVisitTypeCard('Grievance', upcomingVisits.length, !showPastVisits, () {
+                            setState(() {
+                              showPastVisits = false;
+                              isExpandedView = false;
+                              selectedVisitor = null;
+                            });
+                          },
+                            leadingIcon: Image.asset(
+                              'assets/images/grievance.png',
+                              width: 40,
+                              height:40,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     SizedBox(height: 30),
                   ],
@@ -1480,9 +1501,20 @@ class _HomeScreenState extends State<HomeScreen> with HomeScreenLogic {
               child: Row(
                 children: [
                   buildNavItem(
+                    index: 1,
+                    icon: Icons.dashboard,
+                    label: 'Dashboard',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => HomeScreen()),
+                      );
+                    },
+                  ),
+                  buildNavItem(
                     index: 0,
                     icon: Icons.directions_walk,
-                    label: 'Visit',
+                    label: 'Meeting',
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
@@ -1492,12 +1524,12 @@ class _HomeScreenState extends State<HomeScreen> with HomeScreenLogic {
                   ),
                   buildNavItem(
                     index: 1,
-                    icon: Icons.dashboard,
-                    label: 'Dashboard',
+                    icon: Icons.gavel,
+                    label: 'Parole',
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => HomeScreen()),
+                        MaterialPageRoute(builder: (context) => ParoleScreen()),
                       );
                     },
                   ),

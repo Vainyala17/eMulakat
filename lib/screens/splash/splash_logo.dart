@@ -1,3 +1,4 @@
+import 'package:eMulakat/screens/splash/splash_animation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'splash_video.dart';
@@ -25,7 +26,7 @@ class _SplashLogoScreenState extends State<SplashLogoScreen>
 
     Timer(Duration(seconds: 3), () {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => SplashVideoScreen()),
+        MaterialPageRoute(builder: (context) => SplashAnimationScreen()),
       );
     });
   }

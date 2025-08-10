@@ -83,9 +83,20 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
             child: Row(
               children: [
                 _buildNavItem(
+                  index: 1,
+                  icon: Icons.dashboard,
+                  label: 'Dashboard',
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomeScreen()),
+                    );
+                  },
+                ),
+                _buildNavItem(
                   index: 0,
                   icon: Icons.directions_walk,
-                  label: 'Visit',
+                  label: 'Meeting',
                   onTap: () {
                     Navigator.pushReplacement(
                       context,
@@ -95,8 +106,8 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                 ),
                 _buildNavItem(
                   index: 1,
-                  icon: Icons.dashboard,
-                  label: 'Dashboard',
+                  icon: Icons.gavel,
+                  label: 'Parole',
                   onTap: () {
                     Navigator.pushReplacement(
                       context,

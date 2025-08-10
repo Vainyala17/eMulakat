@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:translator/translator.dart';
 import '../../models/visitor_model.dart';
-import '../../services/auth_service.dart';
 import '../../utils/color_scheme.dart';
 import 'horizontal_visit_card.dart';
 import 'notifications_screen.dart';
@@ -330,7 +329,6 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
   @override
   void initState() {
     super.initState();
-    checkAuthentication();
     initializeTts();
     initializeStt();
   }
@@ -444,7 +442,6 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
       await AuthService.logout(context); // <-- this is important
     }
   }
-
   // TTS and Speech methods
   Future<void> initializeTts() async {
     await flutterTts.setLanguage("en-US");
@@ -599,9 +596,10 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
       ),
     );
   }
-
-  Widget buildVisitTypeCard(String title, int count, bool selected, VoidCallback onTap, {Icon? leadingIcon}) {
-    return Expanded(
+  Widget buildVisitTypeCard(String title, int count, bool selected, VoidCallback onTap, {Image? leadingIcon}) {
+    return SizedBox(
+      width: 150,
+      height: 150,
       child: GestureDetector(
         onTap: onTap,
         child: Card(
