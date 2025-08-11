@@ -12,14 +12,12 @@ class ApiService {
   // FIXED: Enhanced fetch keywords with better error handling and validation
   static Future<List<KeywordModel>> fetchKeywords() async {
     try {
-      final token = await AuthService.getToken();
       print('Fetching keywords from: $BASE_URL');
 
       final response = await http.get(
         Uri.parse(BASE_URL),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
         },
       ).timeout(Duration(seconds: 10));// Add timeout
 
@@ -186,12 +184,10 @@ class ApiService {
   // Enhanced method to validate API response structure
   static Future<bool> validateApiResponse() async {
     try {
-      final token = await AuthService.getToken();
       final response = await http.get(
         Uri.parse(BASE_URL),
         headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
       },
       ).timeout(Duration(seconds: 5));
 
@@ -258,12 +254,10 @@ class ApiService {
   // Optional: Test API connectivity
   static Future<bool> testConnection() async {
     try {
-      final token = await AuthService.getToken();
       final response = await http.get(
         Uri.parse(BASE_URL),
         headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
       },
       ).timeout(Duration(seconds: 5));
 
@@ -279,12 +273,10 @@ class ApiService {
   // Method to get keywords count from API without full parsing
   static Future<int> getKeywordsCount() async {
     try {
-      final token = await AuthService.getToken();
       final response = await http.get(
         Uri.parse(BASE_URL),
         headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
       },
       ).timeout(Duration(seconds: 5));
 
@@ -304,12 +296,10 @@ class ApiService {
   // Debug method to print API response structure
   static Future<void> debugApiResponse() async {
     try {
-      final token = await AuthService.getToken();
       final response = await http.get(
         Uri.parse(BASE_URL),
         headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
       },
       ).timeout(Duration(seconds: 10));
 

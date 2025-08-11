@@ -1,47 +1,17 @@
 import 'package:flutter/material.dart';
-import '../../dashboard/visit/visit_preview1.dart';
 import '../../models/visitor_model.dart';
 import '../../utils/color_scheme.dart';
+import '../../dashboard/visit/visit_preview1.dart';
 
-class VisitDetailView extends StatefulWidget {
-  final VisitorModel selectedVisitor;
-  final List<VisitorModel> pastVisits;
-  final List<VisitorModel> upcomingVisits;
-  final Function(VisitorModel) onVisitorSelected;
+class VerticalVisitCard extends StatelessWidget {
+  final VisitorModel visitor;
+  final VoidCallback onTap;
 
-  const VisitDetailView({
+  const VerticalVisitCard({
     Key? key,
-    required this.selectedVisitor,
-    required this.pastVisits,
-    required this.upcomingVisits,
-    required this.onVisitorSelected,
+    required this.visitor,
+    required this.onTap,
   }) : super(key: key);
-
-  @override
-  _VisitDetailViewState createState() => _VisitDetailViewState();
-}
-
-class _VisitDetailViewState extends State<VisitDetailView>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  bool showPastVisits = true;
-  VisitorModel? selectedVisitor;
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() {
-      setState(() {
-        showPastVisits = _tabController.index == 0;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
 
   String getDayOfWeek(DateTime date) {
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -56,12 +26,14 @@ class _VisitDetailViewState extends State<VisitDetailView>
 
   Color statusColor(VisitStatus status) {
     switch (status) {
-      case VisitStatus.approved:
+      case VisitStatus.completed:
         return Colors.green;
-      case VisitStatus.rejected:
+      case VisitStatus.expired:
         return Colors.red;
       case VisitStatus.pending:
         return Colors.orange;
+      case VisitStatus.upcoming:
+        return Colors.blue;
       default:
         return Colors.grey;
     }
@@ -69,21 +41,31 @@ class _VisitDetailViewState extends State<VisitDetailView>
 
   String getStatusText(VisitStatus status) {
     switch (status) {
-      case VisitStatus.approved:
-        return 'Approved';
-      case VisitStatus.rejected:
-        return 'Rejected';
+      case VisitStatus.completed:
+        return 'Completed';
+      case VisitStatus.expired:
+        return 'Expired';
       case VisitStatus.pending:
         return 'Pending';
+      case VisitStatus.upcoming:
+        return 'Upcoming';
+      default:
+        return 'unknown';
     }
   }
 
-  Widget _buildDetailedVisitCard(VisitorModel visitor) {
-    bool isSelected = widget.selectedVisitor == visitor;
-
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        widget.onVisitorSelected(visitor);
+        onTap();
+        // Navigate to visit preview when tapped
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => VisitPreviewScreen1(),
+          ),
+        );
       },
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
@@ -99,18 +81,18 @@ class _VisitDetailViewState extends State<VisitDetailView>
             ),
           ],
           border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.grey.shade600, // 👈 change color based on selection
-            width: isSelected ? 2.0 : 1.0, // 👈 slightly thicker when selected
+            color: Colors.grey.shade300,
+            width: 1.0,
           ),
         ),
         child: Row(
           children: [
-            // Left blue date block (exactly like the image)
+            // Left blue date block
             Container(
               width: 120,
               height: 120,
               decoration: const BoxDecoration(
-                color: Color(0xFF4A90E2), // Blue color from image
+                color: Color(0xFF4A90E2),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(8),
                   bottomLeft: Radius.circular(8),
@@ -147,7 +129,7 @@ class _VisitDetailViewState extends State<VisitDetailView>
                   const SizedBox(height: 2),
                   Text(
                     visitor.visitDate.year.toString(),
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
@@ -157,7 +139,7 @@ class _VisitDetailViewState extends State<VisitDetailView>
               ),
             ),
 
-            // Right content area (white background like the image)
+            // Right content area
             Expanded(
               child: Container(
                 height: 120,
@@ -170,7 +152,7 @@ class _VisitDetailViewState extends State<VisitDetailView>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-
+                          // Time row
                           Row(
                             children: [
                               const Icon(
@@ -180,20 +162,21 @@ class _VisitDetailViewState extends State<VisitDetailView>
                               ),
                               const SizedBox(width: 8),
                               Expanded(
-                                child :Text(
+                                child: Text(
                                   '${visitor.startTime} - ${visitor.endTime}',
                                   style: const TextStyle(
                                     fontSize: 14,
-                                    color : Colors.black,
+                                    color: Colors.black,
                                     fontWeight: FontWeight.w600,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 4),
-                          // Visitor name
+
+                          // Visitor name row
                           Row(
                             children: [
                               const Icon(Icons.person, size: 18, color: AppColors.primary),
@@ -203,17 +186,17 @@ class _VisitDetailViewState extends State<VisitDetailView>
                                   visitor.visitorName,
                                   style: const TextStyle(
                                     fontSize: 14,
-                                    color : Colors.black,
+                                    color: Colors.black,
                                     fontWeight: FontWeight.w600,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 6),
 
-                          // Prison/Jail name
+                          // Prison/Jail name row
                           Row(
                             children: [
                               const Icon(Icons.location_on, size: 18, color: AppColors.primary),
@@ -223,16 +206,17 @@ class _VisitDetailViewState extends State<VisitDetailView>
                                   visitor.jail,
                                   style: const TextStyle(
                                     fontSize: 14,
-                                    color : Colors.black,
+                                    color: Colors.black,
                                     fontWeight: FontWeight.w600,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 6),
-                          // Additional visitors info
+
+                          // Additional visitors info row
                           Row(
                             children: [
                               const Icon(
@@ -241,14 +225,16 @@ class _VisitDetailViewState extends State<VisitDetailView>
                                 color: AppColors.primary,
                               ),
                               const SizedBox(width: 4),
-                              Text(
-                                visitor.additionalVisitors > 0
-                                    ? '${visitor.additionalVisitors} additional participants'
-                                    : 'No additional participants',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color : Colors.black,
-                                  fontWeight: FontWeight.w600,
+                              Expanded(
+                                child: Text(
+                                  visitor.additionalVisitors > 0
+                                      ? '${visitor.additionalVisitors} additional participants'
+                                      : 'No additional participants',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -257,55 +243,36 @@ class _VisitDetailViewState extends State<VisitDetailView>
                         ],
                       ),
                     ),
-                    // Status badge and arrow (like in the image)
+
+                    // Status badge and arrow
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        // Status badge with extra top padding to move it slightly upwards
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 20.0), // 👈 move it up
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: statusColor(visitor.status),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              getStatusText(visitor.status),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
+                        // Status badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: statusColor(visitor.status),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            getStatusText(visitor.status),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
 
+                        const SizedBox(height: 8),
+
                         // Arrow icon
-                        Align(
-                          alignment: Alignment.center,
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.arrow_forward_ios,
-                              size: isSelected ? 35: 30,
-                              color: isSelected ? AppColors.primary : Colors.grey.shade600,
-                              fontWeight: isSelected ? FontWeight.bold: FontWeight.normal,// ✅ dynamic color
-                            ),
-                            onPressed: isSelected
-                                ? () {
-                              setState(() {
-                                selectedVisitor = visitor; // ✅ Set selected visitor
-                              });
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => VisitPreviewScreen1(),
-                                ),
-                              );
-                            }
-                                : null, // 👈 disable press when not selected
-                          ),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 24,
+                          color: AppColors.primary,
                         ),
                       ],
                     ),
@@ -316,80 +283,6 @@ class _VisitDetailViewState extends State<VisitDetailView>
           ],
         ),
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(height: 8),
-        // Tab Bar
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: TabBar(
-            controller: _tabController,
-            indicator: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.grey[600],
-            labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-            tabs: [
-              Tab(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.all_inclusive, size: 20),
-                    const SizedBox(width: 8),
-                    Text('Past Visits (${widget.pastVisits.length})'),
-                  ],
-                ),
-              ),
-              Tab(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.upcoming, size: 20),
-                    const SizedBox(width: 8),
-                    Text('Upcoming (${widget.upcomingVisits.length})'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 30),
-
-        // Tab Bar View
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              // Past Visits Tab
-              ListView.builder(
-                itemCount: widget.pastVisits.length,
-                itemBuilder: (context, index) {
-                  return _buildDetailedVisitCard(widget.pastVisits[index]);
-                },
-              ),
-              // Upcoming Visits Tab
-              ListView.builder(
-                itemCount: widget.upcomingVisits.length,
-                itemBuilder: (context, index) {
-                  return _buildDetailedVisitCard(widget.upcomingVisits[index]);
-                },
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

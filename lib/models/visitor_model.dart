@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum VisitStatus { pending, approved, rejected }
+enum VisitStatus { pending, completed, expired, upcoming }
 
 class VisitorModel {
   int? id;
@@ -128,24 +128,31 @@ class VisitorModel {
   }
   Color statusColor(VisitStatus status) {
     switch (status) {
-      case VisitStatus.approved:
+      case VisitStatus.completed:
         return Colors.green;
-      case VisitStatus.rejected:
+      case VisitStatus.expired:
         return Colors.red;
       case VisitStatus.pending:
         return Colors.orange;
+      case VisitStatus.upcoming:
+        return Colors.blue;
       default:
         return Colors.grey;
     }
   }
-  String get statusText {
+
+  String getStatusText(VisitStatus status) {
     switch (status) {
-      case VisitStatus.approved:
-        return 'Approved';
-      case VisitStatus.rejected:
-        return 'Rejected';
+      case VisitStatus.completed:
+        return 'Completed';
+      case VisitStatus.expired:
+        return 'Expired';
       case VisitStatus.pending:
         return 'Pending';
+      case VisitStatus.upcoming:
+        return 'Upcoming';
+      default:
+        return 'unknown';
     }
   }
 

@@ -1,16 +1,31 @@
 import 'package:flutter/material.dart';
 
 import '../../dashboard/grievance/grievance_home.dart';
+import '../../dashboard/parole/parole_home.dart';
 import '../../dashboard/visit/visit_home.dart';
+import '../../dashboard/visit/whom_to_meet_screen.dart';
 import 'home_screen.dart';
 
 class BottomNavBarScreen extends StatefulWidget {
+  final int selectedIndex;
+
+  const BottomNavBarScreen({
+    Key? key,
+    this.selectedIndex = 1, // default to Meeting tab
+  }) : super(key: key);
+
   @override
   _BottomNavBarScreenState createState() => _BottomNavBarScreenState();
 }
 
 class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.selectedIndex;
+  }
 
   final List<Widget> _pages = [
     VisitHomeScreen(),             // Visit
@@ -24,7 +39,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
     required String label,
     required VoidCallback onTap,
   }) {
-    final _ = _selectedIndex == index;
+    final isSelected = _selectedIndex == index;
 
     return Expanded(
       child: GestureDetector(
@@ -35,21 +50,37 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
           onTap();
         },
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 8),
+          padding: EdgeInsets.symmetric(vertical:3),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 20,
-                color: Colors.white,
+              Container(
+                padding: EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected ? Colors.grey[300] : Colors.transparent,
+                  boxShadow: isSelected
+                      ? [
+                    BoxShadow(
+                      color: Colors.white.withOpacity(0.6),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                    )
+                  ]
+                      : [],
+                ),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: isSelected ? Color(0xFF5A8BBA) : Colors.white,
+                ),
               ),
-              SizedBox(height: 4),
+              SizedBox(height: 6),
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
+                  color: isSelected ? Colors.white : Colors.white70,
+                  fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
@@ -83,38 +114,41 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
             child: Row(
               children: [
                 _buildNavItem(
-                  index: 1,
+                  index: 0,
                   icon: Icons.dashboard,
                   label: 'Dashboard',
                   onTap: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => HomeScreen()),
-                    );
-                  },
-                ),
-                _buildNavItem(
-                  index: 0,
-                  icon: Icons.directions_walk,
-                  label: 'Meeting',
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => VisitHomeScreen()),
+                      MaterialPageRoute(builder: (context) => HomeScreen(selectedIndex: 0)),
                     );
                   },
                 ),
                 _buildNavItem(
                   index: 1,
+                  icon: Icons.directions_walk,
+                  label: 'Meeting',
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => VisitHomeScreen(selectedIndex: 1)),
+                    );
+                  },
+                ),
+                _buildNavItem(
+                  index: 2,
                   icon: Icons.gavel,
                   label: 'Parole',
                   onTap: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => HomeScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => ParoleHomeScreen(selectedIndex: 2),
+                      ),
                     );
                   },
                 ),
+
                 _buildNavItem(
                   index: 3,
                   icon: Icons.report_problem,
@@ -122,7 +156,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                   onTap: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
+                      MaterialPageRoute(builder: (context) => GrievanceHomeScreen(selectedIndex: 3)),
                     );
                   },
                 ),

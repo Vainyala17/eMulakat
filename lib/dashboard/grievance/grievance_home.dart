@@ -1,32 +1,31 @@
+
+import 'package:eMulakat/dashboard/grievance/complaint_screen.dart';
+import 'package:eMulakat/dashboard/visit/visit_home.dart';
 import 'package:flutter/material.dart';
 
 import '../../pdf_viewer_screen.dart';
 import '../../screens/home/home_screen.dart';
-import '../../services/auth_service.dart';
-import '../visit/visit_home.dart';
-import 'complaint_screen.dart';
-import 'grievance_preview_screen.dart';
+import '../parole/parole_home.dart';
 
 class GrievanceHomeScreen extends StatefulWidget {
-  final bool fromChatbot; // ✅ Flag to track if came from chatbot
+  final bool fromChatbot;
+  final int selectedIndex;
 
-  const GrievanceHomeScreen({Key? key, this.fromChatbot = false}) : super(key: key);
+  const GrievanceHomeScreen({Key? key, this.fromChatbot = false, this.selectedIndex = 0}) : super(key: key);
 
   @override
   _GrievanceHomeScreenState createState() => _GrievanceHomeScreenState();
 }
 
 class _GrievanceHomeScreenState extends State<GrievanceHomeScreen> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
 
   @override
   void initState() {
     super.initState();
-    AuthService.checkAndHandleSession(context); // 👈 1 line only
+    _selectedIndex = widget.selectedIndex;
   }
 
-
-  // ✅ This handles SYSTEM back button (physical/gesture)
   Future<bool> _onWillPop() async {
     // If came from chatbot, allow normal back navigation
     if (widget.fromChatbot) {
@@ -49,7 +48,6 @@ class _GrievanceHomeScreenState extends State<GrievanceHomeScreen> {
     ) ?? false;
   }
 
-  // ✅ This handles APPBAR back button click
   void _handleAppBarBack() {
     if (widget.fromChatbot) {
       // If came from chatbot, go back to chatbot (preserves chat history)
@@ -66,7 +64,7 @@ class _GrievanceHomeScreenState extends State<GrievanceHomeScreen> {
     required String label,
     required VoidCallback onTap,
   }) {
-    final _ = _selectedIndex == index;
+    final isSelected = _selectedIndex == index;
 
     return Expanded(
       child: GestureDetector(
@@ -77,21 +75,37 @@ class _GrievanceHomeScreenState extends State<GrievanceHomeScreen> {
           onTap();
         },
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 8),
+          padding: EdgeInsets.symmetric(vertical:3),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 20,
-                color: Colors.white,
+              Container(
+                padding: EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected ? Colors.grey[300] : Colors.transparent,
+                  boxShadow: isSelected
+                      ? [
+                    BoxShadow(
+                      color: Colors.white.withOpacity(0.6),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                    )
+                  ]
+                      : [],
+                ),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: isSelected ? Color(0xFF5A8BBA) : Colors.white,
+                ),
               ),
-              SizedBox(height: 4),
+              SizedBox(height: 6),
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
+                  color: isSelected ? Colors.white : Colors.white70,
+                  fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
@@ -107,129 +121,103 @@ class _GrievanceHomeScreenState extends State<GrievanceHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      initialIndex: 0,
-      child: WillPopScope(
-        onWillPop: _onWillPop,
-        child: Scaffold(
-          backgroundColor: Colors.white,
-          appBar: AppBar(
-            title: const Text('Grievance'),
-            centerTitle: true,
-            backgroundColor: Color(0xFF5A8BBA),
-            foregroundColor: Colors.black,
-            // ✅ Custom leading button for AppBar back navigation
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back),
-              onPressed: _handleAppBarBack, // Custom back button logic
-            ),
-            actions: [
-              IconButton(
-                icon: Icon(Icons.help_outline),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PDFViewerScreen(
-                        assetPath: 'assets/pdfs/about_us.pdf',
-                      ),
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          title: const Text('Grievance'),
+          centerTitle: true,
+          backgroundColor: const Color(0xFF5A8BBA),
+          foregroundColor: Colors.black,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: _handleAppBarBack,
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.help_outline),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PDFViewerScreen(
+                      assetPath: 'assets/pdfs/about_us.pdf',
                     ),
-                  );
-                },
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+
+        // ✅ Only show your meet form screen here
+        body: ComplaintScreen(),
+
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF5A8BBA),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, -2),
               ),
             ],
-            bottom: PreferredSize(
-              preferredSize: Size.fromHeight(kToolbarHeight),
-              child: Container(
-                color: Colors.white, // ✅ Background color
-                child: const TabBar(
-                  indicatorColor: Colors.black,
-                  labelStyle: TextStyle(               // ✅ Font style for selected tab
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  unselectedLabelStyle: TextStyle(     // ✅ Font style for unselected tabs
-                    fontSize: 18,
-                  ),
-                  labelColor: Color(0xFF5A8BBA),
-                  unselectedLabelColor: Colors.black,
-                  tabs: [
-                    Tab(text: 'Register Grievance'),
-                    Tab(text: 'Preview Grievance'),
-                  ],
-                ),
-              ),
-            ),
           ),
-          body: TabBarView(
-            children: [
-              ComplaintScreen(),
-              GrievancePreviewScreen(),
-            ],
-          ),
-          bottomNavigationBar: Container(
-            decoration: BoxDecoration(
-              color: Color(0xFF5A8BBA),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: Offset(0, -2),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              child: SizedBox(
-                height: 60,
-                child: Row(
-                  children: [
-                    _buildNavItem(
-                      index: 1,
-                      icon: Icons.dashboard,
-                      label: 'Dashboard',
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => HomeScreen()),
-                        );
-                      },
-                    ),
-                    _buildNavItem(
-                      index: 0,
-                      icon: Icons.directions_walk,
-                      label: 'Meeting',
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => VisitHomeScreen()),
-                        );
-                      },
-                    ),
-                    _buildNavItem(
-                      index: 1,
-                      icon: Icons.gavel,
-                      label: 'Parole',
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => HomeScreen()),
-                        );
-                      },
-                    ),
-                    _buildNavItem(
-                      index: 3,
-                      icon: Icons.report_problem,
-                      label: 'Grievance',
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+          child: SafeArea(
+            child: SizedBox(
+              height: 60,
+              child: Row(
+                children: [
+                  _buildNavItem(
+                    index: 0,
+                    icon: Icons.dashboard,
+                    label: 'Dashboard',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => HomeScreen(selectedIndex: 0)),
+                      );
+                    },
+                  ),
+                  _buildNavItem(
+                    index: 1,
+                    icon: Icons.directions_walk,
+                    label: 'Meeting',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => VisitHomeScreen(selectedIndex: 1)),
+                      );
+                    },
+                  ),
+                  _buildNavItem(
+                    index: 2,
+                    icon: Icons.gavel,
+                    label: 'Parole',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ParoleHomeScreen(selectedIndex: 2),
+                        ),
+                      );
+                    },
+                  ),
+
+                  _buildNavItem(
+                    index: 3,
+                    icon: Icons.report_problem,
+                    label: 'Grievance',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => GrievanceHomeScreen(selectedIndex: 3)),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ),

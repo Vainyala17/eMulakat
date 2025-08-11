@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../models/visitor_model.dart';
-import '../../utils/color_scheme.dart';
 
 class HorizontalVisitCard extends StatelessWidget {
   final VisitorModel visitor;
@@ -17,45 +16,56 @@ class HorizontalVisitCard extends StatelessWidget {
 
   Color statusColor(VisitStatus status) {
     switch (status) {
-      case VisitStatus.approved:
-        return Color(0xFF4CAF50);
-      case VisitStatus.rejected:
-        return Color(0xFFE53E3E);
+      case VisitStatus.completed:
+        return Colors.green;
+      case VisitStatus.expired:
+        return Colors.red;
       case VisitStatus.pending:
-        return Color(0xFFFF9800);
+        return Colors.orange;
+      case VisitStatus.upcoming:
+        return Colors.blue;
     }
   }
 
   Color statusBackgroundColor(VisitStatus status) {
     switch (status) {
-      case VisitStatus.approved:
-        return Color(0xFF4CAF50).withOpacity(0.1);
-      case VisitStatus.rejected:
-        return Color(0xFFE53E3E).withOpacity(0.1);
+      case VisitStatus.completed:
+        return Colors.green;
+      case VisitStatus.expired:
+        return Colors.red;
       case VisitStatus.pending:
-        return Color(0xFFFF9800).withOpacity(0.1);
+        return Colors.orange;
+      case VisitStatus.upcoming:
+        return Colors.blue;
     }
   }
 
-  IconData statusIcon(VisitStatus status) {
+  String statusIcon(VisitStatus status) {
     switch (status) {
-      case VisitStatus.approved:
-        return Icons.check_circle;
-      case VisitStatus.rejected:
-        return Icons.cancel;
+      case VisitStatus.completed:
+        return 'assets/images/completed.png';
+      case VisitStatus.expired:
+        return 'assets/images/expired.png';
       case VisitStatus.pending:
-        return Icons.schedule;
+        return 'assets/images/pending.png';
+      case VisitStatus.upcoming:
+        return 'assets/images/upcoming.png';
     }
   }
+
 
   String getStatusText(VisitStatus status) {
     switch (status) {
-      case VisitStatus.approved:
-        return 'Approved';
-      case VisitStatus.rejected:
-        return 'Rejected';
+      case VisitStatus.completed:
+        return 'Completed';
+      case VisitStatus.expired:
+        return 'Expired';
       case VisitStatus.pending:
         return 'Pending';
+      case VisitStatus.upcoming:
+        return 'Upcoming';
+      default:
+        return 'unknown';
     }
   }
 
@@ -122,9 +132,8 @@ class HorizontalVisitCard extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
+                    Image.asset(
                       statusIcon(visitor.status),
-                      size: 15,
                       color: statusColor(visitor.status),
                     ),
                     SizedBox(width: 4),

@@ -1,17 +1,17 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:translator/translator.dart';
 import '../../models/visitor_model.dart';
 import '../../utils/color_scheme.dart';
-import 'horizontal_visit_card.dart';
-import 'notifications_screen.dart';
+import 'home_screen.dart';
+import 'vertical_visit_card.dart';
 
 mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
   // State variables
-  int selectedIndex = 0;
+  late int _selectedIndex;
+  VisitorModel? selectedVisitor;
   bool isTtsEnabled = false;
   bool isAuthChecking = true;
   bool isAuthenticated = false;
@@ -31,16 +31,47 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
     'Marathi': 'mr',
   };
 
-  VisitorModel? selectedVisitor;
-  bool showPastVisits = true;
-  bool isExpandedView = false;
+  // Visit type selection
+  String selectedVisitType = 'Meeting'; // Default selection
+  String selectedStatus = 'All'; // Default status filter
 
-  // Sample data
+  // Sample data for different visit types
+  Map<String, List<VisitorModel>> visitData = {
+    'Meeting': [],
+    'Parole': [],
+    'Grievance': [],
+  };
+
+  Map<String, Map<String, int>> statusCounts = {
+    'Meeting': {
+      'Pending': 2,
+      'Upcoming': 3,
+      'Completed': 5,
+      'Expired': 1,
+      'Total': 11,
+    },
+    'Parole': {
+      'Pending': 1,
+      'Upcoming': 0,
+      'Completed': 2,
+      'Expired': 0,
+      'Total': 3,
+    },
+    'Grievance': {
+      'Pending': 3,
+      'Upcoming': 1,
+      'Completed': 4,
+      'Expired': 2,
+      'Total': 10,
+    },
+  };
+
+  // Sample notifications data
   List<NotificationModel> notifications = [
     NotificationModel(
       id: '1',
-      title: 'Visit Approved',
-      message: 'Your visit request for Arthur Road Jail has been approved for Monday, 15:00-17:30',
+      title: 'Visit completed',
+      message: 'Your visit request for Arthur Road Jail has been completed for Monday, 15:00-17:30',
       timestamp: DateTime.now().subtract(Duration(hours: 2)),
       type: 'visit',
       isRead: false,
@@ -69,261 +100,6 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
       type: 'system',
       isRead: false,
     ),
-    NotificationModel(
-      id: '5',
-      title: 'Visit Cancelled',
-      message: 'Unfortunately, your visit scheduled for today has been cancelled due to security reasons.',
-      timestamp: DateTime.now().subtract(Duration(days: 3)),
-      type: 'visit',
-      isRead: true,
-    ),
-    NotificationModel(
-      id: '6',
-      title: 'Grievance Cancelled',
-      message: 'Unfortunately, your Grievance scheduled for today has been cancelled due to some reasons.',
-      timestamp: DateTime.now().subtract(Duration(days: 3)),
-      type: 'grievance',
-      isRead: true,
-    ),
-    NotificationModel(
-      id: '7',
-      title: 'System Maintenance',
-      message: 'The system will be under maintenance on Sunday from 5:00 PM to 7:00 PM.',
-      timestamp: DateTime.now().subtract(Duration(hours: 1)),
-      type: 'system',
-      isRead: false,
-    ),
-  ];
-
-  List<VisitorModel> pastVisits = [
-    VisitorModel(
-      visitorName: 'Ravi Sharma',
-      fatherName: 'Mahesh Sharma',
-      address: '123 MG Road, Mumbai',
-      gender: 'Male',
-      age: 32,
-      relation: 'Brother',
-      idProof: 'Aadhar',
-      idNumber: 'XXXX-XXXX-1234',
-      isInternational: false,
-      state: 'Maharashtra',
-      jail: 'Arthur Road',
-      visitDate: DateTime.now().subtract(Duration(days: 5)),
-      additionalVisitors: 1,
-      additionalVisitorNames: ['Sita Sharma'],
-      prisonerName: 'Ramesh Sharma',
-      prisonerFatherName: 'Naresh Sharma',
-      prisonerAge: 40,
-      prisonerGender: 'Male',
-      mode: true,
-      status: VisitStatus.rejected,
-      startTime: '14:00',
-      endTime: '16:30',
-      dayOfWeek: 'Friday',
-    ),
-    VisitorModel(
-      visitorName: 'Anand Gupta',
-      fatherName: 'Mahesh Gupta',
-      address: '123 MG Road, Mumbai',
-      gender: 'Male',
-      age: 32,
-      relation: 'Brother',
-      idProof: 'Aadhar',
-      idNumber: 'XXXX-XXXX-1234',
-      isInternational: false,
-      state: 'Maharashtra',
-      jail: 'Arthur Road',
-      visitDate: DateTime.now().subtract(Duration(days: 5)),
-      additionalVisitors: 1,
-      additionalVisitorNames: ['Sita Sharma'],
-      prisonerName: 'Ramesh Sharma',
-      prisonerFatherName: 'Naresh Sharma',
-      prisonerAge: 40,
-      prisonerGender: 'Male',
-      mode: true,
-      status: VisitStatus.approved,
-      startTime: '9:30',
-      endTime: '11:00',
-      dayOfWeek: 'Monday',
-    ),
-    VisitorModel(
-      visitorName: 'Vishal Mali',
-      fatherName: 'Mahesh Mali',
-      address: '123 MG Road, Mumbai',
-      gender: 'Male',
-      age: 32,
-      relation: 'Brother',
-      idProof: 'Aadhar',
-      idNumber: 'XXXX-XXXX-1234',
-      isInternational: false,
-      state: 'Maharashtra',
-      jail: 'Arthur Road',
-      visitDate: DateTime.now().subtract(Duration(days: 5)),
-      additionalVisitors: 1,
-      additionalVisitorNames: ['Sita Sharma'],
-      prisonerName: 'Ramesh Sharma',
-      prisonerFatherName: 'Naresh Sharma',
-      prisonerAge: 40,
-      prisonerGender: 'Male',
-      mode: true,
-      status: VisitStatus.rejected,
-      startTime: '14:00',
-      endTime: '16:30',
-      dayOfWeek: 'Saturday',
-    ),
-    VisitorModel(
-      visitorName: 'Ravi Sharma',
-      fatherName: 'Mahesh Sharma',
-      address: '123 MG Road, Mumbai',
-      gender: 'Male',
-      age: 32,
-      relation: 'Brother',
-      idProof: 'Aadhar',
-      idNumber: 'XXXX-XXXX-1234',
-      isInternational: false,
-      state: 'Maharashtra',
-      jail: 'Arthur Road',
-      visitDate: DateTime.now().subtract(Duration(days: 5)),
-      additionalVisitors: 1,
-      additionalVisitorNames: ['Sita Sharma'],
-      prisonerName: 'Ramesh Sharma',
-      prisonerFatherName: 'Naresh Sharma',
-      prisonerAge: 40,
-      prisonerGender: 'Male',
-      mode: true,
-      status: VisitStatus.approved,
-      startTime: '5:00',
-      endTime: '7:30',
-      dayOfWeek: 'Friday',
-    ),
-  ];
-
-  List<VisitorModel> upcomingVisits = [
-    VisitorModel(
-      visitorName: 'Meena Gupta',
-      fatherName: 'Raj Gupta',
-      address: '5th Block, Pune',
-      gender: 'Female',
-      age: 29,
-      relation: 'Wife',
-      idProof: 'Voter ID',
-      idNumber: 'VOT1234567',
-      isInternational: false,
-      state: 'Maharashtra',
-      jail: 'Yerwada Jail',
-      visitDate: DateTime.now().add(Duration(days: 3)),
-      additionalVisitors: 0,
-      additionalVisitorNames: [],
-      prisonerName: 'Sunil Gupta',
-      prisonerFatherName: 'Vinod Gupta',
-      prisonerAge: 35,
-      prisonerGender: 'Male',
-      mode: false,
-      status: VisitStatus.rejected,
-      startTime: '4:00',
-      endTime: '6:30',
-      dayOfWeek: 'Friday',
-    ),
-    VisitorModel(
-      visitorName: 'Shweta patel',
-      fatherName: 'Ramraj Patel',
-      address: '5th Block, Pune',
-      gender: 'Female',
-      age: 29,
-      relation: 'Wife',
-      idProof: 'Voter ID',
-      idNumber: 'VOT1234567',
-      isInternational: false,
-      state: 'Maharashtra',
-      jail: 'Yerwada Jail',
-      visitDate: DateTime.now().add(Duration(days: 3)),
-      additionalVisitors: 0,
-      additionalVisitorNames: [],
-      prisonerName: 'Sunil Gupta',
-      prisonerFatherName: 'Vinod Gupta',
-      prisonerAge: 35,
-      prisonerGender: 'Male',
-      mode: false,
-      status: VisitStatus.pending,
-      startTime: '1:00',
-      endTime: '2:30',
-      dayOfWeek: 'Wednesday',
-    ),
-    VisitorModel(
-      visitorName: 'Meena Gupta',
-      fatherName: 'Raj Gupta',
-      address: '5th Block, Pune',
-      gender: 'Female',
-      age: 29,
-      relation: 'Wife',
-      idProof: 'Voter ID',
-      idNumber: 'VOT1234567',
-      isInternational: false,
-      state: 'Maharashtra',
-      jail: 'Yerwada Jail',
-      visitDate: DateTime.now().add(Duration(days: 3)),
-      additionalVisitors: 0,
-      additionalVisitorNames: [],
-      prisonerName: 'Sunil Gupta',
-      prisonerFatherName: 'Vinod Gupta',
-      prisonerAge: 35,
-      prisonerGender: 'Male',
-      mode: false,
-      status: VisitStatus.rejected,
-      startTime: '11:00',
-      endTime: '13:30',
-      dayOfWeek: 'Tuesday',
-    ),
-    VisitorModel(
-      visitorName: 'Rani patil',
-      fatherName: 'Raj Patil',
-      address: '5th Block, Pune',
-      gender: 'Female',
-      age: 29,
-      relation: 'Wife',
-      idProof: 'Voter ID',
-      idNumber: 'VOT1234567',
-      isInternational: false,
-      state: 'Maharashtra',
-      jail: 'Yerwada Jail',
-      visitDate: DateTime.now().add(Duration(days: 3)),
-      additionalVisitors: 0,
-      additionalVisitorNames: [],
-      prisonerName: 'Sunil Gupta',
-      prisonerFatherName: 'Vinod Gupta',
-      prisonerAge: 35,
-      prisonerGender: 'Male',
-      mode: false,
-      status: VisitStatus.approved,
-      startTime: '15:00',
-      endTime: '17:30',
-      dayOfWeek: 'Monday',
-    ),
-    VisitorModel(
-      visitorName: 'Shyam Roy',
-      fatherName: 'Ram Roy',
-      address: '5th Block, Pune',
-      gender: 'Male',
-      age: 29,
-      relation: 'Wife',
-      idProof: 'Voter ID',
-      idNumber: 'VOT1234567',
-      isInternational: false,
-      state: 'Maharashtra',
-      jail: 'Yerwada Jail',
-      visitDate: DateTime.now().add(Duration(days: 3)),
-      additionalVisitors: 0,
-      additionalVisitorNames: [],
-      prisonerName: 'Sunil Gupta',
-      prisonerFatherName: 'Vinod Gupta',
-      prisonerAge: 35,
-      prisonerGender: 'Male',
-      mode: false,
-      status: VisitStatus.rejected,
-      startTime: '14:00',
-      endTime: '16:30',
-      dayOfWeek: 'Friday',
-    ),
   ];
 
   @override
@@ -331,117 +107,299 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
     super.initState();
     initializeTts();
     initializeStt();
+    initializeVisitData();
+    _selectedIndex = (widget as HomeScreen).selectedIndex;
   }
 
-  // Authentication methods
-  Future<void> checkAuthentication() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? specialUser = prefs.getString('special_user');
-
-      if (specialUser == "7702000723") {
-        setState(() {
-          isAuthenticated = true;
-          isAuthChecking = false;
-        });
-        return;
-      }
-
-      bool isValid = await AuthService.isTokenValid();
-
-      if (mounted) {
-        setState(() {
-          isAuthenticated = isValid;
-          isAuthChecking = false;
-        });
-
-        if (!isValid) {
-          await AuthService.clearTokens();
-          showSessionExpiredDialog();
-        }
-      }
-    } catch (e) {
-      print('Auth check error: $e');
-      if (mounted) {
-        setState(() {
-          isAuthenticated = false;
-          isAuthChecking = false;
-        });
-        showAuthErrorDialog();
-      }
-    }
-  }
-
-  void showSessionExpiredDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text('Session Expired'),
-        content: Text('Your session has expired. Please login again.'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              redirectToLogin();
-            },
-            child: Text('Login'),
-          ),
-        ],
+  void initializeVisitData() {
+    // Sample Meeting data
+    visitData['Meeting'] = [
+      VisitorModel(
+        visitorName: 'Ravi Sharma',
+        fatherName: 'Mahesh Sharma',
+        address: '123 MG Road, Mumbai',
+        gender: 'Male',
+        age: 32,
+        relation: 'Brother',
+        idProof: 'Aadhar',
+        idNumber: 'XXXX-XXXX-1234',
+        isInternational: false,
+        state: 'Maharashtra',
+        jail: 'Arthur Road',
+        visitDate: DateTime.now().add(Duration(days: 5)),
+        additionalVisitors: 1,
+        additionalVisitorNames: ['Sita Sharma'],
+        prisonerName: 'Ramesh Sharma',
+        prisonerFatherName: 'Naresh Sharma',
+        prisonerAge: 40,
+        prisonerGender: 'Male',
+        mode: true,
+        status: VisitStatus.pending,
+        startTime: '14:00',
+        endTime: '16:30',
+        dayOfWeek: 'Friday',
       ),
-    );
-  }
-
-  void showAuthErrorDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text('Authentication Error'),
-        content: Text('Unable to verify your session. Please login again.'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              redirectToLogin();
-            },
-            child: Text('Login'),
-          ),
-        ],
+      VisitorModel(
+        visitorName: 'Anand Gupta',
+        fatherName: 'Mahesh Gupta',
+        address: '456 FC Road, Pune',
+        gender: 'Male',
+        age: 28,
+        relation: 'Son',
+        idProof: 'Aadhar',
+        idNumber: 'XXXX-XXXX-5678',
+        isInternational: false,
+        state: 'Maharashtra',
+        jail: 'Yerwada Jail',
+        visitDate: DateTime.now().add(Duration(days: 2)),
+        additionalVisitors: 0,
+        additionalVisitorNames: [],
+        prisonerName: 'Suresh Gupta',
+        prisonerFatherName: 'Ramesh Gupta',
+        prisonerAge: 55,
+        prisonerGender: 'Male',
+        mode: false,
+        status: VisitStatus.completed,
+        startTime: '10:00',
+        endTime: '12:00',
+        dayOfWeek: 'Wednesday',
       ),
-    );
-  }
-
-  void redirectToLogin() {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      '/login',
-          (route) => false,
-    );
-  }
-
-  Future<void> handleLogout() async {
-    bool confirmLogout = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Logout Confirmation'),
-        content: Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Logout'),
-          ),
-        ],
+      VisitorModel(
+        visitorName: 'Meena Patel',
+        fatherName: 'Raj Patel',
+        address: '789 SB Road, Pune',
+        gender: 'Female',
+        age: 45,
+        relation: 'Mother',
+        idProof: 'Voter ID',
+        idNumber: 'VOT9876543',
+        isInternational: false,
+        state: 'Maharashtra',
+        jail: 'Pune Central Jail',
+        visitDate: DateTime.now().add(Duration(days: 1)),
+        additionalVisitors: 1,
+        additionalVisitorNames: ['Kiran Patel'],
+        prisonerName: 'Amit Patel',
+        prisonerFatherName: 'Raj Patel',
+        prisonerAge: 25,
+        prisonerGender: 'Male',
+        mode: true,
+        status: VisitStatus.upcoming,
+        startTime: '09:00',
+        endTime: '17:00',
+        dayOfWeek: 'Monday',
       ),
-    );
+      VisitorModel(
+        visitorName: 'Sunita Roy',
+        fatherName: 'Bimal Roy',
+        address: '321 MG Road, Nagpur',
+        gender: 'Female',
+        age: 38,
+        relation: 'Wife',
+        idProof: 'Passport',
+        idNumber: 'P1234567',
+        isInternational: false,
+        state: 'Maharashtra',
+        jail: 'Nagpur Central Jail',
+        visitDate: DateTime.now().subtract(Duration(days: 3)),
+        additionalVisitors: 0,
+        additionalVisitorNames: [],
+        prisonerName: 'Rajesh Roy',
+        prisonerFatherName: 'Mohan Roy',
+        prisonerAge: 42,
+        prisonerGender: 'Male',
+        mode: false,
+        status: VisitStatus.expired,
+        startTime: '11:00',
+        endTime: '13:00',
+        dayOfWeek: 'Thursday',
+      ),
+    ];
 
-    if (confirmLogout == true) {
-      await AuthService.logout(context); // <-- this is important
-    }
+    // Sample Parole data
+    visitData['Parole'] = [
+      VisitorModel(
+        visitorName: 'Meena Patel',
+        fatherName: 'Raj Patel',
+        address: '789 SB Road, Pune',
+        gender: 'Female',
+        age: 45,
+        relation: 'Mother',
+        idProof: 'Voter ID',
+        idNumber: 'VOT9876543',
+        isInternational: false,
+        state: 'Maharashtra',
+        jail: 'Pune Central Jail',
+        visitDate: DateTime.now().add(Duration(days: 7)),
+        additionalVisitors: 1,
+        additionalVisitorNames: ['Kiran Patel'],
+        prisonerName: 'Amit Patel',
+        prisonerFatherName: 'Raj Patel',
+        prisonerAge: 25,
+        prisonerGender: 'Male',
+        mode: true,
+        status: VisitStatus.pending,
+        startTime: '09:00',
+        endTime: '17:00',
+        dayOfWeek: 'Monday',
+      ),
+      VisitorModel(
+        visitorName: 'Krishna Kumar',
+        fatherName: 'Ram Kumar',
+        address: '456 MG Road, Mumbai',
+        gender: 'Male',
+        age: 35,
+        relation: 'Brother',
+        idProof: 'Aadhar',
+        idNumber: 'XXXX-XXXX-9876',
+        isInternational: false,
+        state: 'Maharashtra',
+        jail: 'Arthur Road',
+        visitDate: DateTime.now().subtract(Duration(days: 1)),
+        additionalVisitors: 0,
+        additionalVisitorNames: [],
+        prisonerName: 'Vishnu Kumar',
+        prisonerFatherName: 'Shyam Kumar',
+        prisonerAge: 30,
+        prisonerGender: 'Male',
+        mode: false,
+        status: VisitStatus.completed,
+        startTime: '14:00',
+        endTime: '16:00',
+        dayOfWeek: 'Sunday',
+      ),
+      VisitorModel(
+        visitorName: 'Krishna Kumar',
+        fatherName: 'Ram Kumar',
+        address: '456 MG Road, Mumbai',
+        gender: 'Male',
+        age: 35,
+        relation: 'Brother',
+        idProof: 'Aadhar',
+        idNumber: 'XXXX-XXXX-9876',
+        isInternational: false,
+        state: 'Maharashtra',
+        jail: 'Arthur Road',
+        visitDate: DateTime.now().subtract(Duration(days: 1)),
+        additionalVisitors: 0,
+        additionalVisitorNames: [],
+        prisonerName: 'Vishnu Kumar',
+        prisonerFatherName: 'Shyam Kumar',
+        prisonerAge: 30,
+        prisonerGender: 'Male',
+        mode: false,
+        status: VisitStatus.expired,
+        startTime: '14:00',
+        endTime: '16:00',
+        dayOfWeek: 'Sunday',
+      ),
+    ];
+
+    // Sample Grievance data
+    visitData['Grievance'] = [
+      VisitorModel(
+        visitorName: 'Sunita Roy',
+        fatherName: 'Bimal Roy',
+        address: '321 MG Road, Nagpur',
+        gender: 'Female',
+        age: 38,
+        relation: 'Wife',
+        idProof: 'Passport',
+        idNumber: 'P1234567',
+        isInternational: false,
+        state: 'Maharashtra',
+        jail: 'Nagpur Central Jail',
+        visitDate: DateTime.now().subtract(Duration(days: 3)),
+        additionalVisitors: 0,
+        additionalVisitorNames: [],
+        prisonerName: 'Rajesh Roy',
+        prisonerFatherName: 'Mohan Roy',
+        prisonerAge: 42,
+        prisonerGender: 'Male',
+        mode: false,
+        status: VisitStatus.expired,
+        startTime: '11:00',
+        endTime: '13:00',
+        dayOfWeek: 'Thursday',
+      ),
+      VisitorModel(
+        visitorName: 'Priya Singh',
+        fatherName: 'Raj Singh',
+        address: '567 Park Street, Mumbai',
+        gender: 'Female',
+        age: 29,
+        relation: 'Sister',
+        idProof: 'Driving License',
+        idNumber: 'DL1234567890',
+        isInternational: false,
+        state: 'Maharashtra',
+        jail: 'Arthur Road',
+        visitDate: DateTime.now().add(Duration(days: 3)),
+        additionalVisitors: 1,
+        additionalVisitorNames: ['Rahul Singh'],
+        prisonerName: 'Vikram Singh',
+        prisonerFatherName: 'Mohan Singh',
+        prisonerAge: 32,
+        prisonerGender: 'Male',
+        mode: true,
+        status: VisitStatus.pending,
+        startTime: '15:00',
+        endTime: '17:00',
+        dayOfWeek: 'Thursday',
+      ),
+      VisitorModel(
+        visitorName: 'Kavita Desai',
+        fatherName: 'Suresh Desai',
+        address: '890 Link Road, Thane',
+        gender: 'Female',
+        age: 42,
+        relation: 'Mother',
+        idProof: 'Voter ID',
+        idNumber: 'VOT7890123',
+        isInternational: false,
+        state: 'Maharashtra',
+        jail: 'Thane Jail',
+        visitDate: DateTime.now().add(Duration(days: 1)),
+        additionalVisitors: 0,
+        additionalVisitorNames: [],
+        prisonerName: 'Rohit Desai',
+        prisonerFatherName: 'Suresh Desai',
+        prisonerAge: 22,
+        prisonerGender: 'Male',
+        mode: false,
+        status: VisitStatus.upcoming,
+        startTime: '10:00',
+        endTime: '12:00',
+        dayOfWeek: 'Tuesday',
+      ),
+      VisitorModel(
+        visitorName: 'Deepak Joshi',
+        fatherName: 'Ramesh Joshi',
+        address: '234 Hill Road, Bandra',
+        gender: 'Male',
+        age: 55,
+        relation: 'Father',
+        idProof: 'Passport',
+        idNumber: 'P9876543',
+        isInternational: false,
+        state: 'Maharashtra',
+        jail: 'Byculla Jail',
+        visitDate: DateTime.now().subtract(Duration(days: 5)),
+        additionalVisitors: 1,
+        additionalVisitorNames: ['Sunita Joshi'],
+        prisonerName: 'Arun Joshi',
+        prisonerFatherName: 'Ramesh Joshi',
+        prisonerAge: 28,
+        prisonerGender: 'Male',
+        mode: true,
+        status: VisitStatus.completed,
+        startTime: '13:00',
+        endTime: '15:00',
+        dayOfWeek: 'Wednesday',
+      ),
+    ];
   }
+
   // TTS and Speech methods
   Future<void> initializeTts() async {
     await flutterTts.setLanguage("en-US");
@@ -507,12 +465,14 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
 
   Color statusColor(VisitStatus status) {
     switch (status) {
-      case VisitStatus.approved:
+      case VisitStatus.completed:
         return Colors.green;
-      case VisitStatus.rejected:
+      case VisitStatus.expired:
         return Colors.red;
       case VisitStatus.pending:
         return Colors.orange;
+      case VisitStatus.upcoming:
+        return Colors.blue;
       default:
         return Colors.grey;
     }
@@ -520,13 +480,46 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
 
   String getStatusText(VisitStatus status) {
     switch (status) {
-      case VisitStatus.approved:
-        return 'Approved';
-      case VisitStatus.rejected:
-        return 'Rejected';
+      case VisitStatus.completed:
+        return 'Completed';
+      case VisitStatus.expired:
+        return 'Expired';
       case VisitStatus.pending:
         return 'Pending';
+      case VisitStatus.upcoming:
+        return 'Upcoming';
+      default:
+        return 'null';
     }
+  }
+
+  // Get filtered visits based on selected status
+  List<VisitorModel> getFilteredVisits() {
+    List<VisitorModel> currentVisits = visitData[selectedVisitType] ?? [];
+
+    if (selectedStatus == 'All') {
+      return currentVisits;
+    }
+
+    VisitStatus statusFilter;
+    switch (selectedStatus) {
+      case 'Pending':
+        statusFilter = VisitStatus.pending;
+        break;
+      case 'Upcoming':
+        statusFilter = VisitStatus.upcoming;
+        break;
+      case 'Completed':
+        statusFilter = VisitStatus.completed;
+        break;
+      case 'Expired':
+        statusFilter = VisitStatus.expired;
+        break;
+      default:
+        return currentVisits;
+    }
+
+    return currentVisits.where((visit) => visit.status == statusFilter).toList();
   }
 
   // Notification methods
@@ -558,32 +551,48 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
     required String label,
     required VoidCallback onTap,
   }) {
-    final isSelected = selectedIndex == index;
+    final isSelected = _selectedIndex == index;
 
     return Expanded(
       child: GestureDetector(
         onTap: () {
           setState(() {
-            selectedIndex = index;
+            _selectedIndex = index;
           });
           onTap();
         },
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 8),
+          padding: EdgeInsets.symmetric(vertical: 3),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 20,
-                color: Colors.white,
+              Container(
+                padding: EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected ? Colors.grey[300] : Colors.transparent,
+                  boxShadow: isSelected
+                      ? [
+                    BoxShadow(
+                      color: Colors.white.withOpacity(0.6),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                    )
+                  ]
+                      : [],
+                ),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: isSelected ? Color(0xFF5A8BBA) : Colors.white,
+                ),
               ),
-              SizedBox(height: 4),
+              SizedBox(height: 6),
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
+                  color: isSelected ? Colors.white : Colors.white70,
+                  fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
@@ -596,22 +605,29 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
       ),
     );
   }
+
   Widget buildVisitTypeCard(String title, int count, bool selected, VoidCallback onTap, {Image? leadingIcon}) {
     return SizedBox(
       width: 150,
       height: 150,
       child: GestureDetector(
-        onTap: onTap,
+        onTap: () {
+          setState(() {
+            selectedVisitType = title;
+            selectedStatus = 'All'; // Reset status filter when changing visit type
+          });
+          onTap();
+        },
         child: Card(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
             side: BorderSide(
-              color: selected ? AppColors.primary : Colors.grey.shade300,
-              width: selected ? 2 : 1,
+              color: selectedVisitType == title ? AppColors.primary : Colors.grey.shade300,
+              width: selectedVisitType == title ? 2 : 1,
             ),
           ),
           elevation: 2,
-          color: selected ? AppColors.primary.withOpacity(0.2) : Colors.grey.shade200,
+          color: selectedVisitType == title ? AppColors.primary.withOpacity(0.2) : Colors.grey.shade200,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 12.0),
             child: Column(
@@ -635,7 +651,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
                   backgroundColor: Colors.white,
                   radius: 15,
                   child: Text(
-                    '$count',
+                    '${statusCounts[title]?['Total'] ?? 0}',
                     style: TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.bold,
@@ -650,45 +666,121 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
     );
   }
 
-  Widget buildVisitCardList(List<VisitorModel> visits) {
-    return SizedBox(
-      height: 220,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: visits.length,
-        itemBuilder: (context, index) {
-          final visitor = visits[index];
-          return HorizontalVisitCard(
-            visitor: visitor,
-            isSelected: selectedVisitor == visitor,
-            onTap: () {
-              setState(() {
-                selectedVisitor = visitor;
-                isExpandedView = true;
-              });
-            },
-          );
-        },
+  Widget buildStatusCard(String title, int count, String iconType, bool selected, VoidCallback onTap) {
+    Color iconColor;
+    String imagePath;
+
+    switch (iconType) {
+      case 'pending':
+        iconColor = Colors.orange;
+        imagePath = 'assets/images/pending.png';
+        break;
+      case 'upcoming':
+        iconColor = Colors.blue;
+        imagePath = 'assets/images/upcoming.png';
+        break;
+      case 'completed':
+        iconColor = Colors.green;
+        imagePath = 'assets/images/completed.png';
+        break;
+      case 'expired':
+        iconColor = Colors.red;
+        imagePath = 'assets/images/expired.png';
+        break;
+      default:
+        iconColor = Colors.black;
+        imagePath = 'assets/images/total.png';
+    }
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: selected ? iconColor.withOpacity(0.1) : Colors.white,
+            border: Border.all(
+              color: selected ? iconColor : Colors.grey.shade300,
+              width: selected ? 2 : 1,
+            ),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2), // ✅ Black shadow
+                blurRadius: 6, // Softness of shadow
+                offset: const Offset(0, 3), // Position of shadow
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Image.asset(
+                imagePath,
+                width: 24,
+                height: 24,
+                color: iconColor,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                count.toString(),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: iconColor,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  // Session management
-  void startPeriodicSessionCheck() {
-    Timer.periodic(Duration(minutes: 5), (timer) async {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
+  Widget buildVerticalVisitsList() {
+    List<VisitorModel> filteredVisits = getFilteredVisits();
 
-      bool isValid = await AuthService.isTokenValid();
-      if (!isValid) {
-        timer.cancel();
-        await AuthService.clearTokens();
-        if (mounted) {
-          showSessionExpiredDialog();
-        }
-      }
-    });
+    if (filteredVisits.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.inbox_outlined,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            SizedBox(height: 16),
+            Text(
+              'No ${selectedStatus.toLowerCase()} ${selectedVisitType.toLowerCase()} found',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return Column(
+      children: filteredVisits.map((visitor) {
+        return VerticalVisitCard(
+          visitor: visitor,
+          onTap: () {
+            print('Selected visit: ${visitor.visitorName}');
+          },
+        );
+      }).toList(),
+    );
   }
 }

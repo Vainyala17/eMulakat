@@ -8,6 +8,7 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/form_section_title.dart';
 import '../../utils/validators.dart';
 import '../visit/visit_home.dart';
+import '../visit/whom_to_meet_screen.dart';
 import 'grievance_home.dart';
 import 'grievance_preview_screen.dart';
 
@@ -224,6 +225,59 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
     });
   }
 
+  void showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // prevent dismissing by tapping outside
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check_circle, color: Colors.green, size: 60),
+              SizedBox(height: 16),
+              Text(
+                "Success",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              Text(
+                "Your data has been successfully saved!",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+              ),
+              SizedBox(height: 16),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop(); // close dialog
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomeScreen()),
+                  );
+                },
+                child: Text(
+                  "OK",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.black, // ✅ Correct way
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _updateAdditionalVisitorControllers() {
     if (_additionalVisitors > _additionalVisitorControllers.length) {
       for (int i = _additionalVisitorControllers.length; i < _additionalVisitors; i++) {
@@ -243,7 +297,7 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
     required String label,
     required VoidCallback onTap,
   }) {
-    final _ = _selectedIndex == index;
+    final isSelected = _selectedIndex == index;
 
     return Expanded(
       child: GestureDetector(
@@ -254,21 +308,37 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
           onTap();
         },
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 8),
+          padding: EdgeInsets.symmetric(vertical:3),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 20,
-                color: Colors.white,
+              Container(
+                padding: EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected ? Colors.grey[300] : Colors.transparent,
+                  boxShadow: isSelected
+                      ? [
+                    BoxShadow(
+                      color: Colors.white.withOpacity(0.6),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                    )
+                  ]
+                      : [],
+                ),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: isSelected ? Color(0xFF5A8BBA) : Colors.white,
+                ),
               ),
-              SizedBox(height: 4),
+              SizedBox(height: 6),
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
+                  color: isSelected ? Colors.white : Colors.white70,
+                  fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
@@ -535,31 +605,7 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
                             text: 'Save',
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
-                                if (_selectedPrisonerGender == null) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Please select gender')),
-                                  );
-                                  return;
-                                }
-                                // Show success message
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Grievance details submitted successfully.',
-                                      style: TextStyle(color: Colors.black), // <-- Text color
-                                    ),
-                                    backgroundColor: Colors.blue,
-                                    duration: Duration(seconds: 2),
-                                  ),
-                                );
-
-                                // Navigate after short delay
-                                Future.delayed(Duration(seconds: 2), () {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => GrievanceHomeScreen()),
-                                  );
-                                });
+                                showSuccessDialog(context);
                               }
                             },
                           ),
