@@ -26,12 +26,14 @@ class VerticalVisitCard extends StatelessWidget {
 
   Color statusColor(VisitStatus status) {
     switch (status) {
-      case VisitStatus.approved:
+      case VisitStatus.completed:
         return Colors.green;
-      case VisitStatus.rejected:
+      case VisitStatus.expired:
         return Colors.red;
       case VisitStatus.pending:
         return Colors.orange;
+      case VisitStatus.upcoming:
+        return Colors.blue;
       default:
         return Colors.grey;
     }
@@ -39,12 +41,16 @@ class VerticalVisitCard extends StatelessWidget {
 
   String getStatusText(VisitStatus status) {
     switch (status) {
-      case VisitStatus.approved:
-        return 'Approved';
-      case VisitStatus.rejected:
-        return 'Rejected';
+      case VisitStatus.completed:
+        return 'Completed';
+      case VisitStatus.expired:
+        return 'Expired';
       case VisitStatus.pending:
         return 'Pending';
+      case VisitStatus.upcoming:
+        return 'Upcoming';
+      default:
+        return 'unknown';
     }
   }
 

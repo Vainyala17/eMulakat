@@ -414,26 +414,35 @@ class _eVisitorPassScreenState extends State<eVisitorPassScreen> {
     final endTime = widget.visitor.endTime ?? '--:--';
     final dayOfWeek = widget.visitor.dayOfWeek ?? 'N/A';
 
-    IconData statusIcon;
+    String imagePath;
     Color statusColor;
     String statusText;
 
     switch (status) {
-      case VisitStatus.approved:
-        statusIcon = Icons.verified;
+      case VisitStatus.completed:
+        imagePath = 'assets/images/completed.png';
         statusColor = Colors.green;
-        statusText = 'APPROVED';
+        statusText = 'COMPLETED';
         break;
-      case VisitStatus.rejected:
-        statusIcon = Icons.cancel;
+      case VisitStatus.expired:
+        imagePath = 'assets/images/expired.png';
         statusColor = Colors.red;
-        statusText = 'REJECTED';
+        statusText = 'EXPIRED';
         break;
       case VisitStatus.pending:
-        statusIcon = Icons.hourglass_bottom;
+        imagePath = 'assets/images/pending.png';
         statusColor = Colors.orange;
         statusText = 'PENDING';
         break;
+      case VisitStatus.upcoming:
+        imagePath = 'assets/images/upcoming.png';
+        statusColor = Colors.blue;
+        statusText = 'UPCOMING';
+        break;
+      default:
+        imagePath = 'assets/images/default.png';
+        statusColor = Colors.grey;
+        statusText = 'UNKNOWN';
     }
 
     return Container(
@@ -446,7 +455,7 @@ class _eVisitorPassScreenState extends State<eVisitorPassScreen> {
       ),
       child: Row(
         children: [
-          Icon(statusIcon, color: statusColor, size: 24),
+          Icon(imagePath as IconData?, color: statusColor, size: 24),
           SizedBox(width: 10),
           Expanded(
             child: Column(

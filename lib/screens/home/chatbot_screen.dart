@@ -54,7 +54,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     prisonerAge: 35,
     prisonerGender: 'Male',
     mode: false,
-    status: VisitStatus.rejected,
+    status: VisitStatus.expired,
     startTime: '14:00',
     endTime: '16:30',
     dayOfWeek: 'Friday',
