@@ -76,42 +76,27 @@ class _GrievanceHomeScreenState extends State<GrievanceHomeScreen> {
           onTap();
         },
         child: Container(
-          padding: EdgeInsets.symmetric(vertical:3),
+          height: 60,
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isSelected ? Colors.grey[300] : Colors.transparent,
-                  boxShadow: isSelected
-                      ? [
-                    BoxShadow(
-                      color: Colors.white.withOpacity(0.6),
-                      blurRadius: 8,
-                      spreadRadius: 2,
-                    )
-                  ]
-                      : [],
-                ),
-                child: Icon(
-                  icon,
-                  size: 20,
-                  color: isSelected ? Color(0xFF5A8BBA) : Colors.white,
-                ),
+              Icon(
+                icon,
+                color: isSelected ? Colors.white : Colors.white70,
+                size: 24,
               ),
-              SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
                 label,
                 style: TextStyle(
                   color: isSelected ? Colors.white : Colors.white70,
                   fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

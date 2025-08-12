@@ -129,7 +129,7 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
                                 builder: (context) => MeetFormScreen(
                                   fromRegisteredInmates: true,
                                   prefilledPrisonerName: inmate['prisonerName'],
-                                  prefilledPrison: inmate['Prison'],
+                                  prefilledPrison: inmate['prison'],
                                 ), // Added const
                               ),
                             );
