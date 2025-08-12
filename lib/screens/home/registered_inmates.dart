@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../dashboard/grievance/grievance_home.dart';
 import '../../dashboard/parole/parole_home.dart';
 import '../../dashboard/visit/visit_home.dart';
+import '../../dashboard/visit/whom_to_meet_screen.dart';
 
 class MyRegisteredInmatesScreen extends StatefulWidget {
   const MyRegisteredInmatesScreen({super.key});
@@ -20,7 +21,7 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
       "genderAge": "M/47",
       "relation": "Brother",
       "modeOfVisit": "Yes",
-      "jailAddress": "CENTRAL JAIL NO.2, TIHAR",
+      "prison": "CENTRAL JAIL NO.2, TIHAR", // Fixed: lowercase 'prison'
     },
     {
       "serial": 2,
@@ -29,109 +30,159 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
       "genderAge": "M/57",
       "relation": "Lawyer",
       "modeOfVisit": "Yes",
-      "jailAddress": "CENTRAL JAIL NO.2, TIHAR",
+      "prison": "CENTRAL JAIL NO.2, TIHAR", // Fixed: lowercase 'prison'
     },
     {
       "serial": 3,
       "prisonerName": "Test",
-      "visitorName": "",
+      "visitorName": "Rajesh",
       "genderAge": "M/21",
       "relation": "Lawyer",
       "modeOfVisit": "-",
-      "jailAddress": "PHQ",
+      "prison": "PHQ", // Fixed: lowercase 'prison'
     }
   ];
 
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: Colors.grey[700]),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 14,fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(12),
-      itemCount: inmates.length,
-      itemBuilder: (context, index) {
-        final inmate = inmates[index];
-        return Card(
-          color: Colors.white, // ✅ White background
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: Colors.grey, width: 1), // ✅ Grey border
-          ),
-          elevation: 4, // ✅ Shadow
-          shadowColor: Colors.black.withOpacity(0.2), // ✅ Soft shadow
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header with Serial No. and Prisoner Name
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "${inmate['serial']}. ${inmate['prisonerName']}",
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.download, color: Colors.blue),
-                      onPressed: () {
-                        // TODO: implement download logic
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text("Visitor: ${inmate['visitorName']}"),
-                Text("Gender/Age: ${inmate['genderAge']}"),
-                Text("Relation: ${inmate['relation']}"),
-                Text("Mode of Visit: ${inmate['modeOfVisit']}"),
-                Text("Jail Address: ${inmate['jailAddress']}"),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => VisitHomeScreen(selectedIndex: 1)),
-                        );
-                      },
-                      child: const Text(
-                        "Meeting",
-                        style: TextStyle(color: Colors.black), // ✅ Correct way
-                      ),
-                    ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => ParoleHomeScreen(selectedIndex: 2)),
-                        );
-                      },
-                      child: const Text("Parole",style: TextStyle(color: Colors.black), // ✅ Correct way
-                      ),
-                    ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => GrievanceHomeScreen(selectedIndex: 3)),
-                        );
-                      },
-                      child: const Text("Grievance",style: TextStyle(color: Colors.black), // ✅ Correct way
-                      ),
-                    ),
-                  ],
-                )
-              ],
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: ListView.builder(
+        padding: const EdgeInsets.all(12),
+        itemCount: inmates.length,
+        itemBuilder: (context, index) {
+          final inmate = inmates[index];
+          return Card(
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Colors.black, width: 1),
             ),
-          ),
-        );
-      },
+            elevation: 4,
+            shadowColor: Colors.black.withOpacity(0.2),
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header with Serial No. and Prisoner Name
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded( // Added: Prevent overflow
+                        child: _buildInfoRow(
+                          Icons.person,
+                          "${inmate['serial']}. ${inmate['prisonerName']}",
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.download, color: Colors.blue),
+                        onPressed: () {
+                          // TODO: implement download logic
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Download functionality coming soon')),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  _buildInfoRow(Icons.people, "Visitor: ${inmate['visitorName']}"),
+                  _buildInfoRow(Icons.badge, "Gender/Age: ${inmate['genderAge']}"),
+                  _buildInfoRow(Icons.family_restroom, "Relation: ${inmate['relation']}"),
+                  _buildInfoRow(Icons.meeting_room, "Mode of Visit: ${inmate['modeOfVisit']}"),
+                  _buildInfoRow(Icons.location_on, "Prison: ${inmate['prison']}"), // Fixed: lowercase 'prison'
+                  const SizedBox(height: 12),
+                  // Fixed: Better button layout with proper spacing
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            foregroundColor: Colors.white, // Fixed: Use foregroundColor instead of text color
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                          ),
+                          onPressed: () {
+                            Navigator.push( // Fixed: Use push instead of pushReplacement
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MeetFormScreen(
+                                  fromRegisteredInmates: true,
+                                  prefilledPrisonerName: inmate['prisonerName'],
+                                  prefilledPrison: inmate['Prison'],
+                                ), // Added const
+                              ),
+                            );
+                          },
+                          child: const Text("Meeting"),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white, // Fixed: Use foregroundColor
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                          ),
+                          onPressed: () {
+                            Navigator.push( // Fixed: Use push instead of pushReplacement
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ParoleHomeScreen(selectedIndex: 2), // Added const
+                              ),
+                            );
+                          },
+                          child: const Text("Parole"),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white, // Fixed: Use foregroundColor
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                          ),
+                          onPressed: () {
+                            Navigator.push( // Fixed: Use push instead of pushReplacement
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const GrievanceHomeScreen(selectedIndex: 3), // Added const
+                              ),
+                            );
+                          },
+                          child: const Text("Grievance"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

@@ -6,6 +6,7 @@ import '../../dashboard/evisitor_pass_screen.dart';
 import '../../dashboard/grievance/grievance_home.dart';
 import '../../dashboard/parole/parole_home.dart';
 import '../../dashboard/visit/visit_home.dart';
+import '../../dashboard/visit/whom_to_meet_screen.dart';
 import '../../models/visitor_model.dart';
 import '../registration/visitor_register_screen.dart';
 import 'chatbot_screen.dart';
@@ -82,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen>
             textAlign: TextAlign.center, // Center the text
           ),
           content: Text(
-            'Your Profile is Incomplete.Update your Profile with your photo, ID proof to raise Meeting, Parole, Grievance requests for your Registered Inmates.',
+            'Please complete your profile by adding your photo and ID proof. This will allow you to raise Meeting, Parole or Grievance requests for your registered inmates',
             style: TextStyle(fontSize: 16),
             textAlign: TextAlign.center,
           ),
@@ -486,10 +487,10 @@ class _HomeScreenState extends State<HomeScreen>
                       context,
                       MaterialPageRoute(
                         builder: (context) =>
-                            NotificationScreen(
-                              notifications: notifications,
-                              onNotificationRead: markNotificationAsRead,
-                            ),
+                          NotificationScreen(
+                            notifications: notifications,
+                            onNotificationRead: markNotificationAsRead,
+                          ),
                       ),
                     );
                   },
@@ -597,7 +598,7 @@ class _HomeScreenState extends State<HomeScreen>
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => VisitHomeScreen(selectedIndex: 1)),
+                        MaterialPageRoute(builder: (context) => MeetFormScreen(selectedIndex: 1,showVisitCards: true,)),
                       );
                     },
                   ),

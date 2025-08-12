@@ -536,7 +536,7 @@ class _VisitPreviewScreen1State extends State<VisitPreviewScreen1> {
                 Navigator.of(context).pop();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => VisitHomeScreen()),
+                  MaterialPageRoute(builder: (context) => MeetFormScreen(selectedIndex: 1,showVisitCards: true,)),
                 );
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(

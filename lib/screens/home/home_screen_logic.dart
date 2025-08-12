@@ -137,7 +137,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
         status: VisitStatus.pending,
         startTime: '14:00',
         endTime: '16:30',
-        dayOfWeek: 'Friday',
+        dayOfWeek: 'Friday', prison: '',
       ),
       VisitorModel(
         visitorName: 'Anand Gupta',
@@ -162,7 +162,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
         status: VisitStatus.completed,
         startTime: '10:00',
         endTime: '12:00',
-        dayOfWeek: 'Wednesday',
+        dayOfWeek: 'Wednesday', prison: '',
       ),
       VisitorModel(
         visitorName: 'Meena Patel',
@@ -187,7 +187,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
         status: VisitStatus.upcoming,
         startTime: '09:00',
         endTime: '17:00',
-        dayOfWeek: 'Monday',
+        dayOfWeek: 'Monday', prison: '',
       ),
       VisitorModel(
         visitorName: 'Sunita Roy',
@@ -212,7 +212,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
         status: VisitStatus.expired,
         startTime: '11:00',
         endTime: '13:00',
-        dayOfWeek: 'Thursday',
+        dayOfWeek: 'Thursday', prison: '',
       ),
     ];
 
@@ -241,7 +241,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
         status: VisitStatus.pending,
         startTime: '09:00',
         endTime: '17:00',
-        dayOfWeek: 'Monday',
+        dayOfWeek: 'Monday', prison: '',
       ),
       VisitorModel(
         visitorName: 'Krishna Kumar',
@@ -266,7 +266,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
         status: VisitStatus.completed,
         startTime: '14:00',
         endTime: '16:00',
-        dayOfWeek: 'Sunday',
+        dayOfWeek: 'Sunday', prison: '',
       ),
       VisitorModel(
         visitorName: 'Krishna Kumar',
@@ -291,7 +291,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
         status: VisitStatus.expired,
         startTime: '14:00',
         endTime: '16:00',
-        dayOfWeek: 'Sunday',
+        dayOfWeek: 'Sunday', prison: '',
       ),
     ];
 
@@ -320,7 +320,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
         status: VisitStatus.expired,
         startTime: '11:00',
         endTime: '13:00',
-        dayOfWeek: 'Thursday',
+        dayOfWeek: 'Thursday', prison: '',
       ),
       VisitorModel(
         visitorName: 'Priya Singh',
@@ -345,7 +345,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
         status: VisitStatus.pending,
         startTime: '15:00',
         endTime: '17:00',
-        dayOfWeek: 'Thursday',
+        dayOfWeek: 'Thursday', prison: '',
       ),
       VisitorModel(
         visitorName: 'Kavita Desai',
@@ -370,7 +370,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
         status: VisitStatus.upcoming,
         startTime: '10:00',
         endTime: '12:00',
-        dayOfWeek: 'Tuesday',
+        dayOfWeek: 'Tuesday', prison: '',
       ),
       VisitorModel(
         visitorName: 'Deepak Joshi',
@@ -395,7 +395,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
         status: VisitStatus.completed,
         startTime: '13:00',
         endTime: '15:00',
-        dayOfWeek: 'Wednesday',
+        dayOfWeek: 'Wednesday', prison: '',
       ),
     ];
   }
@@ -778,7 +778,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
           visitor: visitor,
           onTap: () {
             print('Selected visit: ${visitor.visitorName}');
-          },
+          }, sourceType: '',
         );
       }).toList(),
     );

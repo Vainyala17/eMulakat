@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../pdf_viewer_screen.dart';
 import '../../screens/home/home_screen.dart';
 import '../grievance/grievance_home.dart';
+import '../visit/whom_to_meet_screen.dart';
 
 class ParoleHomeScreen extends StatefulWidget {
   final bool fromChatbot;
@@ -192,7 +193,7 @@ class _ParoleHomeScreenState extends State<ParoleHomeScreen> {
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => VisitHomeScreen(selectedIndex: 1)),
+                        MaterialPageRoute(builder: (context) => MeetFormScreen(selectedIndex: 1,showVisitCards: true,)),
                       );
                     },
                   ),

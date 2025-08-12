@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../dashboard/grievance/grievance_home.dart';
+import '../../dashboard/parole/parole_home.dart';
+import '../../dashboard/visit/whom_to_meet_screen.dart';
 import '../../models/visitor_model.dart';
 import '../../utils/color_scheme.dart';
 import '../../dashboard/visit/visit_preview1.dart';
@@ -6,11 +9,15 @@ import '../../dashboard/visit/visit_preview1.dart';
 class VerticalVisitCard extends StatelessWidget {
   final VisitorModel visitor;
   final VoidCallback onTap;
+  final String sourceType;
+  final Map<String, dynamic>? inmate;
 
   const VerticalVisitCard({
     Key? key,
     required this.visitor,
+    required this.sourceType,
     required this.onTap,
+    this.inmate,
   }) : super(key: key);
 
   String getDayOfWeek(DateTime date) {
@@ -59,12 +66,9 @@ class VerticalVisitCard extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         onTap();
-        // Navigate to visit preview when tapped
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => VisitPreviewScreen1(),
-          ),
+          MaterialPageRoute(builder: (context) => VisitPreviewScreen1()),
         );
       },
       child: Container(
@@ -88,56 +92,7 @@ class VerticalVisitCard extends StatelessWidget {
         child: Row(
           children: [
             // Left blue date block
-            Container(
-              width: 120,
-              height: 120,
-              decoration: const BoxDecoration(
-                color: Color(0xFF4A90E2),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(8),
-                  bottomLeft: Radius.circular(8),
-                ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    getDayOfWeek(visitor.visitDate),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    visitor.visitDate.day.toString().padLeft(2, '0'),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    getMonthName(visitor.visitDate),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    visitor.visitDate.year.toString(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _buildDateBlock(),
 
             // Right content area
             Expanded(
@@ -146,133 +101,47 @@ class VerticalVisitCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Row(
                   children: [
-                    // Visit details column
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Time row
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.access_time,
-                                color: Color(0xFF4A90E2),
-                                size: 16,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  '${visitor.startTime} - ${visitor.endTime}',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-
-                          // Visitor name row
-                          Row(
-                            children: [
-                              const Icon(Icons.person, size: 18, color: AppColors.primary),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  visitor.visitorName,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-
-                          // Prison/Jail name row
-                          Row(
-                            children: [
-                              const Icon(Icons.location_on, size: 18, color: AppColors.primary),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  visitor.jail,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-
-                          // Additional visitors info row
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.group,
-                                size: 18,
-                                color: AppColors.primary,
-                              ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  visitor.additionalVisitors > 0
-                                      ? '${visitor.additionalVisitors} additional participants'
-                                      : 'No additional participants',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Status badge and arrow
+                    Expanded(child: _buildDetails()),
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        // Status badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: statusColor(visitor.status),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            getStatusText(visitor.status),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-
+                        _buildStatusBadge(),
                         const SizedBox(height: 8),
-
-                        // Arrow icon
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          size: 24,
-                          color: AppColors.primary,
+                        GestureDetector(
+                          onTap: () {
+                            if (sourceType == "meeting") {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => MeetFormScreen(
+                                    fromRegisteredInmates: true,
+                                    prefilledPrisonerName: inmate?['prisonerName'],
+                                    prefilledPrison: inmate?['Prison'],
+                                  ),
+                                ),
+                              );
+                            } else if (sourceType == "parole") {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ParoleHomeScreen(selectedIndex: 2),
+                                ),
+                              );
+                            } else if (sourceType == "grievance") {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => GrievanceHomeScreen(selectedIndex: 3),
+                                ),
+                              );
+                            }
+                          },
+                          child: Icon(
+                            Icons.arrow_forward_ios,
+                            size: 24,
+                            color: AppColors.primary,
+                          ),
                         ),
                       ],
                     ),
@@ -282,6 +151,109 @@ class VerticalVisitCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDateBlock() {
+    return Container(
+      width: 120,
+      height: 120,
+      decoration: const BoxDecoration(
+        color: Color(0xFF4A90E2),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(8),
+          bottomLeft: Radius.circular(8),
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(getDayOfWeek(visitor.visitDate),
+              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 2),
+          Text(visitor.visitDate.day.toString().padLeft(2, '0'),
+              style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+          Text(getMonthName(visitor.visitDate),
+              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 2),
+          Text(visitor.visitDate.year.toString(),
+              style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetails() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.access_time, color: Color(0xFF4A90E2), size: 16),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text('${visitor.startTime} - ${visitor.endTime}',
+                  style: const TextStyle(fontSize: 14, color: Colors.black, fontWeight: FontWeight.w600),
+                  overflow: TextOverflow.ellipsis),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            const Icon(Icons.person, size: 18, color: AppColors.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(visitor.visitorName,
+                  style: const TextStyle(fontSize: 14, color: Colors.black, fontWeight: FontWeight.w600),
+                  overflow: TextOverflow.ellipsis),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            const Icon(Icons.location_on, size: 18, color: AppColors.primary),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(visitor.jail,
+                  style: const TextStyle(fontSize: 14, color: Colors.black, fontWeight: FontWeight.w600),
+                  overflow: TextOverflow.ellipsis),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            const Icon(Icons.group, size: 18, color: AppColors.primary),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                visitor.additionalVisitors > 0
+                    ? '${visitor.additionalVisitors} additional participants'
+                    : 'No additional participants',
+                style: const TextStyle(fontSize: 11, color: Colors.black, fontWeight: FontWeight.w600),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: statusColor(visitor.status),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        getStatusText(visitor.status),
+        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
       ),
     );
   }
