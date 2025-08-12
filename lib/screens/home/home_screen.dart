@@ -19,7 +19,8 @@ import 'horizontal_visit_card.dart';
 class HomeScreen extends StatefulWidget {
   final int selectedIndex;
 
-  const HomeScreen({Key? key, this.selectedIndex = 0}) : super(key: key);
+  // Changed default value from 0 to 1 to show "My Registered Inmates" tab first
+  const HomeScreen({Key? key, this.selectedIndex = 1}) : super(key: key);
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -30,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   late TabController _tabController;
   bool _isProfileCompleted = false;
+  int _currentBottomNavIndex = 0; // Add this to track bottom navigation state
 
   @override
   void initState() {
@@ -39,6 +41,10 @@ class _HomeScreenState extends State<HomeScreen>
       vsync: this,
       initialIndex: widget.selectedIndex,
     );
+
+    // Set the correct bottom navigation index based on selected tab
+    _currentBottomNavIndex = widget.selectedIndex == 1 ? 0 : 0; // 0 for Dashboard
+
     _checkProfileStatus();
     initializeTts();
     initializeStt();
@@ -80,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen>
               fontWeight: FontWeight.bold,
               color: AppColors.primary,
             ),
-            textAlign: TextAlign.center, // Center the text
+            textAlign: TextAlign.center,
           ),
           content: Text(
             'Please complete your profile by adding your photo and ID proof. This will allow you to raise Meeting, Parole or Grievance requests for your registered inmates',
@@ -91,7 +97,6 @@ class _HomeScreenState extends State<HomeScreen>
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                // User chose to cancel - they can only view data
               },
               child: Text(
                 'Cancel',
@@ -101,7 +106,6 @@ class _HomeScreenState extends State<HomeScreen>
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                // Navigate to profile form
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -304,7 +308,7 @@ class _HomeScreenState extends State<HomeScreen>
                   // Third row - Total
                   Row(
                     children: [
-                      Expanded(child: SizedBox()), // Empty space
+                      Expanded(child: SizedBox()),
                       buildStatusCard(
                         'Total',
                         statusCounts[selectedVisitType]?['Total'] ?? 0,
@@ -316,7 +320,7 @@ class _HomeScreenState extends State<HomeScreen>
                           });
                         },
                       ),
-                      Expanded(child: SizedBox()), // Empty space
+                      Expanded(child: SizedBox()),
                     ],
                   ),
                 ],
@@ -389,6 +393,53 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Updated buildNavItem to show active state correctly
+  Widget buildNavItem({
+    required int index,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    bool isSelected = _currentBottomNavIndex == index;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _currentBottomNavIndex = index;
+          });
+          onTap();
+        },
+        child: Container(
+          height: 60,
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? Colors.white : Colors.white70,
+                size: 24,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.white70,
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -487,10 +538,10 @@ class _HomeScreenState extends State<HomeScreen>
                       context,
                       MaterialPageRoute(
                         builder: (context) =>
-                          NotificationScreen(
-                            notifications: notifications,
-                            onNotificationRead: markNotificationAsRead,
-                          ),
+                            NotificationScreen(
+                              notifications: notifications,
+                              onNotificationRead: markNotificationAsRead,
+                            ),
                       ),
                     );
                   },
@@ -543,7 +594,7 @@ class _HomeScreenState extends State<HomeScreen>
               controller: _tabController,
               children: [
                 _buildHomeTabContent(),
-                MyRegisteredInmatesScreen(), // Make sure this widget exists
+                MyRegisteredInmatesScreen(),
               ],
             ),
 
@@ -585,10 +636,8 @@ class _HomeScreenState extends State<HomeScreen>
                     icon: Icons.dashboard,
                     label: 'Dashboard',
                     onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => HomeScreen(selectedIndex: 0)),
-                      );
+                      // Stay on current screen, just switch to dashboard tab
+                      _tabController.animateTo(0);
                     },
                   ),
                   buildNavItem(

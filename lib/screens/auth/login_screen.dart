@@ -1065,26 +1065,27 @@ class _LoginScreenState extends State<LoginScreen> {
           onTap();
         },
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 8),
+          height: 60,
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 icon,
-                size: 20,
-                color: Colors.white,
+                color: isSelected ? Colors.white : Colors.white70,
+                size: 24,
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
+                  color: isSelected ? Colors.white : Colors.white70,
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

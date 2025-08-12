@@ -111,42 +111,27 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
           onTap();
         },
         child: Container(
-          padding: EdgeInsets.symmetric(vertical:3),
+          height: 60,
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isSelected ? Colors.grey[300] : Colors.transparent,
-                  boxShadow: isSelected
-                      ? [
-                    BoxShadow(
-                      color: Colors.white.withOpacity(0.6),
-                      blurRadius: 8,
-                      spreadRadius: 2,
-                    )
-                  ]
-                      : [],
-                ),
-                child: Icon(
-                  icon,
-                  size: 20,
-                  color: isSelected ? Color(0xFF5A8BBA) : Colors.white,
-                ),
+              Icon(
+                icon,
+                color: isSelected ? Colors.white : Colors.white70,
+                size: 24,
               ),
-              SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
                 label,
                 style: TextStyle(
                   color: isSelected ? Colors.white : Colors.white70,
                   fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -663,13 +648,14 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     bool readOnly = false,
     int maxLines = 1,
     String? fieldName,
+    bool isRequired = false,
   }) {
     return GestureDetector(
       onTap: readOnly ? () => _showReadOnlyAlert(fieldName ?? label) : null,
       child: TextFormField(
         controller: controller,
         decoration: InputDecoration(
-          labelText: label,
+          labelText: isRequired ? '$label*' : label,
           hintText: hint,
           border: OutlineInputBorder(),
           fillColor: readOnly ? Colors.grey[200] : Colors.white,
@@ -703,6 +689,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     );
   }
 
+
   // Meeting Form View
   Widget _buildMeetingFormView() {
     return Form(
@@ -729,8 +716,8 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
             // Prison Address - Read only when from registered inmates or visit cards
             _buildReadOnlyTextField(
               controller: _prisonController,
-              label: 'Prison *',
-              hint: 'Prison Address',
+              label: 'Prison*',
+              hint: 'Prison',
               validator: (value) => value!.isEmpty ? 'Prison is required' : null,
               readOnly: _isReadOnlyMode,
               maxLines: 2,
@@ -959,10 +946,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => MeetFormScreen(
-                          selectedIndex: 1,
-                          fromNavbar: true, // FIXED: Set fromNavbar to true
-                        )),
+                        MaterialPageRoute(builder: (context) => MeetFormScreen(selectedIndex: 1,showVisitCards: true,)),
                       );
                     },
                   ),
@@ -986,9 +970,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => GrievanceHomeScreen(selectedIndex: 3),
-                        ),
+                        MaterialPageRoute(builder: (context) => GrievanceHomeScreen(selectedIndex: 3)),
                       );
                     },
                   ),
