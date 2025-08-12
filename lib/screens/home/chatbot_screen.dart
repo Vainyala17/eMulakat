@@ -58,6 +58,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     startTime: '14:00',
     endTime: '16:30',
     dayOfWeek: 'Friday',
+    prison: 'null',
   );
 
   @override
@@ -548,7 +549,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           print('✅ Navigating to VisitHomeScreen');
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => VisitHomeScreen(fromChatbot: true)),
+            MaterialPageRoute(builder: (context) => MeetFormScreen(selectedIndex: 1,showVisitCards: true,)),
           ).then((_) {
             _showReturnMessage();
           }).catchError((error) {

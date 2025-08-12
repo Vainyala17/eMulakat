@@ -27,12 +27,6 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
     _selectedIndex = widget.selectedIndex;
   }
 
-  final List<Widget> _pages = [
-    VisitHomeScreen(),             // Visit
-    HomeScreen(),             // Dashboard
-    GrievanceHomeScreen(),    // Grievance
-  ];
-
   Widget _buildNavItem({
     required int index,
     required IconData icon,
@@ -131,7 +125,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                   onTap: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => VisitHomeScreen(selectedIndex: 1)),
+                      MaterialPageRoute(builder: (context) => MeetFormScreen(selectedIndex: 1,showVisitCards: true,)),
                     );
                   },
                 ),
@@ -167,5 +161,4 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
       ),
     );
   }
-
 }

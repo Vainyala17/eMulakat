@@ -654,7 +654,7 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => VisitHomeScreen()),
+                        MaterialPageRoute(builder: (context) => MeetFormScreen(selectedIndex: 1,showVisitCards: true,)),
                       );
                     },
                   ),

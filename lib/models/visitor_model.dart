@@ -31,6 +31,7 @@ class VisitorModel {
   final String endTime;
   final String dayOfWeek;
   final String? videoLink;
+  final String prison;
   final String? officer;
   bool mode;
 
@@ -62,6 +63,7 @@ class VisitorModel {
     required this.startTime,
     required this.endTime ,
     required this.dayOfWeek,
+    required this.prison,
     this.videoLink,
     this.officer,
     required this.mode,
@@ -117,6 +119,7 @@ class VisitorModel {
       additionalVisitors: map['additionalVisitors'],
       additionalVisitorNames: map['additionalVisitorNames'].split(','),
       prisonerName: map['prisonerName'],
+      prison: map['prison'],
       prisonerFatherName: map['prisonerFatherName'],
       prisonerAge: map['prisonerAge'],
       prisonerGender: map['prisonerGender'],
