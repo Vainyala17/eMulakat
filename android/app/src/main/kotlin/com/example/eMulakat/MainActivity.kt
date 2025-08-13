@@ -1,4 +1,4 @@
-package com.example.eMulakat
+package com.nic.eMulakat
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../dashboard/grievance/grievance_details_screen.dart';
 import '../../dashboard/grievance/grievance_home.dart';
 import '../../dashboard/parole/parole_home.dart';
 import '../../dashboard/visit/whom_to_meet_screen.dart';
@@ -132,7 +133,7 @@ class VerticalVisitCard extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => GrievanceHomeScreen(selectedIndex: 3),
+                                  builder: (context) => GrievanceDetailsScreen(selectedIndex: 3),
                                 ),
                               );
                             }

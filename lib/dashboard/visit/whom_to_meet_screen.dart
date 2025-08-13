@@ -5,22 +5,50 @@ import '../../models/visitor_model.dart';
 import '../../pdf_viewer_screen.dart';
 import '../../screens/home/home_screen.dart';
 import '../../screens/home/vertical_visit_card.dart';
+import '../../utils/color_scheme.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/form_section_title.dart';
 import '../../utils/validators.dart';
+import '../grievance/grievance_details_screen.dart';
 import '../grievance/grievance_home.dart';
 import '../parole/parole_home.dart';
+import 'additional_visitors.dart';
+
+// Model for additional visitor data
+class AdditionalVisitor {
+  String visitorName;
+  String fatherName;
+  String relation;
+  String mobileNumber;
+  String? photoPath;
+  String? idProofType;
+  String? idProofNumber;
+  String? idProofPath;
+  bool isSelected;
+
+  AdditionalVisitor({
+    required this.visitorName,
+    required this.fatherName,
+    required this.relation,
+    required this.mobileNumber,
+    this.photoPath,
+    this.idProofType,
+    this.idProofNumber,
+    this.idProofPath,
+    this.isSelected = false,
+  });
+}
 
 class MeetFormScreen extends StatefulWidget {
   final bool fromChatbot;
   final int selectedIndex;
   final VisitorModel? visitorData;
-  final bool fromNavbar; // New parameter to distinguish navigation path
-  final bool fromRegisteredInmates; // New parameter for direct navigation
-  final String? prefilledPrisonerName; // For prefilled data
-  final String? prefilledPrison; // For prefilled prison address
-  final bool showVisitCards; // New parameter to show visit cards first
+  final bool fromNavbar;
+  final bool fromRegisteredInmates;
+  final String? prefilledPrisonerName;
+  final String? prefilledPrison;
+  final bool showVisitCards;
 
   const MeetFormScreen({
     Key? key,
@@ -48,51 +76,100 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
   String? _selectedVisitMode;
   List<TextEditingController> _additionalVisitorControllers = [];
   bool _isReadOnlyMode = false;
-  bool _showingVisitCards = false; // Track current view
-  String selectedVisitType = 'Meeting'; // Default selection
+  bool _showingVisitCards = false;
+  bool _showAdditionalVisitorsList = false; // New state for showing visitors list
+  String selectedVisitType = 'Meeting';
   String selectedStatus = 'All';
   final List<String> _visitModes = ['Physical', 'Video Conferencing'];
+  final List<String> _idProofTypes = ['Aadhar Card', 'Voter ID', 'Passport', 'Driving License', 'PAN Card'];
+  // Sample previous visitors data
+  List<AdditionalVisitor> _previousVisitors = [
+    AdditionalVisitor(
+      visitorName: 'KAMAL KISHORE',
+      fatherName: 'RAM KISHAN',
+      relation: 'Others',
+      mobileNumber: 'XXXXXXXX',
+      idProofType: 'Aadhar Card',
+      idProofNumber: 'XXXX-XXXX-1234',
+    ),
+    AdditionalVisitor(
+      visitorName: 'USHA',
+      fatherName: 'ASHOK KUMAR',
+      relation: 'Husband / Wife',
+      mobileNumber: 'XXXXXXXX',
+      idProofType: 'Voter ID',
+      idProofNumber: 'VOT123456',
+    ),
+    AdditionalVisitor(
+      visitorName: 'MEENA',
+      fatherName: 'KAMAL KISHORE',
+      relation: 'Sister',
+      mobileNumber: 'XXXXXXXX',
+      idProofType: 'Passport',
+      idProofNumber: 'P1234567',
+    ),
+    AdditionalVisitor(
+      visitorName: 'KAMLESH',
+      fatherName: 'VINESH',
+      relation: 'Sister',
+      mobileNumber: 'XXXXXXXX',
+      idProofType: 'Driving License',
+      idProofNumber: 'DL123456',
+    ),
+  ];
+
+  final List<Map<String, dynamic>> inmates = [
+    {
+      "serial": 1,
+      "prisonerName": "Ashok Kumar",
+      "visitorName": "Govind Ram",
+      "genderAge": "M/47",
+      "relation": "Brother",
+      "modeOfVisit": "Yes",
+      "prison": "CENTRAL JAIL NO.2, TIHAR",
+    },
+    {
+      "serial": 2,
+      "prisonerName": "Anil Kumar",
+      "visitorName": "Kewal Singh",
+      "genderAge": "M/57",
+      "relation": "Lawyer",
+      "modeOfVisit": "Yes",
+      "prison": "CENTRAL JAIL NO.2, TIHAR",
+    },
+    {
+      "serial": 3,
+      "prisonerName": "Test",
+      "visitorName": "Rajesh",
+      "genderAge": "M/21",
+      "relation": "Lawyer",
+      "modeOfVisit": "-",
+      "prison": "PHQ",
+    }
+  ];
 
   Map<String, List<VisitorModel>> visitData = {
     'Meeting': [],
   };
 
-  // Sample visit cards data
-  final List<Map<String, dynamic>> visitCards = [
-    {
-      "date": "16",
-      "month": "Aug",
-      "year": "2025",
-      "day": "Saturday",
-      "time": "14:00 - 16:30",
-      "prisonerName": "Ravi Sharma",
-      "prison": "CENTRAL JAIL NO.2, TIHAR",
-      "status": "Pending",
-      "additionalParticipants": "1 additional participant",
-    },
-    {
-      "date": "18",
-      "month": "Aug",
-      "year": "2025",
-      "day": "Monday",
-      "time": "10:00 - 12:00",
-      "prisonerName": "Ashok Kumar",
-      "prison": "CENTRAL JAIL NO.3, TIHAR",
-      "status": "Confirmed",
-      "additionalParticipants": "2 additional participants",
-    },
-    {
-      "date": "20",
-      "month": "Aug",
-      "year": "2025",
-      "day": "Wednesday",
-      "time": "15:00 - 17:00",
-      "prisonerName": "Anil Kumar",
-      "prison": "PHQ DELHI",
-      "status": "Pending",
-      "additionalParticipants": "No additional participants",
-    },
-  ];
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.selectedIndex;
+    initializeVisitData();
+
+    if (widget.fromNavbar) {
+      _showingVisitCards = true;
+      _isReadOnlyMode = false;
+    } else {
+      _showingVisitCards = widget.showVisitCards;
+      _isReadOnlyMode = widget.fromRegisteredInmates;
+    }
+
+    if (!_showingVisitCards) {
+      _populateFormData();
+      _additionalVisitorControllers.add(TextEditingController());
+    }
+  }
 
   Widget _buildNavItem({
     required int index,
@@ -137,6 +214,418 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
           ),
         ),
       ),
+    );
+  }
+
+
+
+  // Widget to build additional visitor card
+  Widget _buildAdditionalVisitorCard(AdditionalVisitor visitor, int index) {
+    return Card(
+      margin: EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: Colors.grey.shade300),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Checkbox(
+                  value: visitor.isSelected,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      visitor.isSelected = value ?? false;
+                    });
+                  },
+                  activeColor: Color(0xFF5A8BBA),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        visitor.visitorName,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Father: ${visitor.fatherName}',
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                      Text(
+                        'Relation: ${visitor.relation}',
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                      Text(
+                        'Mobile: ${visitor.mobileNumber}',
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Photo:',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 4),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Photo upload functionality
+                          _showPhotoUploadDialog(visitor);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[200],
+                          foregroundColor: Colors.black87,
+                          elevation: 0,
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        child: Text(
+                          visitor.photoPath ?? 'Browse...',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'ID Details:',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 4),
+                      DropdownButtonFormField<String>(
+                        value: visitor.idProofType,
+                        decoration: InputDecoration(
+                          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          isDense: true,
+                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.black),
+                        items: _idProofTypes.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value, style: TextStyle(fontSize: 12)),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            visitor.idProofType = newValue;
+                          });
+                        },
+                      ),
+                      SizedBox(height: 8),
+                      TextFormField(
+                        initialValue: visitor.idProofNumber,
+                        decoration: InputDecoration(
+                          hintText: 'Enter Card Number',
+                          hintStyle: TextStyle(fontSize: 12),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          isDense: true,
+                        ),
+                        style: TextStyle(fontSize: 12),
+                        onChanged: (value) {
+                          visitor.idProofNumber = value;
+                        },
+                      ),
+                      SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: () {
+                          // ID proof upload functionality
+                          _showIdProofUploadDialog(visitor);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[200],
+                          foregroundColor: Colors.black87,
+                          elevation: 0,
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        child: Text(
+                          visitor.idProofPath ?? 'Browse...',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Widget to build the additional visitors list view
+  Widget _buildAdditionalVisitorsListView() {
+    return Padding(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Additional Visitors List',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF5A8BBA),
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    _showAdditionalVisitorsList = false;
+                  });
+                },
+                icon: Icon(Icons.close, color: Colors.grey),
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _previousVisitors.length + 1, // +1 for Add button
+              itemBuilder: (context, index) {
+                if (index == _previousVisitors.length) {
+                  // Add new visitor button at the end
+                  return Container(
+                    margin: EdgeInsets.only(top: 16),
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        // Navigate to add new visitor screen
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AddNewVisitorScreen(),
+                          ),
+                        );
+
+                        if (result != null && result is AdditionalVisitor) {
+                          setState(() {
+                            _previousVisitors.add(result);
+                          });
+                        }
+                      },
+                      icon: Icon(Icons.add, color: Colors.white),
+                      label: Text(
+                        'Add New Visitor',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF5A8BBA),
+                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return _buildAdditionalVisitorCard(_previousVisitors[index], index);
+              },
+            ),
+          ),
+          SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    _addSelectedVisitorsToForm();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF5A8BBA),
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'Add Selected Visitors',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addSelectedVisitorsToForm() {
+    List<AdditionalVisitor> selectedVisitors = _previousVisitors
+        .where((visitor) => visitor.isSelected)
+        .toList();
+
+    if (selectedVisitors.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please select at least one visitor'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Clear existing additional visitor controllers
+    for (var controller in _additionalVisitorControllers) {
+      controller.dispose();
+    }
+    _additionalVisitorControllers.clear();
+
+    // Add selected visitors to form
+    for (var visitor in selectedVisitors) {
+      TextEditingController controller = TextEditingController();
+      controller.text = visitor.visitorName;
+      _additionalVisitorControllers.add(controller);
+    }
+
+    setState(() {
+      _showAdditionalVisitorsList = false;
+      // Reset selection for next time
+      for (var visitor in _previousVisitors) {
+        visitor.isSelected = false;
+      }
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${selectedVisitors.length} visitor(s) added successfully'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _showPhotoUploadDialog(AdditionalVisitor visitor) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Upload Photo'),
+          content: Text('Photo upload functionality will be implemented here.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  visitor.photoPath = 'photo_uploaded.jpg';
+                });
+              },
+              child: Text('Upload'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Custom TextFormField widget for read-only fields with styling
+  Widget _buildReadOnlyTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    String? Function(String?)? validator,
+    bool readOnly = false,
+    int maxLines = 1,
+    String? fieldName,
+    bool isRequired = false,
+  }) {
+    return GestureDetector(
+      onTap: readOnly ? () => _showReadOnlyAlert(fieldName ?? label) : null,
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: isRequired ? '$label*' : label,
+          hintText: hint,
+          border: OutlineInputBorder(),
+          fillColor: readOnly ? Colors.grey[200] : Colors.white,
+          filled: true,
+          suffixIcon: readOnly ? Icon(Icons.lock_outline, color: Colors.grey) : null,
+        ),
+        style: TextStyle(
+          color: readOnly ? Colors.grey[600] : Colors.black,
+        ),
+        validator: validator,
+        readOnly: readOnly,
+        maxLines: maxLines,
+        inputFormatters: readOnly ? [] : [
+          TextInputFormatter.withFunction((oldValue, newValue) {
+            String text = newValue.text;
+            if (text.isNotEmpty) {
+              text = text.split(' ').map((word) {
+                if (word.isNotEmpty) {
+                  return word[0].toUpperCase() + word.substring(1).toLowerCase();
+                }
+                return word;
+              }).join(' ');
+            }
+            return TextEditingValue(
+              text: text,
+              selection: TextSelection.collapsed(offset: text.length),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+  void _showIdProofUploadDialog(AdditionalVisitor visitor) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Upload ID Proof'),
+          content: Text('ID proof upload functionality will be implemented here.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  visitor.idProofPath = 'id_proof_uploaded.pdf';
+                });
+              },
+              child: Text('Upload'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -303,8 +792,11 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
   }
 
   void _handleAppBarBack() {
-    if (_showingVisitCards) {
-      // If showing visit cards and came from form navigation, go back to previous screen
+    if (_showAdditionalVisitorsList) {
+      setState(() {
+        _showAdditionalVisitorsList = false;
+      });
+    } else if (_showingVisitCards) {
       if (widget.fromNavbar || widget.fromRegisteredInmates) {
         Navigator.pop(context);
       } else {
@@ -314,18 +806,14 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
         );
       }
     } else {
-      // If in form view
       if (widget.fromChatbot) {
-        // If came from chatbot, go back to chatbot (preserves chat history)
         Navigator.pop(context);
       } else if (widget.fromNavbar && !widget.showVisitCards) {
-        // If came from navbar but not showing cards initially, go back to cards
         setState(() {
           _showingVisitCards = true;
           _clearFormData();
         });
       } else {
-        // Normal app flow - show alert
         _onWillPop();
       }
     }
@@ -370,7 +858,6 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     return currentVisits.where((visit) => visit.status == statusFilter).toList();
   }
 
-  // Method to show read-only field alert
   void _showReadOnlyAlert(String fieldName) {
     showDialog(
       context: context,
@@ -417,41 +904,32 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _selectedIndex = widget.selectedIndex;
-
-    // Initialize visit data first
-    initializeVisitData();
-
-    // Determine initial view and mode
-    // FIXED: When coming from navbar, always show visit cards first
-    if (widget.fromNavbar) {
-      _showingVisitCards = true;
-      _isReadOnlyMode = false; // Don't set readonly initially for navbar
-    } else {
-      _showingVisitCards = widget.showVisitCards;
-      _isReadOnlyMode = widget.fromRegisteredInmates;
-    }
-
-    if (!_showingVisitCards) {
-      // Populate form data if not showing visit cards
-      _populateFormData();
-      // Add initial visitor field
-      _additionalVisitorControllers.add(TextEditingController());
-    }
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: Colors.black),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 14,fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _populateFormData() {
     if (widget.visitorData != null) {
-      // From existing visitor data (editing mode)
       final visitor = widget.visitorData!;
       _prisonerNameController.text = visitor.prisonerName;
       _prisonController.text = visitor.prison ?? '';
       _visitDateController.text = DateFormat('dd/MM/yyyy').format(visitor.visitDate);
       _selectedVisitMode = visitor.mode ? 'Video Conferencing' : 'Physical';
 
-      // Populate additional visitors
       for (int i = 0; i < visitor.additionalVisitors; i++) {
         _additionalVisitorControllers.add(TextEditingController());
         if (i < visitor.additionalVisitorNames.length) {
@@ -459,42 +937,10 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
         }
       }
     } else if (widget.fromRegisteredInmates) {
-      // From registered inmates with prefilled data
       _prisonerNameController.text = widget.prefilledPrisonerName ?? '';
       _prisonController.text = widget.prefilledPrison ?? '';
-      _isReadOnlyMode = true; // Set readonly for registered inmates
+      _isReadOnlyMode = true;
     }
-  }
-
-  // FIXED: Updated this method to properly handle card tap
-  void _navigateToForm(VisitorModel visitor) {
-    setState(() {
-      _showingVisitCards = false;
-      _isReadOnlyMode = true; // Set to read-only when coming from visit cards
-
-      // Populate form with selected visitor data
-      _prisonerNameController.text = visitor.prisonerName;
-      _prisonController.text = visitor.prison ?? '';
-      _visitDateController.text = DateFormat('dd/MM/yyyy').format(visitor.visitDate);
-      _selectedVisitMode = visitor.mode ? 'Video Conferencing' : 'Physical';
-
-      // Clear and populate additional visitors
-      for (var controller in _additionalVisitorControllers) {
-        controller.dispose();
-      }
-      _additionalVisitorControllers.clear();
-
-      // Add initial visitor field
-      _additionalVisitorControllers.add(TextEditingController());
-
-      // Populate additional visitor names if any
-      for (int i = 0; i < visitor.additionalVisitorNames.length; i++) {
-        if (i >= _additionalVisitorControllers.length) {
-          _additionalVisitorControllers.add(TextEditingController());
-        }
-        _additionalVisitorControllers[i].text = visitor.additionalVisitorNames[i];
-      }
-    });
   }
 
   void _addVisitorField() {
@@ -514,7 +960,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
 
   Future<bool> _onWillPop() async {
     if (_showingVisitCards) {
-      return true; // Allow normal back navigation for visit cards
+      return true;
     }
 
     return await showDialog(
@@ -582,113 +1028,112 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     );
   }
 
-  Widget buildVerticalVisitsList() {
-    List<VisitorModel> filteredVisits = getFilteredVisits();
+  Widget _buildVerticalList() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: inmates.length,
+      itemBuilder: (context, index) {
+        final inmate = inmates[index];
+        return Card(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Colors.black, width: 1),
+          ),
+          elevation: 4,
+          shadowColor: Colors.black.withOpacity(0.2),
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with Serial No. and Prisoner Name
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          const Icon(Icons.person, color: Colors.black, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              "${inmate['prisonerName']} (#${inmate['serial']})",
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.download, color: Colors.blue),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Download functionality coming soon')),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                _buildInfoRow(Icons.perm_identity, "Father Name: ${inmate['visitorName']}"),
 
-    if (filteredVisits.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.inbox_outlined,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            SizedBox(height: 16),
-            Text(
-              'No ${selectedStatus.toLowerCase()} ${selectedVisitType.toLowerCase()} found',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _showingVisitCards = false;
-                  _isReadOnlyMode = false; // Allow editing for new visits
-                  _additionalVisitorControllers.add(TextEditingController());
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF5A8BBA),
-                foregroundColor: Colors.white,
-              ),
-              child: Text('Create New Visit'),
-            ),
-          ],
-        ),
-      );
-    }
+                // Gender/Age with arrow icon
+                Row(
+                  children: [
+                    const Icon(Icons.badge, size: 18, color: Colors.black),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        "Gender/Age: ${inmate['genderAge']}",
+                        style: const TextStyle(fontSize: 14,fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MeetFormScreen(
+                              selectedIndex: 1,
+                              fromRegisteredInmates: true,
+                              prefilledPrisonerName: inmate['prisonerName'],
+                              prefilledPrison: inmate['prison'],
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.white,
+                          size: 17,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(16),
-      child: Column(
-        children: filteredVisits.map((visitor) {
-          return VerticalVisitCard(
-            visitor: visitor,
-            onTap: () {
-              print('Selected visit: ${visitor.visitorName} - Prison: ${visitor.prison}');
-              _navigateToForm(visitor); // FIXED: Pass the visitor object
-            }, sourceType: '',
-          );
-        }).toList(),
-      ),
+                _buildInfoRow(Icons.family_restroom, "Relation: ${inmate['relation']}"),
+                _buildInfoRow(Icons.meeting_room, "Mode of Visit: ${inmate['modeOfVisit']}"),
+                _buildInfoRow(Icons.location_on, "Prison: ${inmate['prison']}"),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
-
-  // Custom TextFormField widget for read-only fields with styling
-  Widget _buildReadOnlyTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    String? Function(String?)? validator,
-    bool readOnly = false,
-    int maxLines = 1,
-    String? fieldName,
-    bool isRequired = false,
-  }) {
-    return GestureDetector(
-      onTap: readOnly ? () => _showReadOnlyAlert(fieldName ?? label) : null,
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: isRequired ? '$label*' : label,
-          hintText: hint,
-          border: OutlineInputBorder(),
-          fillColor: readOnly ? Colors.grey[200] : Colors.white,
-          filled: true,
-          suffixIcon: readOnly ? Icon(Icons.lock_outline, color: Colors.grey) : null,
-        ),
-        style: TextStyle(
-          color: readOnly ? Colors.grey[600] : Colors.black,
-        ),
-        validator: validator,
-        readOnly: readOnly,
-        maxLines: maxLines,
-        inputFormatters: readOnly ? [] : [
-          TextInputFormatter.withFunction((oldValue, newValue) {
-            String text = newValue.text;
-            if (text.isNotEmpty) {
-              text = text.split(' ').map((word) {
-                if (word.isNotEmpty) {
-                  return word[0].toUpperCase() + word.substring(1).toLowerCase();
-                }
-                return word;
-              }).join(' ');
-            }
-            return TextEditingValue(
-              text: text,
-              selection: TextSelection.collapsed(offset: text.length),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
 
   // Meeting Form View
   Widget _buildMeetingFormView() {
@@ -789,60 +1234,97 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
               ],
             ),
             SizedBox(height: 20),
-            // Dynamic Additional Visitor Fields
-            for (int i = 0; i < _additionalVisitorControllers.length; i++)
-              Padding(
-                padding: EdgeInsets.only(bottom: 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: CustomTextField(
-                        controller: _additionalVisitorControllers[i],
-                        label: 'Additional Visitor Name ${i + 1}',
-                        hint: 'Enter Additional visitor name',
-                        inputFormatters: [
-                          TextInputFormatter.withFunction((oldValue, newValue) {
-                            String text = newValue.text;
-                            if (text.isNotEmpty) {
-                              text = text.split(' ').map((word) {
-                                if (word.isNotEmpty) {
-                                  return word[0].toUpperCase() + word.substring(1).toLowerCase();
-                                }
-                                return word;
-                              }).join(' ');
-                            }
-                            return TextEditingValue(
-                              text: text,
-                              selection: TextSelection.collapsed(offset: text.length),
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                    if (_additionalVisitorControllers.length > 1)
-                      IconButton(
-                        onPressed: () => _removeVisitorField(i),
-                        icon: Icon(Icons.remove_circle_outline, color: Colors.red),
-                      ),
-                  ],
-                ),
-              ),
 
-            // Add Visitor Button
-            Row(
-              children: [
-                ElevatedButton.icon(
-                  onPressed: _addVisitorField,
-                  icon: Icon(Icons.add, color: Colors.white),
-                  label: Text('Add', style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF5A8BBA),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+            // Additional Visitors Section with improved UI
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Additional Visitors List',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF5A8BBA),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _showAdditionalVisitorsList = true;
+                          });
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF5A8BBA),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Icon(
+                            Icons.add,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                  SizedBox(height: 16),
+
+                  // Dynamic Additional Visitor Fields
+                  // Only show fields when controllers list is not empty
+                  if (_additionalVisitorControllers.isNotEmpty)
+                    for (int i = 0; i < _additionalVisitorControllers.length; i++)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: CustomTextField(
+                                controller: _additionalVisitorControllers[i],
+                                label: 'Additional Visitor Name ${i + 1}',
+                                hint: 'Enter Additional visitor name',
+                                inputFormatters: [
+                                  TextInputFormatter.withFunction((oldValue, newValue) {
+                                    String text = newValue.text;
+                                    if (text.isNotEmpty) {
+                                      text = text.split(' ').map((word) {
+                                        if (word.isNotEmpty) {
+                                          return word[0].toUpperCase() +
+                                              word.substring(1).toLowerCase();
+                                        }
+                                        return word;
+                                      }).join(' ');
+                                    }
+                                    return TextEditingValue(
+                                      text: text,
+                                      selection:
+                                      TextSelection.collapsed(offset: text.length),
+                                    );
+                                  }),
+                                ],
+                              ),
+                            ),
+                            if (_additionalVisitorControllers.length > 1)
+                              IconButton(
+                                onPressed: () => _removeVisitorField(i),
+                                icon: const Icon(Icons.remove_circle_outline,
+                                    color: Colors.red),
+                              ),
+                          ],
+                        ),
+                      ),
+                ],
+              ),
             ),
 
             SizedBox(height: 30),
@@ -882,10 +1364,16 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        backgroundColor: _showingVisitCards ? Colors.grey[100] : Colors.white,
-        body: _showingVisitCards ? buildVerticalVisitsList() : _buildMeetingFormView(),
+        backgroundColor: _showAdditionalVisitorsList
+            ? Colors.white
+            : (_showingVisitCards ? Colors.grey[100] : Colors.white),
+        body: _showAdditionalVisitorsList
+            ? _buildAdditionalVisitorsListView()
+            : (_showingVisitCards ? _buildVerticalList() : _buildMeetingFormView()),
         appBar: AppBar(
-          title: Text(_showingVisitCards ? 'Visit History' : 'Visit Form'),
+          title: Text(_showAdditionalVisitorsList
+              ? 'Additional Visitors'
+              : (_showingVisitCards ? 'Meeting Data' : 'Visit Form')),
           centerTitle: true,
           backgroundColor: const Color(0xFF5A8BBA),
           foregroundColor: Colors.black,
@@ -910,6 +1398,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
               ),
           ],
         ),
+
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: const Color(0xFF5A8BBA),
@@ -970,7 +1459,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => GrievanceHomeScreen(selectedIndex: 3)),
+                        MaterialPageRoute(builder: (context) => GrievanceDetailsScreen(selectedIndex: 3)),
                       );
                     },
                   ),
@@ -994,3 +1483,5 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     super.dispose();
   }
 }
+
+

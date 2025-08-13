@@ -45,7 +45,7 @@ class _DrawerMenuState extends State<DrawerMenu> {
         'icon': Icons.share,
         'label': 'Share Us',
         'isShare': true,
-        'message': 'Hey! Check out this awesome app: https://play.google.com/store/apps/details?id=com.example.emulakat'
+        'message': 'Hey! Check out this awesome app: https://play.google.com/store/apps/details?id=com.nic.emulakat'
       },
       {'icon': Icons.star_rate, 'label': 'Rate Us', 'isRate': true},
     ];

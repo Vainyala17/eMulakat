@@ -357,8 +357,8 @@ class _ParoleScreenState extends State<ParoleScreen> {
 
                 CustomTextField(
                   controller: _AddressPlaceController,
-                  label: 'Message*',
-                  hint: 'Enter issue description',
+                  label: 'Address of Place to Visit*',
+                  hint: 'Application Testing',
                   maxLines: 5, // 👈 Makes it look like a textarea
                   maxLength: 500, // Optional: increase limit
                   validator: (value) {

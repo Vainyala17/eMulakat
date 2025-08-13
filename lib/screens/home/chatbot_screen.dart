@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../dashboard/evisitor_pass_screen.dart';
+import '../../dashboard/grievance/grievance_details_screen.dart';
 import '../../dashboard/grievance/grievance_home.dart';
 import '../../dashboard/visit/whom_to_meet_screen.dart';
 import '../../models/keyword_model.dart';
@@ -562,7 +563,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           print('✅ Navigating to GrievanceHomeScreen');
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => GrievanceHomeScreen(fromChatbot: true)),
+            MaterialPageRoute(builder: (context) => GrievanceDetailsScreen(fromChatbot: true)),
           ).then((_) {
             _showReturnMessage();
           }).catchError((error) {

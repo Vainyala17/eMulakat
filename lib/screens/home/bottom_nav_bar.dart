@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../dashboard/grievance/grievance_details_screen.dart';
 import '../../dashboard/grievance/grievance_home.dart';
 import '../../dashboard/parole/parole_home.dart';
 import '../../dashboard/visit/visit_home.dart';
@@ -135,7 +136,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                   onTap: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => GrievanceHomeScreen(selectedIndex: 3)),
+                      MaterialPageRoute(builder: (context) => GrievanceDetailsScreen(selectedIndex: 3)),
                     );
                   },
                 ),
