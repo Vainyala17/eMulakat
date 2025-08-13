@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../pdf_viewer_screen.dart';
 import '../../screens/home/home_screen.dart';
+import '../grievance/grievance_details_screen.dart';
 import '../grievance/grievance_home.dart';
 import '../visit/whom_to_meet_screen.dart';
 
@@ -203,7 +204,7 @@ class _ParoleHomeScreenState extends State<ParoleHomeScreen> {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => GrievanceHomeScreen(selectedIndex: 3),
+                          builder: (context) => GrievanceDetailsScreen(selectedIndex: 3),
                         ),
                       );
                     },

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../dashboard/grievance/grievance_details_screen.dart';
 import '../../dashboard/grievance/grievance_home.dart';
 import '../../dashboard/parole/parole_home.dart';
 import '../../dashboard/visit/visit_home.dart';
@@ -48,7 +49,7 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: Colors.grey[700]),
+          Icon(icon, size: 18, color: Colors.black),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
@@ -88,10 +89,19 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded( // Added: Prevent overflow
-                        child: _buildInfoRow(
-                          Icons.person,
-                          "${inmate['serial']}. ${inmate['prisonerName']}",
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(Icons.person, color: Colors.black,size: 18,), // Prisoner icon
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                "${inmate['prisonerName']} (#${inmate['serial']})",
+                                style: const TextStyle(fontSize: 16,fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis, // Avoid overflow
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       IconButton(
@@ -106,7 +116,7 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  _buildInfoRow(Icons.people, "Visitor: ${inmate['visitorName']}"),
+                  _buildInfoRow(Icons.perm_identity, "Father Name: ${inmate['visitorName']}"),
                   _buildInfoRow(Icons.badge, "Gender/Age: ${inmate['genderAge']}"),
                   _buildInfoRow(Icons.family_restroom, "Relation: ${inmate['relation']}"),
                   _buildInfoRow(Icons.meeting_room, "Mode of Visit: ${inmate['modeOfVisit']}"),
@@ -168,7 +178,7 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
                             Navigator.push( // Fixed: Use push instead of pushReplacement
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const GrievanceHomeScreen(selectedIndex: 3), // Added const
+                                builder: (context) => const GrievanceDetailsScreen(selectedIndex: 3), // Added const
                               ),
                             );
                           },

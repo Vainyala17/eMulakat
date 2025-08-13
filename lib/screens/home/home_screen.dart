@@ -3,6 +3,7 @@ import 'package:eMulakat/screens/home/registered_inmates.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../dashboard/evisitor_pass_screen.dart';
+import '../../dashboard/grievance/grievance_details_screen.dart';
 import '../../dashboard/grievance/grievance_home.dart';
 import '../../dashboard/parole/parole_home.dart';
 import '../../dashboard/visit/visit_home.dart';
@@ -44,7 +45,6 @@ class _HomeScreenState extends State<HomeScreen>
 
     // Set the correct bottom navigation index based on selected tab
     _currentBottomNavIndex = widget.selectedIndex == 1 ? 0 : 0; // 0 for Dashboard
-
     _checkProfileStatus();
     initializeTts();
     initializeStt();
@@ -81,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen>
         return AlertDialog(
           backgroundColor: Colors.white,
           title: const Text(
-            'Alert!',
+            'Alert!\nIncomplete Profile',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: AppColors.primary,
@@ -89,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen>
             textAlign: TextAlign.center,
           ),
           content: Text(
-            'Please complete your profile by adding your photo and ID proof. This will allow you to raise Meeting, Parole or Grievance requests for your registered inmates',
+            'Please complete your Profile by adding your photo and ID proof to allow to raise Meeting, Parole, Grievance requests for your Registered Inmates.',
             style: TextStyle(fontSize: 16),
             textAlign: TextAlign.center,
           ),
@@ -138,12 +138,6 @@ class _HomeScreenState extends State<HomeScreen>
     });
   }
 
-  void _handleRestrictedAction() {
-    if (!_isProfileCompleted) {
-      _showProfileUpdateAlert();
-    }
-  }
-
   // Home Tab Content
   Widget _buildHomeTabContent() {
     return SingleChildScrollView(
@@ -173,10 +167,6 @@ class _HomeScreenState extends State<HomeScreen>
                       'assets/images/meeting.png',
                       width: 40,
                       height: 40,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(Icons.meeting_room, size: 40,
-                            color: AppColors.primary);
-                      },
                     ),
                   ),
                   SizedBox(width: 10),
@@ -194,10 +184,6 @@ class _HomeScreenState extends State<HomeScreen>
                       'assets/images/parole.png',
                       width: 40,
                       height: 40,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(
-                            Icons.gavel, size: 40, color: AppColors.primary);
-                      },
                     ),
                   ),
                   SizedBox(width: 10),
@@ -215,10 +201,6 @@ class _HomeScreenState extends State<HomeScreen>
                       'assets/images/grievance.png',
                       width: 40,
                       height: 40,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(Icons.report_problem, size: 40,
-                            color: AppColors.primary);
-                      },
                     ),
                   ),
                 ],
@@ -338,60 +320,6 @@ class _HomeScreenState extends State<HomeScreen>
 
           SizedBox(height: 30),
 
-          // E-Pass Button
-          Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(
-              child: SizedBox(
-                width: 160,
-                child: ElevatedButton(
-                  onPressed: () {
-                    List<VisitorModel> filteredVisits = getFilteredVisits();
-                    if (filteredVisits.isNotEmpty) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              eVisitorPassScreen(visitor: filteredVisits.first),
-                        ),
-                      );
-                    } else {
-                      showDialog(
-                        context: context,
-                        builder: (context) =>
-                            AlertDialog(
-                              title: Text('No Visit Available'),
-                              content: Text('No ${selectedStatus
-                                  .toLowerCase()} ${selectedVisitType
-                                  .toLowerCase()} available for e-pass generation.'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text('OK'),
-                                ),
-                              ],
-                            ),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    'eVisitor Pass',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -574,17 +502,30 @@ class _HomeScreenState extends State<HomeScreen>
               ],
             ),
           ],
-          bottom: TabBar(
-            controller: _tabController,
-            labelColor: Colors.black,
-            unselectedLabelColor: Colors.black54,
-            indicatorColor: Colors.white,
-            indicatorWeight: 5,
-            tabs: [
-              Tab(text: 'Dashboard'),
-              Tab(text: 'My Registered Inmates'),
-            ],
-          ),
+            bottom: TabBar(
+              controller: _tabController,
+              labelColor: Colors.black,
+              unselectedLabelColor: Colors.black54,
+              indicatorColor: Colors.white,
+              indicatorWeight: 5,
+
+              // Text style for selected tab
+              labelStyle: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 15, // Increase font size here
+              ),
+
+              // Text style for unselected tabs
+              unselectedLabelStyle: TextStyle(
+                fontWeight: FontWeight.normal,
+                fontSize: 14,
+              ),
+
+              tabs: const [
+                Tab(text: 'Dashboard'),
+                Tab(text: 'My Registered Inmates'),
+              ],
+            )
         ),
         drawer: DrawerMenu(),
         body: Stack(
@@ -671,7 +612,7 @@ class _HomeScreenState extends State<HomeScreen>
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => GrievanceHomeScreen(selectedIndex: 3)),
+                        MaterialPageRoute(builder: (context) => GrievanceDetailsScreen(selectedIndex: 3)),
                       );
                     },
                   ),
