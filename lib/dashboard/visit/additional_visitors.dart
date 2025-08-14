@@ -1,5 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:image/image.dart' as img;
+import 'package:image_picker/image_picker.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/form_section_title.dart';
@@ -17,6 +23,8 @@ class AdditionalVisitor {
   String? idProofNumber;
   String? idProofPath;
   bool isSelected;
+  File? passportImage;
+  File? idProofImage;
 
   AdditionalVisitor({
     required this.visitorName,
@@ -28,6 +36,8 @@ class AdditionalVisitor {
     this.idProofNumber,
     this.idProofPath,
     this.isSelected = false,
+    this.passportImage,
+    this.idProofImage,
   });
 }
 
@@ -44,10 +54,15 @@ class _AddNewVisitorScreenState extends State<AddNewVisitorScreen> {
   final TextEditingController _idNumberController = TextEditingController();
 
   String? _selectedRelation;
-  String? _selectedIdProofType;
-  String? _photoPath;
-  String? _idProofPath;
-
+  String? _selectedIdProof;
+  // Separate variables for different images
+  File? _passportImage;  // For passport photo
+  File? _idProofImage;   // For ID proof image
+  List<num> laplacianKernel = [
+    0,  1,  0,
+    1, -4,  1,
+    0,  1,  0,
+  ];
   final List<String> _relations = [
     'Father',
     'Mother',
@@ -63,8 +78,16 @@ class _AddNewVisitorScreenState extends State<AddNewVisitorScreen> {
     'Lawyer',
     'Others'
   ];
-
-  final List<String> _idProofTypes = [
+  final Map<String, int> _idLimits = {
+    'Aadhar Card': 12,
+    'Pan Card': 10,
+    'Driving License': 16,
+    'Passport': 8,
+    'Voter ID': 10,
+    'Others': 20,
+    'Not Available': 0,
+  };
+  final List<String> _idProofs = [
     'Aadhar Card',
     'Voter ID',
     'Passport',
@@ -72,6 +95,250 @@ class _AddNewVisitorScreenState extends State<AddNewVisitorScreen> {
     'PAN Card',
     'Ration Card'
   ];
+
+  double computeLaplacianVariance(img.Image image) {
+    final grayscale = img.grayscale(image);
+
+    // Correct Laplacian kernel as a 3x3 matrix
+    final kernel = [
+      [0, -1, 0],
+      [-1, 4, -1],
+      [0, -1, 0],
+    ];
+
+    int width = grayscale.width;
+    int height = grayscale.height;
+
+    double sum = 0;
+    double sumSquared = 0;
+    int pixelCount = 0;
+
+    // Apply Laplacian filter manually
+    for (int y = 1; y < height - 1; y++) {
+      for (int x = 1; x < width - 1; x++) {
+        double result = 0;
+
+        for (int ky = 0; ky < 3; ky++) {
+          for (int kx = 0; kx < 3; kx++) {
+            final pixel = grayscale.getPixel(x + kx - 1, y + ky - 1);
+            final luminance = img.getLuminance(pixel).toDouble();
+            result += luminance * kernel[ky][kx];
+          }
+        }
+
+        sum += result;
+        sumSquared += result * result;
+        pixelCount++;
+      }
+    }
+
+    if (pixelCount == 0) return 0;
+
+    double mean = sum / pixelCount;
+    double variance = (sumSquared / pixelCount) - (mean * mean);
+    return variance;
+  }
+
+  Future<bool> isImageSharpAndFaceVisible(File file, {double threshold = 100}) async {
+    try {
+      // Decode image
+      final bytes = await file.readAsBytes();
+      final image = img.decodeImage(bytes);
+      if (image == null) return false;
+
+      // Sharpness check
+      final variance = computeLaplacianVariance(image);
+      print('Sharpness (variance): $variance');
+      final isSharp = variance > threshold;
+
+      if (!isSharp) return false;
+
+      // Face detection
+      final inputImage = InputImage.fromFile(file);
+      final faceDetector = FaceDetector(
+        options: FaceDetectorOptions(
+          performanceMode: FaceDetectorMode.accurate, // Changed from fast to accurate
+          enableContours: false,
+          enableClassification: false,
+        ),
+      );
+
+      final faces = await faceDetector.processImage(inputImage);
+      await faceDetector.close();
+
+      final hasFace = faces.isNotEmpty;
+      print('Face detected: $hasFace');
+
+      return hasFace;
+    } catch (e) {
+      print('Error in face detection: $e');
+      return false;
+    }
+  }
+  // Pick image function with type parameter
+  Future<void> _pickImage(String imageType) async {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.camera_alt),
+                title: Text('Camera'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _getImage(ImageSource.camera, imageType);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.image_search),
+                title: Text('Gallery'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _getImage(ImageSource.gallery, imageType);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Get image function with type parameter
+  Future<void> _getImage(ImageSource source, String imageType) async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(
+      source: source,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+    );
+
+    if (pickedFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No image selected'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    final file = File(pickedFile.path);
+    final fileSize = await file.length();
+
+    // Fix: Changed from 10000 * 1024 to 1000 * 1024 for 1MB limit
+    if (fileSize > 1000 * 1024) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Selected image exceeds 1MB limit'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (imageType == 'passport') {
+      // Show loading indicator during validation
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      try {
+        final isValid = await isImageSharpAndFaceVisible(file);
+        Navigator.pop(context); // Close loading dialog
+
+        if (!isValid) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Photo must be sharp and contain a visible face'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+        setState(() {
+          _passportImage = file;
+        });
+      } catch (e) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error validating image: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } else if (imageType == 'idproof') {
+      if (_idNumberController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Please enter ID number before uploading document'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      try {
+        final isMatch = await isIdNumberInDocument(file, _idNumberController.text);
+        Navigator.pop(context); // Close loading dialog
+
+        if (!isMatch) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('ID number does not match document'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        setState(() {
+          _idProofImage = file;
+        });
+      } catch (e) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error validating document: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<bool> isIdNumberInDocument(File imageFile, String enteredNumber) async {
+    final inputImage = InputImage.fromFile(imageFile);
+    final recognizer = TextRecognizer();
+    final result = await recognizer.processImage(inputImage);
+    await recognizer.close();
+    print(result.text);
+    final extractedText = result.text.replaceAll(RegExp(r'\s+'), '');
+    print(extractedText);
+    final cleanedInput = enteredNumber.replaceAll(RegExp(r'\s+'), '');
+
+    return extractedText.contains(cleanedInput);
+  }
+
+  bool isImageUnderSizeLimit(File imageFile, {int maxKB = 10000}) {
+    final bytes = imageFile.lengthSync();
+    return bytes <= maxKB * 1024;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -219,310 +486,167 @@ class _AddNewVisitorScreenState extends State<AddNewVisitorScreen> {
               SizedBox(height: 24),
 
               // Photo Upload Section
-              Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Photo Upload*',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF5A8BBA),
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            height: 120,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.grey[300]!),
-                            ),
-                            child: _photoPath == null
-                                ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.camera_alt_outlined,
-                                  size: 40,
-                                  color: Colors.grey[400],
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'No photo selected',
-                                  style: TextStyle(
-                                    color: Colors.grey[500],
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            )
-                                : Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.check_circle,
-                                    color: Colors.green,
-                                    size: 40,
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    'Photo uploaded',
-                                    style: TextStyle(
-                                      color: Colors.green,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+              // Passport Photo Upload
+              Align(
+                alignment: Alignment.topRight,
+                child: Container(
+                  width: 100,
+                  height: 130,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: _passportImage != null
+                      ? Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          _passportImage!,
+                          width: 100,
+                          height: 130,
+                          fit: BoxFit.cover,
                         ),
-                        SizedBox(width: 16),
-                        Column(
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: () => _uploadPhoto(),
-                              icon: Icon(Icons.upload, color: Colors.white, size: 18),
-                              label: Text(
-                                'Browse',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xFF5A8BBA),
-                                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                              ),
-                            ),
-                            if (_photoPath != null)
-                              TextButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _photoPath = null;
-                                  });
-                                },
-                                child: Text(
-                                  'Remove',
-                                  style: TextStyle(color: Colors.red, fontSize: 12),
-                                ),
-                              ),
-                          ],
+                      ),
+                      Positioned(
+                        top: 3,
+                        right: 3,
+                        child: IconButton(
+                          icon: Icon(Icons.close, size: 18, color: Colors.red),
+                          padding: EdgeInsets.zero,
+                          constraints: BoxConstraints(),
+                          onPressed: () {
+                            setState(() {
+                              _passportImage = null;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  )
+                      : InkWell(
+                    onTap: () => _pickImage('passport'),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.upload, size: 30, color: Colors.black,),
+                        SizedBox(height: 5),
+                        Text(
+                          'Upload\nPhoto',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 12),
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
               SizedBox(height: 24),
 
-              // ID Proof Section
-              Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
+              DropdownButtonFormField<String>(
+                value: _selectedIdProof,
+                decoration: InputDecoration(
+                  labelText: 'Select Identity Proof',
+                  border: OutlineInputBorder(),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'ID Proof Details*',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF5A8BBA),
-                      ),
-                    ),
-                    SizedBox(height: 16),
+                items: _idProofs.map((idProof) {
+                  return DropdownMenuItem(
+                    value: idProof,
+                    child: Text(idProof),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedIdProof = value;
+                    _idNumberController.clear();
+                  });
+                },
+                validator: (value) => value == null ? 'Please select ID proof' : null,
+              ),
+              SizedBox(height: 16),
 
-                    // ID Proof Type Dropdown
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'ID Proof Type*',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        DropdownButtonFormField<String>(
-                          value: _selectedIdProofType,
-                          decoration: InputDecoration(
-                            hintText: 'Select ID proof type',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            fillColor: Colors.white,
-                            filled: true,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          ),
-                          items: _idProofTypes.map((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value, style: TextStyle(fontSize: 14)),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              _selectedIdProofType = newValue;
-                            });
-                          },
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please select ID proof type';
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-
-                    // ID Number
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'ID Number*',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        TextFormField(
-                          controller: _idNumberController,
-                          decoration: InputDecoration(
-                            hintText: 'Enter ID number',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            fillColor: Colors.white,
-                            filled: true,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          ),
-                          style: TextStyle(fontSize: 14),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'ID number is required';
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-
-                    // ID Proof Upload
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: Colors.grey[300]!),
-                            ),
-                            child: _idProofPath == null
-                                ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.description_outlined,
-                                  size: 30,
-                                  color: Colors.grey[400],
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'No file selected',
-                                  style: TextStyle(
-                                    color: Colors.grey[500],
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ],
-                            )
-                                : Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.check_circle,
-                                    color: Colors.green,
-                                    size: 30,
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'File uploaded',
-                                    style: TextStyle(
-                                      color: Colors.green,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        Column(
-                          children: [
-                            ElevatedButton(
-                              onPressed: () => _uploadIdProof(),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xFF5A8BBA),
-                                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                              ),
-                              child: Text(
-                                'Browse',
-                                style: TextStyle(color: Colors.white, fontSize: 12),
-                              ),
-                            ),
-                            if (_idProofPath != null)
-                              TextButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _idProofPath = null;
-                                  });
-                                },
-                                child: Text(
-                                  'Remove',
-                                  style: TextStyle(color: Colors.red, fontSize: 10),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
+              // ID Number
+              if (_selectedIdProof != null && _selectedIdProof != 'Not Available')
+                CustomTextField(
+                  controller: _idNumberController,
+                  label: 'ID Number*',
+                  hint: 'Enter ${_selectedIdProof} Number',
+                  validator: (value) => Validators.validateIdNumber(value, _selectedIdProof!, _idLimits[_selectedIdProof!] ?? 0),
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(_idLimits[_selectedIdProof!] ?? 0),
+                    if (_selectedIdProof == 'Pan Card')
+                      FilteringTextInputFormatter.allow(RegExp(r'[A-Z0-9]'))
+                    else if (_selectedIdProof == 'Passport')
+                      FilteringTextInputFormatter.allow(RegExp(r'[A-Z0-9]'))
+                    else
+                      FilteringTextInputFormatter.digitsOnly,
+                    if (_selectedIdProof == 'Pan Card')
+                      TextInputFormatter.withFunction((oldValue, newValue) {
+                        return TextEditingValue(
+                          text: newValue.text.toUpperCase(),
+                          selection: newValue.selection,
+                        );
+                      }),
                   ],
                 ),
-              ),
-              SizedBox(height: 32),
+              SizedBox(height: 16),
 
+              // ID Proof Image Upload
+              Align(
+                alignment: Alignment.center,
+                child: Container(
+                  width: 500,
+                  height: 130,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: _idProofImage != null
+                      ? Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          _idProofImage!,
+                          width: 500,
+                          height: 150,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: IconButton(
+                          icon: Icon(Icons.close, size: 18, color: Colors.red),
+                          padding: EdgeInsets.zero,
+                          constraints: BoxConstraints(),
+                          onPressed: () {
+                            setState(() {
+                              _idProofImage = null;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  )
+                      : InkWell(
+                    onTap: () => _pickImage('idproof'),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.upload, size: 50, color: Colors.black,),
+                        SizedBox(height: 8),
+                        Text(
+                          'Upload ID Proof Image',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 15),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 24),
               // Save Button
               Row(
                 children: [
@@ -543,134 +667,10 @@ class _AddNewVisitorScreenState extends State<AddNewVisitorScreen> {
     );
   }
 
-  void _uploadPhoto() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Upload Photo'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: Icon(Icons.camera_alt),
-                title: Text('Take Photo'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  setState(() {
-                    _photoPath = 'camera_photo.jpg';
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Photo captured successfully'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.photo_library),
-                title: Text('Choose from Gallery'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  setState(() {
-                    _photoPath = 'gallery_photo.jpg';
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Photo selected successfully'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _uploadIdProof() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Upload ID Proof'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: Icon(Icons.camera_alt),
-                title: Text('Take Photo'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  setState(() {
-                    _idProofPath = 'id_photo.jpg';
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('ID proof captured successfully'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.photo_library),
-                title: Text('Choose from Gallery'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  setState(() {
-                    _idProofPath = 'id_document.pdf';
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('ID proof selected successfully'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.document_scanner),
-                title: Text('Scan Document'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  setState(() {
-                    _idProofPath = 'scanned_document.pdf';
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Document scanned successfully'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void _saveVisitor() {
     if (_formKey.currentState!.validate()) {
       // Check if photo is uploaded
-      if (_photoPath == null) {
+      if (_passportImage == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Please upload a photo'),
@@ -680,8 +680,8 @@ class _AddNewVisitorScreenState extends State<AddNewVisitorScreen> {
         return;
       }
 
-      // Check if ID proof is uploaded
-      if (_idProofPath == null) {
+      // Check if ID proof is uploaded (only if ID proof type is selected)
+      if (_selectedIdProof != null && _selectedIdProof != 'Not Available' && _idProofImage == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Please upload ID proof'),
@@ -697,10 +697,10 @@ class _AddNewVisitorScreenState extends State<AddNewVisitorScreen> {
         fatherName: _fatherNameController.text.trim(),
         relation: _selectedRelation!,
         mobileNumber: _mobileController.text.trim(),
-        photoPath: _photoPath,
-        idProofType: _selectedIdProofType,
+        passportImage: _passportImage, // Fixed: use _passportImage instead of _idProofImage
+        idProofType: _selectedIdProof,
         idProofNumber: _idNumberController.text.trim(),
-        idProofPath: _idProofPath,
+        idProofImage: _idProofImage,
       );
 
       // Show success dialog

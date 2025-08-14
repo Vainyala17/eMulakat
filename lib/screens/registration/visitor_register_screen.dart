@@ -34,36 +34,18 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _idNumberController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _mobileController = TextEditingController();
-  final TextEditingController _otpController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
-  final String _dummyOtp = "123456";
   String? _selectedGender;
   String? _selectedIdProof;
-  bool _isInternationalVisitor = false;
   List<num> laplacianKernel = [
     0,  1,  0,
     1, -4,  1,
     0,  1,  0,
   ];
-
-
-  // Separate variables for different images
   File? _passportImage;  // For passport photo
   File? _idProofImage;   // For ID proof image
-
-  // OTP related variables
-  bool _isOtpSent = false;
-  bool _isOtpVerified = false;
-  String? _generatedOtp;
-  int _resendCounter = 0;
-  bool _canResend = true;
-  Timer? _resendTimer;
-  int _secondsRemaining = 30;
-
   final List<String> _genders = ['Male', 'Female', 'Transgender'];
   final List<String> _idProofs = ['Aadhar Card', 'Pan Card', 'Driving License', 'Passport', 'Voter ID', 'Others', 'Not Available'];
 
@@ -82,28 +64,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     super.initState();
   }
 
-  // Generate random OTP
-  String _generateOtp() {
-    // Return dummy OTP for testing
-    return _dummyOtp;
-  }
 
-  void _startResendTimer() {
-    _secondsRemaining = 30;
-    _resendTimer?.cancel();
-    _resendTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-      if (_secondsRemaining > 0) {
-        setState(() {
-          _secondsRemaining--;
-        });
-      } else {
-        timer.cancel();
-        setState(() {
-          _canResend = true;
-        });
-      }
-    });
-  }
 
   double computeLaplacianVariance(img.Image image) {
     final grayscale = img.grayscale(image);
@@ -184,54 +145,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     return bytes <= maxKB * 1024;
   }
 
-  // Send OTP function
-  void _sendOtp() {
-    bool isValid = false;
-    String recipient = '';
-
-    if (_isInternationalVisitor) {
-      if (_emailController.text.isNotEmpty &&
-          Validators.validateEmail(_emailController.text) == null) {
-        isValid = true;
-        recipient = _emailController.text;
-      }
-    } else {
-      if (_mobileController.text.length == 10) {
-        isValid = true;
-        recipient = _mobileController.text;
-      }
-    }
-
-    if (isValid) {
-      setState(() {
-        _generatedOtp = _generateOtp();
-        _isOtpSent = true;
-        _canResend = false;
-        _resendCounter = 0; // Reset counter on fresh send
-      });
-
-      print('Generated OTP: $_generatedOtp'.tr());
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'OTP resent to $recipient'.tr(),
-            style: TextStyle(color: Colors.black), // <-- Text color
-          ),
-          backgroundColor: Colors.blue, // <-- Background color
-        ),
-      );
-
-      _startResendTimer(); // ✅ Start countdown
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please enter a valid ${_isInternationalVisitor ? "email" : "mobile number"}'.tr()),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
   void showSuccessDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -291,75 +204,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
         );
       },
     );
-  }
-  // Verify OTP function
-  void _verifyOtp() {
-    if (_otpController.text == _generatedOtp) {
-      setState(() {
-        _isOtpVerified = true;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'OTP verified successfully!'.tr(),
-            style: TextStyle(color: Colors.black), // <-- Text color
-          ),
-          backgroundColor: Color(0xFF7AA9D4),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Invalid OTP. Please try again.'.tr()),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  // Resend OTP function
-  void _resendOtp() {
-    if (_canResend && _resendCounter < 3) {
-      setState(() {
-        _resendCounter++;
-        _generatedOtp = _generateOtp();
-        _canResend = false;
-        _otpController.clear();
-      });
-
-      print('Resent OTP: $_generatedOtp'.tr());
-
-      String recipient = _isInternationalVisitor ? _emailController.text : _mobileController.text;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'OTP resent to $recipient'.tr(),
-            style: TextStyle(color: Colors.black), // <-- Text color
-          ),
-          backgroundColor: Colors.blue, // <-- Background color
-        ),
-      );
-      _startResendTimer();
-
-      // Enable resend after 30 seconds
-      Future.delayed(Duration(seconds: 30), () {
-        if (mounted) {
-          setState(() {
-            _canResend = true;
-          });
-        }
-      });
-    }
-  }
-
-  bool _canSendOtp() {
-    if (_isInternationalVisitor) {
-      return _emailController.text.isNotEmpty &&
-          Validators.validateEmail(_emailController.text) == null &&
-          !_isOtpVerified;
-    } else {
-      return _mobileController.text.length == 10 && !_isOtpVerified;
-    }
   }
 
   // Pick image function with type parameter
@@ -800,191 +644,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
                     ),
                   ),
                   SizedBox(height: 16),
-
-                  // International Visitor Checkbox
-                  CheckboxListTile(
-                    title: Text('International Visitor'.tr()),
-                    value: _isInternationalVisitor,
-                    onChanged: (value) {
-                      setState(() {
-                        _isInternationalVisitor = value ?? false;
-                        // Clear all fields when switching
-                        _emailController.clear();
-                        _mobileController.clear();
-                        _otpController.clear();
-                        _isOtpSent = false;
-                        _isOtpVerified = false;
-                        _resendCounter = 0;
-                        _canResend = true;
-                      });
-                    },
-                  ),
-
-                  // Email (for international visitors or optional for others)
-                  if (_isInternationalVisitor) ...  [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomTextField(
-                            controller: _emailController,
-                            label: 'Email ID*'.tr(),
-                            hint: 'Enter Your Email ID',
-                            keyboardType: TextInputType.emailAddress,
-                            validator: Validators.validateEmail,
-                            onChanged: (value) {
-                              setState(() {
-                                if (Validators.validateEmail(value) != null) {
-                                  _isOtpSent = false;
-                                  _isOtpVerified = false;
-                                  _otpController.clear();
-                                }
-                              });
-                            },
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        if (_canSendOtp())
-                          ElevatedButton(
-                            onPressed: _isOtpSent ? null : _sendOtp,
-                            child: Text(_isOtpSent ? 'Sent'.tr() : 'Get OTP'.tr()),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _isOtpSent ? Colors.black : Color(0xFF7AA9D4),
-                              foregroundColor: Colors.black,
-                            ),
-                          ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-                  ],
-
-                  // Mobile Field (for domestic visitors)
-                  if (!_isInternationalVisitor) ...[
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomTextField(
-                            controller: _mobileController,
-                            label: 'Mobile No*'.tr(),
-                            hint: 'Enter Your Mobile Number',
-                            keyboardType: TextInputType.phone,
-                            validator: Validators.validateMobile,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(10),
-                            ],
-                            onChanged: (value) {
-                              setState(() {
-                                if (value.length != 10) {
-                                  _isOtpSent = false;
-                                  _isOtpVerified = false;
-                                  _otpController.clear();
-                                }
-                              });
-                            },
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        if (_canSendOtp())
-                          ElevatedButton(
-                            onPressed: _isOtpSent ? null : _sendOtp,
-                            child: Text(_isOtpSent ? 'Sent'.tr() : 'Get OTP'.tr()),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _isOtpSent ? Colors.black : Color(0xFF7AA9D4),
-                              foregroundColor: Colors.black,
-                            ),
-                          ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-                  ],
-
-                  // OTP Verification Section
-                  if (_isOtpSent && !_isOtpVerified) ...[
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomTextField(
-                            controller: _otpController,
-                            label: 'Enter OTP*'.tr(),
-                            hint: 'Enter 6-digit OTP',
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(6),
-                            ],
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter OTP';
-                              }
-                              if (value.length != 6) {
-                                return 'OTP must be 6 digits';
-                              }
-                              return null;
-                            },
-                            onChanged: (val) {
-                              setState(() {}); // Refresh the verify button state
-                            },
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Column(
-                          children: [
-                            ElevatedButton(
-                              onPressed: _otpController.text.length == 6 ? _verifyOtp : null,
-                              child: Text('Verify'.tr()),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xFF7AA9D4),
-                                foregroundColor: Colors.black, // <-- Set text/icon color to white
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            TextButton(
-                              onPressed: _canResend && _resendCounter < 3 ? _resendOtp : null,
-                              child: Text(
-                                _canResend
-                                    ? 'Resend'.tr()
-                                    : 'Wait ${_secondsRemaining}s.tr()',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 10),
-                    if (_resendCounter > 0)
-                      Text(
-                        'Resend attempts: $_resendCounter/3'.tr(),
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                    SizedBox(height: 10),
-                  ],
-
-                  // OTP Verified Message
-                  if (_isOtpVerified) ...[
-                    Container(
-                      padding: EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(5),
-                        border: Border.all(color: Color(0xFF7AA9D4)),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.check_circle, color: Color(0xFF7AA9D4)),
-                          SizedBox(width: 10),
-                          Text(
-                            _isInternationalVisitor
-                                ? 'Email verified successfully!'.tr()
-                                : 'Mobile number verified successfully!'.tr(),
-                            style: TextStyle(color: Color(0xFF7AA9D4), fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                  ],
-
+                  
                   // Password Field
                   CustomTextField(
                     label: 'Password*'.tr(),
@@ -1049,9 +709,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     _addressController.dispose();
     _ageController.dispose();
     _idNumberController.dispose();
-    _emailController.dispose();
-    _mobileController.dispose();
-    _otpController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();

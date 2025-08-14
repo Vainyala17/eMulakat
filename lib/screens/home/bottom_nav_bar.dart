@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../dashboard/grievance/grievance_details_screen.dart';
 import '../../dashboard/grievance/grievance_home.dart';
 import '../../dashboard/parole/parole_home.dart';
+import '../../dashboard/parole/parole_screen.dart';
 import '../../dashboard/visit/visit_home.dart';
 import '../../dashboard/visit/whom_to_meet_screen.dart';
 import 'home_screen.dart';
@@ -123,7 +124,7 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ParoleHomeScreen(selectedIndex: 2),
+                        builder: (context) => ParoleScreen(selectedIndex: 2),
                       ),
                     );
                   },
