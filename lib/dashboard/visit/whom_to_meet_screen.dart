@@ -1,21 +1,23 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:image/image.dart' as img;
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../../models/visitor_model.dart';
 import '../../pdf_viewer_screen.dart';
 import '../../screens/home/home_screen.dart';
-import '../../screens/home/vertical_visit_card.dart';
 import '../../utils/color_scheme.dart';
-import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/form_section_title.dart';
 import '../../utils/validators.dart';
 import '../grievance/grievance_details_screen.dart';
-import '../grievance/grievance_home.dart';
-import '../parole/parole_home.dart';
+import '../parole/parole_screen.dart';
 import 'additional_visitors.dart';
 
-// Model for additional visitor data
 class AdditionalVisitor {
   String visitorName;
   String fatherName;
@@ -26,6 +28,8 @@ class AdditionalVisitor {
   String? idProofNumber;
   String? idProofPath;
   bool isSelected;
+  File? passportImage;  // Add this
+  File? idProofImage;   // Add this
 
   AdditionalVisitor({
     required this.visitorName,
@@ -37,6 +41,8 @@ class AdditionalVisitor {
     this.idProofNumber,
     this.idProofPath,
     this.isSelected = false,
+    this.passportImage,   // Add this
+    this.idProofImage,    // Add this
   });
 }
 
@@ -72,7 +78,6 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
   final TextEditingController _prisonerNameController = TextEditingController();
   final TextEditingController _prisonController = TextEditingController();
   final TextEditingController _visitDateController = TextEditingController();
-
   String? _selectedVisitMode;
   List<TextEditingController> _additionalVisitorControllers = [];
   bool _isReadOnlyMode = false;
@@ -82,8 +87,11 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
   String selectedStatus = 'All';
   final List<String> _visitModes = ['Physical', 'Video Conferencing'];
   final List<String> _idProofTypes = ['Aadhar Card', 'Voter ID', 'Passport', 'Driving License', 'PAN Card'];
+  List<AdditionalVisitor> _selectedVisitorsForDisplay = [];
   // Sample previous visitors data
-  List<AdditionalVisitor> _previousVisitors = [
+
+  final List<AdditionalVisitor> _previousVisitors = [
+
     AdditionalVisitor(
       visitorName: 'KAMAL KISHORE',
       fatherName: 'RAM KISHAN',
@@ -122,7 +130,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     {
       "serial": 1,
       "prisonerName": "Ashok Kumar",
-      "visitorName": "Govind Ram",
+      "fatherName": "Govind Ram",
       "genderAge": "M/47",
       "relation": "Brother",
       "modeOfVisit": "Yes",
@@ -131,7 +139,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     {
       "serial": 2,
       "prisonerName": "Anil Kumar",
-      "visitorName": "Kewal Singh",
+      "fatherName": "Kewal Singh",
       "genderAge": "M/57",
       "relation": "Lawyer",
       "modeOfVisit": "Yes",
@@ -140,18 +148,18 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     {
       "serial": 3,
       "prisonerName": "Test",
-      "visitorName": "Rajesh",
+      "fatherName": "Rajesh",
       "genderAge": "M/21",
       "relation": "Lawyer",
       "modeOfVisit": "-",
       "prison": "PHQ",
     }
   ];
-
   Map<String, List<VisitorModel>> visitData = {
     'Meeting': [],
   };
 
+  @override
   void initState() {
     super.initState();
     _selectedIndex = widget.selectedIndex;
@@ -167,10 +175,259 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
 
     if (!_showingVisitCards) {
       _populateFormData();
-      _additionalVisitorControllers.add(TextEditingController());
+     // _additionalVisitorControllers.add(TextEditingController());
+    }
+  }
+// Add Laplacian kernel for sharpness detection
+  List<num> laplacianKernel = [
+    0,  1,  0,
+    1, -4,  1,
+    0,  1,  0,
+  ];
+
+  double computeLaplacianVariance(img.Image image) {
+    final grayscale = img.grayscale(image);
+
+    final kernel = [
+      [0, -1, 0],
+      [-1, 4, -1],
+      [0, -1, 0],
+    ];
+
+    int width = grayscale.width;
+    int height = grayscale.height;
+
+    double sum = 0;
+    double sumSquared = 0;
+    int pixelCount = 0;
+
+    for (int y = 1; y < height - 1; y++) {
+      for (int x = 1; x < width - 1; x++) {
+        double result = 0;
+
+        for (int ky = 0; ky < 3; ky++) {
+          for (int kx = 0; kx < 3; kx++) {
+            final pixel = grayscale.getPixel(x + kx - 1, y + ky - 1);
+            final luminance = img.getLuminance(pixel).toDouble();
+            result += luminance * kernel[ky][kx];
+          }
+        }
+
+        sum += result;
+        sumSquared += result * result;
+        pixelCount++;
+      }
+    }
+
+    if (pixelCount == 0) return 0;
+
+    double mean = sum / pixelCount;
+    double variance = (sumSquared / pixelCount) - (mean * mean);
+    return variance;
+  }
+
+  Future<bool> isImageSharpAndFaceVisible(File file, {double threshold = 100}) async {
+    try {
+      final bytes = await file.readAsBytes();
+      final image = img.decodeImage(bytes);
+      if (image == null) return false;
+
+      final variance = computeLaplacianVariance(image);
+      print('Sharpness (variance): $variance');
+      final isSharp = variance > threshold;
+
+      if (!isSharp) return false;
+
+      final inputImage = InputImage.fromFile(file);
+      final faceDetector = FaceDetector(
+        options: FaceDetectorOptions(
+          performanceMode: FaceDetectorMode.accurate,
+          enableContours: false,
+          enableClassification: false,
+        ),
+      );
+
+      final faces = await faceDetector.processImage(inputImage);
+      await faceDetector.close();
+
+      final hasFace = faces.isNotEmpty;
+      print('Face detected: $hasFace');
+
+      return hasFace;
+    } catch (e) {
+      print('Error in face detection: $e');
+      return false;
     }
   }
 
+  Future<bool> isIdNumberInDocument(File imageFile, String enteredNumber) async {
+    final inputImage = InputImage.fromFile(imageFile);
+    final recognizer = TextRecognizer();
+    final result = await recognizer.processImage(inputImage);
+    await recognizer.close();
+
+    print(result.text);
+    final extractedText = result.text.replaceAll(RegExp(r'\s+'), '');
+    print(extractedText);
+    final cleanedInput = enteredNumber.replaceAll(RegExp(r'\s+'), '');
+
+    return extractedText.contains(cleanedInput);
+  }
+
+  Future<void> _pickImageForVisitor(String imageType, AdditionalVisitor visitor) async {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.camera_alt),
+                title: Text('Camera'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _getImageForVisitor(ImageSource.camera, imageType, visitor);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.image_search),
+                title: Text('Gallery'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _getImageForVisitor(ImageSource.gallery, imageType, visitor);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _getImageForVisitor(ImageSource source, String imageType, AdditionalVisitor visitor) async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(
+      source: source,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+    );
+
+    if (pickedFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No image selected'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    final file = File(pickedFile.path);
+    final fileSize = await file.length();
+
+    if (fileSize > 1000 * 1024) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Selected image exceeds 1MB limit'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (imageType == 'passport') {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(child: CircularProgressIndicator()),
+      );
+
+      try {
+        final isValid = await isImageSharpAndFaceVisible(file);
+        Navigator.pop(context);
+
+        if (!isValid) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Photo must be sharp and contain a visible face'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        setState(() {
+          visitor.passportImage = file;
+          visitor.photoPath = 'visitor_photo_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Photo uploaded successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error validating image: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } else if (imageType == 'idproof') {
+      if (visitor.idProofNumber == null || visitor.idProofNumber!.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Please enter ID number before uploading document'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(child: CircularProgressIndicator()),
+      );
+
+      try {
+        final isMatch = await isIdNumberInDocument(file, visitor.idProofNumber!);
+        Navigator.pop(context);
+
+        if (!isMatch) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('ID number does not match document'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        setState(() {
+          visitor.idProofImage = file;
+          visitor.idProofPath = '${visitor.idProofType?.toLowerCase().replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('ID proof uploaded successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error validating document: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
   Widget _buildNavItem({
     required int index,
     required IconData icon,
@@ -217,201 +474,217 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     );
   }
 
-
-
   // Widget to build additional visitor card
   Widget _buildAdditionalVisitorCard(AdditionalVisitor visitor, int index) {
-    return Card(
-      margin: EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: Colors.grey.shade300),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: visitor.isSelected ? const Color(0xFF5A8BBA) : Colors.grey.shade600,
+          width: visitor.isSelected ? 2 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            spreadRadius: 0,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: Column(
+        children: [
+          // Header Section
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: visitor.isSelected
+                  ? const Color(0xFF5A8BBA).withOpacity(0.05)
+                  : Colors.grey.shade50,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Row(
               children: [
-                Checkbox(
-                  value: visitor.isSelected,
-                  onChanged: (bool? value) {
+                // Custom Checkbox
+                GestureDetector(
+                  onTap: () {
                     setState(() {
-                      visitor.isSelected = value ?? false;
+                      visitor.isSelected = !visitor.isSelected;
                     });
                   },
-                  activeColor: Color(0xFF5A8BBA),
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: visitor.isSelected ? const Color(0xFF5A8BBA) : Colors.white,
+                      border: Border.all(
+                        color: visitor.isSelected
+                            ? const Color(0xFF5A8BBA)
+                            : Colors.grey.shade400,
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: visitor.isSelected
+                        ? const Icon(Icons.check, color: Colors.white, size: 16)
+                        : null,
+                  ),
                 ),
+                const SizedBox(width: 12),
+
+                // Visitor Info
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         visitor.visitorName,
-                        style: TextStyle(
-                          fontSize: 16,
+                        style: const TextStyle(
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: Colors.black87,
                         ),
                       ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Father: ${visitor.fatherName}',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                      ),
-                      Text(
-                        'Relation: ${visitor.relation}',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                      ),
-                      Text(
-                        'Mobile: ${visitor.mobileNumber}',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                      ),
+                      const SizedBox(height: 4),
+                      _buildInfoRow(Icons.person_outline, '',
+                          label: 'Father', value: visitor.fatherName),
+                      _buildInfoRow(Icons.family_restroom, '',
+                          label: 'Relation', value: visitor.relation),
+                      _buildInfoRow(Icons.phone, '',
+                          label: 'Mobile', value: visitor.mobileNumber),
                     ],
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Photo:',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 4),
-                      ElevatedButton(
-                        onPressed: () {
-                          // Photo upload functionality
-                          _showPhotoUploadDialog(visitor);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey[200],
-                          foregroundColor: Colors.black87,
-                          elevation: 0,
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        child: Text(
-                          visitor.photoPath ?? 'Browse...',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ],
+          ),
+
+          // Document Upload Section (only visible when selected)
+          if (visitor.isSelected) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Document Upload',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF5A8BBA),
+                    ),
                   ),
-                ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'ID Details:',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 4),
-                      DropdownButtonFormField<String>(
-                        value: visitor.idProofType,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          isDense: true,
-                        ),
-                        style: TextStyle(fontSize: 12, color: Colors.black),
-                        items: _idProofTypes.map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value, style: TextStyle(fontSize: 12)),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            visitor.idProofType = newValue;
-                          });
-                        },
-                      ),
-                      SizedBox(height: 8),
-                      TextFormField(
-                        initialValue: visitor.idProofNumber,
-                        decoration: InputDecoration(
-                          hintText: 'Enter Card Number',
-                          hintStyle: TextStyle(fontSize: 12),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          isDense: true,
-                        ),
-                        style: TextStyle(fontSize: 12),
-                        onChanged: (value) {
-                          visitor.idProofNumber = value;
-                        },
-                      ),
-                      SizedBox(height: 8),
-                      ElevatedButton(
-                        onPressed: () {
-                          // ID proof upload functionality
-                          _showIdProofUploadDialog(visitor);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey[200],
-                          foregroundColor: Colors.black87,
-                          elevation: 0,
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        child: Text(
-                          visitor.idProofPath ?? 'Browse...',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 16),
+
+                  // Photo Upload
+                  _buildDocumentSection(
+                    title: 'Visitor Photo',
+                    icon: Icons.photo_camera,
+                    isUploaded: visitor.photoPath != null,
+                    uploadedFileName: visitor.photoPath,
+                    onUpload: () =>
+                        _pickImageForVisitor('passport', visitor),
                   ),
-                ),
-              ],
+
+                  const SizedBox(height: 16),
+
+                  // ID Proof Details
+                  const Text(
+                    'ID Proof Details',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // ID Type Dropdown
+                  DropdownButtonFormField<String>(
+                    value: visitor.idProofType,
+                    decoration: InputDecoration(
+                      labelText: 'Select ID Proof Type',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                    ),
+                    items: _idProofTypes.map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(
+                          value,
+                          style: const TextStyle(fontSize: 14, color: Colors.black87),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        visitor.idProofType = newValue;
+                      });
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // ID Number Input
+                  TextFormField(
+                    initialValue: visitor.idProofNumber,
+                    decoration: InputDecoration(
+                      labelText: 'Enter ID Number',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                    ),
+                    style:
+                    const TextStyle(fontSize: 14, color: Colors.black87),
+                    onChanged: (value) {
+                      visitor.idProofNumber = value;
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // ID Proof Upload
+                  _buildDocumentSection(
+                    title: 'ID Proof Document',
+                    icon: Icons.description,
+                    isUploaded: visitor.idProofPath != null,
+                    uploadedFileName: visitor.idProofPath,
+                    onUpload: () =>
+                        _pickImageForVisitor('idproof', visitor),
+                  ),
+                ],
+              ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
 
+
   // Widget to build the additional visitors list view
   Widget _buildAdditionalVisitorsListView() {
-    return Padding(
-      padding: EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Additional Visitors List',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF5A8BBA),
-                ),
-              ),
-              IconButton(
-                onPressed: () {
-                  setState(() {
-                    _showAdditionalVisitorsList = false;
-                  });
-                },
-                icon: Icon(Icons.close, color: Colors.grey),
-              ),
-            ],
-          ),
-          SizedBox(height: 16),
           Expanded(
             child: ListView.builder(
+              padding: EdgeInsets.all(16),
               itemCount: _previousVisitors.length + 1, // +1 for Add button
               itemBuilder: (context, index) {
                 if (index == _previousVisitors.length) {
@@ -449,33 +722,43 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                     ),
                   );
                 }
-
                 return _buildAdditionalVisitorCard(_previousVisitors[index], index);
               },
             ),
           ),
-          SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    _addSelectedVisitorsToForm();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF5A8BBA),
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    'Add Selected Visitors',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+          // Bottom button area - not inside Expanded
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.2),
+                  spreadRadius: 1,
+                  blurRadius: 3,
+                  offset: Offset(0, -1),
+                ),
+              ],
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  _addSelectedVisitorsToForm();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF5A8BBA),
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
+                child: Text(
+                  'Add Selected Visitors',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
               ),
-            ],
+            ),
           ),
         ],
       ),
@@ -497,14 +780,15 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
       return;
     }
 
-    // Clear existing additional visitor controllers
+    // Clear existing controllers
     for (var controller in _additionalVisitorControllers) {
       controller.dispose();
     }
     _additionalVisitorControllers.clear();
 
-    // Add selected visitors to form
+    // Add selected visitors to display list and create controllers
     for (var visitor in selectedVisitors) {
+      _selectedVisitorsForDisplay.add(visitor);
       TextEditingController controller = TextEditingController();
       controller.text = visitor.visitorName;
       _additionalVisitorControllers.add(controller);
@@ -526,30 +810,80 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     );
   }
 
-  void _showPhotoUploadDialog(AdditionalVisitor visitor) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Upload Photo'),
-          content: Text('Photo upload functionality will be implemented here.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  visitor.photoPath = 'photo_uploaded.jpg';
-                });
-              },
-              child: Text('Upload'),
+// Helper method for document upload sections
+  Widget _buildDocumentSection({
+    required String title,
+    required IconData icon,
+    required bool isUploaded,
+    required String? uploadedFileName,
+    required VoidCallback onUpload,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isUploaded ? Colors.green.shade100 : Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(6),
             ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
+            child: Icon(
+              icon,
+              size: 20,
+              color: isUploaded ? Colors.green.shade700 : Colors.grey.shade600,
             ),
-          ],
-        );
-      },
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  isUploaded
+                      ? uploadedFileName ?? 'Document uploaded'
+                      : 'No document uploaded',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isUploaded ? Colors.green.shade700 : Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: onUpload,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isUploaded ? Colors.green.shade600 : Color(0xFF5A8BBA),
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+              elevation: 0,
+            ),
+            child: Text(
+              isUploaded ? 'Replace' : 'Upload',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -600,32 +934,6 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
           }),
         ],
       ),
-    );
-  }
-  void _showIdProofUploadDialog(AdditionalVisitor visitor) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Upload ID Proof'),
-          content: Text('ID proof upload functionality will be implemented here.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  visitor.idProofPath = 'id_proof_uploaded.pdf';
-                });
-              },
-              child: Text('Upload'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
-            ),
-          ],
-        );
-      },
     );
   }
 
@@ -791,45 +1099,6 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     ];
   }
 
-  void _handleAppBarBack() {
-    if (_showAdditionalVisitorsList) {
-      setState(() {
-        _showAdditionalVisitorsList = false;
-      });
-    } else if (_showingVisitCards) {
-      if (widget.fromNavbar || widget.fromRegisteredInmates) {
-        Navigator.pop(context);
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-        );
-      }
-    } else {
-      if (widget.fromChatbot) {
-        Navigator.pop(context);
-      } else if (widget.fromNavbar && !widget.showVisitCards) {
-        setState(() {
-          _showingVisitCards = true;
-          _clearFormData();
-        });
-      } else {
-        _onWillPop();
-      }
-    }
-  }
-
-  void _clearFormData() {
-    _prisonerNameController.clear();
-    _prisonController.clear();
-    _visitDateController.clear();
-    _selectedVisitMode = null;
-    for (var controller in _additionalVisitorControllers) {
-      controller.dispose();
-    }
-    _additionalVisitorControllers.clear();
-  }
-
   List<VisitorModel> getFilteredVisits() {
     List<VisitorModel> currentVisits = visitData[selectedVisitType] ?? [];
 
@@ -904,17 +1173,69 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
   }
 
   @override
-  Widget _buildInfoRow(IconData icon, String text) {
+  // Replace your existing _buildInfoRow method with this unified version
+  Widget _buildInfoRow(IconData icon, String text, {
+    Color? iconColor,
+    Color? textColor,
+    double? iconSize,
+    double? fontSize,
+    FontWeight? fontWeight,
+    String? label,
+    String? value,
+  }) {
+    if (label != null && value != null) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: 2),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: iconSize ?? 16,
+              color: iconColor ?? Colors.grey.shade600,
+            ),
+            SizedBox(width: 6),
+            Text(
+              '$label: ',
+              style: TextStyle(
+                fontSize: fontSize ?? 14,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: fontSize ?? 14,
+                  color: textColor ?? Colors.black87,
+                  fontWeight: fontWeight ?? FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Original format for your inmates list
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: Colors.black),
+          Icon(
+              icon,
+              size: iconSize ?? 18,
+              color: iconColor ?? Colors.black
+          ),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 14,fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: fontSize ?? 14,
+                fontWeight: fontWeight ?? FontWeight.bold,
+                color: textColor ?? Colors.black,
+              ),
             ),
           ),
         ],
@@ -940,21 +1261,6 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
       _prisonerNameController.text = widget.prefilledPrisonerName ?? '';
       _prisonController.text = widget.prefilledPrison ?? '';
       _isReadOnlyMode = true;
-    }
-  }
-
-  void _addVisitorField() {
-    setState(() {
-      _additionalVisitorControllers.add(TextEditingController());
-    });
-  }
-
-  void _removeVisitorField(int index) {
-    if (_additionalVisitorControllers.length > 1) {
-      setState(() {
-        _additionalVisitorControllers[index].dispose();
-        _additionalVisitorControllers.removeAt(index);
-      });
     }
   }
 
@@ -1080,7 +1386,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                   ],
                 ),
                 const SizedBox(height: 4),
-                _buildInfoRow(Icons.perm_identity, "Father Name: ${inmate['visitorName']}"),
+                _buildInfoRow(Icons.perm_identity, "Father Name: ${inmate['fatherName']}"),
 
                 // Gender/Age with arrow icon
                 Row(
@@ -1239,120 +1545,145 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Additional Visitors List',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF5A8BBA),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _showAdditionalVisitorsList = true;
-                          });
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Color(0xFF5A8BBA),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Icon(
-                            Icons.add,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ],
+                color: Color(0xFFDDE5ED),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 3,
+                    offset: Offset(0, 1),
                   ),
-                  SizedBox(height: 16),
-
-                  // Dynamic Additional Visitor Fields
-                  // Only show fields when controllers list is not empty
-                  if (_additionalVisitorControllers.isNotEmpty)
-                    for (int i = 0; i < _additionalVisitorControllers.length; i++)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: CustomTextField(
-                                controller: _additionalVisitorControllers[i],
-                                label: 'Additional Visitor Name ${i + 1}',
-                                hint: 'Enter Additional visitor name',
-                                inputFormatters: [
-                                  TextInputFormatter.withFunction((oldValue, newValue) {
-                                    String text = newValue.text;
-                                    if (text.isNotEmpty) {
-                                      text = text.split(' ').map((word) {
-                                        if (word.isNotEmpty) {
-                                          return word[0].toUpperCase() +
-                                              word.substring(1).toLowerCase();
-                                        }
-                                        return word;
-                                      }).join(' ');
-                                    }
-                                    return TextEditingValue(
-                                      text: text,
-                                      selection:
-                                      TextSelection.collapsed(offset: text.length),
-                                    );
-                                  }),
-                                ],
-                              ),
-                            ),
-                            if (_additionalVisitorControllers.length > 1)
-                              IconButton(
-                                onPressed: () => _removeVisitorField(i),
-                                icon: const Icon(Icons.remove_circle_outline,
-                                    color: Colors.red),
-                              ),
-                          ],
-                        ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Additional Visitors List',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF5A8BBA),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _showAdditionalVisitorsList = true;
+                      });
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF5A8BBA),
+                        borderRadius: BorderRadius.circular(20),
                       ),
+                      child: Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
 
+            if (_additionalVisitorControllers.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 10),
+                  Text(
+                    'Added Visitors:',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF5A8BBA),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  // Display visitor cards instead of just text fields
+                  ...List.generate(
+                    _selectedVisitorsForDisplay.length,
+                        (index) => Container(
+                      margin: EdgeInsets.only(bottom: 12),
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _selectedVisitorsForDisplay[index].visitorName,
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Father: ${_selectedVisitorsForDisplay[index].fatherName}',
+                                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                                ),
+                                Text(
+                                  'Relation: ${_selectedVisitorsForDisplay[index].relation}',
+                                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                                ),
+                                Text(
+                                  'Mobile: ${_selectedVisitorsForDisplay[index].mobileNumber}',
+                                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _selectedVisitorsForDisplay.removeAt(index);
+                                if (index < _additionalVisitorControllers.length) {
+                                  _additionalVisitorControllers[index].dispose();
+                                  _additionalVisitorControllers.removeAt(index);
+                                }
+                              });
+                            },
+                            icon: Icon(Icons.delete, color: Colors.red),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                ],
+              ),
+
             SizedBox(height: 30),
 
             // Schedule Visit Button
-            Row(
-              children: [
-                Expanded(
-                  child: CustomButton(
-                    text: 'Save',
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        if (_selectedVisitMode == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Please select visit mode'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                          return;
-                        }
-                        showSuccessDialog(context);
-                      }
-                    },
-                  ),
-                ),
-              ],
-            )
+            SizedBox(
+              width: double.infinity,
+              child: CustomButton(
+                text: 'Save',
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    if (_selectedVisitMode == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Please select visit mode'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    showSuccessDialog(context);
+                  }
+                },
+              ),
+            ),
+            SizedBox(height: 20), // Extra padding at bottom
           ],
         ),
       ),
@@ -1366,7 +1697,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
       child: Scaffold(
         backgroundColor: _showAdditionalVisitorsList
             ? Colors.white
-            : (_showingVisitCards ? Colors.grey[100] : Colors.white),
+            : (_showingVisitCards ? Colors.white : Colors.white),
         body: _showAdditionalVisitorsList
             ? _buildAdditionalVisitorsListView()
             : (_showingVisitCards ? _buildVerticalList() : _buildMeetingFormView()),
@@ -1379,7 +1710,9 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
           foregroundColor: Colors.black,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: _handleAppBarBack,
+            onPressed: () {
+              Navigator.pop(context); // Normal back navigation
+            },
           ),
           actions: [
             if (_showingVisitCards)
@@ -1428,6 +1761,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                       );
                     },
                   ),
+                  // In your Meeting navbar onTap:
                   _buildNavItem(
                     index: 1,
                     icon: Icons.directions_walk,
@@ -1435,7 +1769,13 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => MeetFormScreen(selectedIndex: 1,showVisitCards: true,)),
+                        MaterialPageRoute(
+                          builder: (context) => MeetFormScreen(
+                            selectedIndex: 1,
+                            showVisitCards: true,
+                            fromNavbar: true, // Make sure this is set
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -1447,7 +1787,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ParoleHomeScreen(selectedIndex: 2),
+                          builder: (context) => ParoleScreen(selectedIndex: 2),
                         ),
                       );
                     },

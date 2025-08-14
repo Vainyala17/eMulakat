@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../dashboard/grievance/grievance_details_screen.dart';
 import '../../dashboard/grievance/grievance_home.dart';
 import '../../dashboard/parole/parole_home.dart';
+import '../../dashboard/parole/parole_screen.dart';
 import '../../dashboard/visit/visit_home.dart';
 import '../../dashboard/visit/whom_to_meet_screen.dart';
 
@@ -15,34 +16,152 @@ class MyRegisteredInmatesScreen extends StatefulWidget {
 
 class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
   final List<Map<String, dynamic>> inmates = [
+    // Meeting + Parole + Grievance (All 3 services)
     {
       "serial": 1,
       "prisonerName": "Ashok Kumar",
-      "visitorName": "Govind Ram",
-      "genderAge": "M/47",
-      "relation": "Brother",
-      "modeOfVisit": "Yes",
-      "prison": "CENTRAL JAIL NO.2, TIHAR", // Fixed: lowercase 'prison'
+      "visitorName": "Govind Ram", // For meeting
+      "genderAge": "M/47", // For meeting
+      "relation": "Brother", // For meeting
+      "modeOfVisit": "Yes", // For meeting
+      "paroleFrom": "10 Aug 2025", // For parole
+      "paroleTo": "20 Aug 2025", // For parole
+      "reason": "To maintain family and social ties", // For parole
+      "category": "III Treated by the prison authorities", // For grievance
+      "prison": "CENTRAL JAIL NO.2, TIHAR",
     },
+    // Meeting + Parole only
     {
       "serial": 2,
       "prisonerName": "Anil Kumar",
-      "visitorName": "Kewal Singh",
-      "genderAge": "M/57",
-      "relation": "Lawyer",
-      "modeOfVisit": "Yes",
-      "prison": "CENTRAL JAIL NO.2, TIHAR", // Fixed: lowercase 'prison'
+      "visitorName": "Kewal Singh", // For meeting
+      "genderAge": "M/57", // For meeting
+      "relation": "Lawyer", // For meeting
+      "modeOfVisit": "Yes", // For meeting
+      "paroleFrom": "15 Aug 2025", // For parole
+      "paroleTo": "25 Aug 2025", // For parole
+      "reason": "Other", // For parole
+      "prison": "CENTRAL JAIL NO.2, TIHAR",
     },
+    // Meeting + Grievance only
     {
       "serial": 3,
-      "prisonerName": "Test",
-      "visitorName": "Rajesh",
-      "genderAge": "M/21",
-      "relation": "Lawyer",
-      "modeOfVisit": "-",
-      "prison": "PHQ", // Fixed: lowercase 'prison'
+      "prisonerName": "Test Kumar",
+      "visitorName": "Rajesh Singh", // For meeting
+      "genderAge": "M/21", // For meeting
+      "relation": "Lawyer", // For meeting
+      "modeOfVisit": "No", // For meeting
+      "category": "Manhandling by co prisoners", // For grievance
+      "prison": "PHQ",
+    },
+    // Parole + Grievance only
+    {
+      "serial": 4,
+      "prisonerName": "Raj Shekar",
+      "paroleFrom": "5 Jul 2025", // For parole
+      "paroleTo": "25 Sep 2025", // For parole
+      "reason": "To maintain family and social ties", // For parole
+      "category": "Basic Facilities not provided inside prison", // For grievance
+      "prison": "CENTRAL JAIL NO.2, TIHAR",
+    },
+    // Meeting only
+    {
+      "serial": 5,
+      "prisonerName": "Ram Kumar",
+      "visitorName": "Sita Devi", // For meeting
+      "genderAge": "F/45", // For meeting
+      "relation": "Wife", // For meeting
+      "modeOfVisit": "Yes", // For meeting
+      "prison": "CENTRAL JAIL NO.2, TIHAR",
+    },
+    // Parole only
+    {
+      "serial": 6,
+      "prisonerName": "Prashant Singh",
+      "paroleFrom": "18 Nov 2025", // For parole
+      "paroleTo": "1 Dec 2025", // For parole
+      "reason": "To maintain family and social ties", // For parole
+      "prison": "PHQ",
+    },
+    // Grievance only
+    {
+      "serial": 7,
+      "prisonerName": "Sid Kumar",
+      "category": "III Treated by the prison authorities", // For grievance
+      "prison": "CENTRAL JAIL NO.2, TIHAR",
+    },
+    // All 3 services (another example)
+    {
+      "serial": 8,
+      "prisonerName": "Dilip Mhatre",
+      "visitorName": "Sunita Mhatre", // For meeting
+      "genderAge": "F/40", // For meeting
+      "relation": "Wife", // For meeting
+      "modeOfVisit": "Yes", // For meeting
+      "paroleFrom": "20 Aug 2025", // For parole
+      "paroleTo": "30 Aug 2025", // For parole
+      "reason": "Other", // For parole
+      "category": "Manhandling by co prisoners", // For grievance
+      "prison": "CENTRAL JAIL NO.2, TIHAR",
+    },
+    // Meeting + Parole only
+    {
+      "serial": 9,
+      "prisonerName": "Nirav Rao",
+      "visitorName": "Kavita Rao", // For meeting
+      "genderAge": "F/35", // For meeting
+      "relation": "Sister", // For meeting
+      "modeOfVisit": "No", // For meeting
+      "paroleFrom": "25 Aug 2025", // For parole
+      "paroleTo": "5 Sep 2025", // For parole
+      "reason": "To maintain family and social ties", // For parole
+      "prison": "PHQ",
+    },
+    // Parole + Grievance only
+    {
+      "serial": 10,
+      "prisonerName": "Mahesh Patil",
+      "paroleFrom": "1 Sep 2025", // For parole
+      "paroleTo": "10 Sep 2025", // For parole
+      "reason": "Other", // For parole
+      "category": "Basic Facilities not provided inside prison", // For grievance
+      "prison": "CENTRAL JAIL NO.2, TIHAR",
+    },
+    // All 3 services
+    {
+      "serial": 11,
+      "prisonerName": "Ramesh Dodhia",
+      "visitorName": "Meera Dodhia", // For meeting
+      "genderAge": "F/38", // For meeting
+      "relation": "Wife", // For meeting
+      "modeOfVisit": "Yes", // For meeting
+      "paroleFrom": "12 Sep 2025", // For parole
+      "paroleTo": "22 Sep 2025", // For parole
+      "reason": "To maintain family and social ties", // For parole
+      "category": "Manhandling by co prisoners", // For grievance
+      "prison": "PHQ",
     }
   ];
+
+  // Check if inmate has meeting data
+  bool hasMeetingData(Map<String, dynamic> inmate) {
+    return inmate.containsKey('visitorName') &&
+        inmate.containsKey('genderAge') &&
+        inmate.containsKey('relation') &&
+        inmate.containsKey('modeOfVisit');
+  }
+
+  // Check if inmate has parole data
+  bool hasParoleData(Map<String, dynamic> inmate) {
+    return inmate.containsKey('paroleFrom') &&
+        inmate.containsKey('paroleTo') &&
+        inmate.containsKey('reason');
+  }
+
+  // Check if inmate has grievance data
+  bool hasGrievanceData(Map<String, dynamic> inmate) {
+    return inmate.containsKey('category');
+  }
 
   Widget _buildInfoRow(IconData icon, String text) {
     return Padding(
@@ -54,10 +173,36 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 14,fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildServiceButton({
+    required String title,
+    required Color color,
+    required bool isEnabled,
+    required VoidCallback? onPressed,
+  }) {
+    return Expanded(
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isEnabled ? color : Colors.grey[300],
+          foregroundColor: isEnabled ? Colors.white : Colors.grey[600],
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          elevation: isEnabled ? 2 : 0,
+        ),
+        onPressed: isEnabled ? onPressed : null,
+        child: Text(
+          title,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isEnabled ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
       ),
     );
   }
@@ -71,6 +216,12 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
         itemCount: inmates.length,
         itemBuilder: (context, index) {
           final inmate = inmates[index];
+
+          // Check which services are available
+          bool canMeeting = hasMeetingData(inmate);
+          bool canParole = hasParoleData(inmate);
+          bool canGrievance = hasGrievanceData(inmate);
+
           return Card(
             color: Colors.white,
             shape: RoundedRectangleBorder(
@@ -92,13 +243,13 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
                       Expanded(
                         child: Row(
                           children: [
-                            Icon(Icons.person, color: Colors.black,size: 18,), // Prisoner icon
+                            Icon(Icons.person, color: Colors.black, size: 18),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 "${inmate['prisonerName']} (#${inmate['serial']})",
-                                style: const TextStyle(fontSize: 16,fontWeight: FontWeight.bold),
-                                overflow: TextOverflow.ellipsis, // Avoid overflow
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
@@ -107,7 +258,6 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
                       IconButton(
                         icon: const Icon(Icons.download, color: Colors.blue),
                         onPressed: () {
-                          // TODO: implement download logic
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Download functionality coming soon')),
                           );
@@ -116,74 +266,91 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  _buildInfoRow(Icons.perm_identity, "Father Name: ${inmate['visitorName']}"),
-                  _buildInfoRow(Icons.badge, "Gender/Age: ${inmate['genderAge']}"),
-                  _buildInfoRow(Icons.family_restroom, "Relation: ${inmate['relation']}"),
-                  _buildInfoRow(Icons.meeting_room, "Mode of Visit: ${inmate['modeOfVisit']}"),
-                  _buildInfoRow(Icons.location_on, "Prison: ${inmate['prison']}"), // Fixed: lowercase 'prison'
+
+                  // Dynamic data display based on available services
+                  // Meeting data
+                  if (canMeeting) ...[
+                    _buildInfoRow(Icons.perm_identity, "Father Name: ${inmate['visitorName']}"),
+                    _buildInfoRow(Icons.badge, "Gender/Age: ${inmate['genderAge']}"),
+                    _buildInfoRow(Icons.family_restroom, "Relation: ${inmate['relation']}"),
+                    _buildInfoRow(Icons.meeting_room, "Mode of Visit: ${inmate['modeOfVisit']}"),
+                  ],
+
+                  // Parole data
+                  if (canParole) ...[
+                    _buildInfoRow(Icons.date_range_outlined, "Parole From: ${inmate['paroleFrom']}"),
+                    _buildInfoRow(Icons.date_range, "Parole To: ${inmate['paroleTo']}"),
+                    _buildInfoRow(Icons.explicit_outlined, "Reason: ${inmate['reason']}"),
+                  ],
+
+                  // Grievance data
+                  if (canGrievance) ...[
+                    _buildInfoRow(Icons.report_problem_outlined, "Category: ${inmate['category']}"),
+                  ],
+
+                  // Prison (always show)
+                  _buildInfoRow(Icons.location_on, "Prison: ${inmate['prison']}"),
+
                   const SizedBox(height: 12),
-                  // Fixed: Better button layout with proper spacing
+
+                  // Service buttons - all visible but only enabled if data exists
                   Row(
                     children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.white, // Fixed: Use foregroundColor instead of text color
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                          ),
-                          onPressed: () {
-                            Navigator.push( // Fixed: Use push instead of pushReplacement
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => MeetFormScreen(
-                                  fromRegisteredInmates: true,
-                                  prefilledPrisonerName: inmate['prisonerName'],
-                                  prefilledPrison: inmate['prison'],
-                                ), // Added const
+                      _buildServiceButton(
+                        title: "Meeting",
+                        color: Colors.blue,
+                        isEnabled: canMeeting,
+                        onPressed: canMeeting ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MeetFormScreen(
+                                selectedIndex: 1,
+                                fromRegisteredInmates: true,
+                                prefilledPrisonerName: inmate['prisonerName'],
+                                prefilledPrison: inmate['prison'],
                               ),
-                            );
-                          },
-                          child: const Text("Meeting"),
-                        ),
+                            ),
+                          );
+                        } : null,
                       ),
                       const SizedBox(width: 8),
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white, // Fixed: Use foregroundColor
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                          ),
-                          onPressed: () {
-                            Navigator.push( // Fixed: Use push instead of pushReplacement
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const ParoleHomeScreen(selectedIndex: 2), // Added const
+                      _buildServiceButton(
+                        title: "Parole",
+                        color: Colors.green,
+                        isEnabled: canParole,
+                        onPressed: canParole ? () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ParoleScreen(
+                                selectedIndex: 2,
+                                fromRegisteredInmates: true,
+                                prefilledPrisonerName: inmate['prisonerName'],
+                                prefilledPrison: inmate['prison'],
                               ),
-                            );
-                          },
-                          child: const Text("Parole"),
-                        ),
+                            ),
+                          );
+                        } : null,
                       ),
                       const SizedBox(width: 8),
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            foregroundColor: Colors.white, // Fixed: Use foregroundColor
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                          ),
-                          onPressed: () {
-                            Navigator.push( // Fixed: Use push instead of pushReplacement
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const GrievanceDetailsScreen(selectedIndex: 3), // Added const
+                      _buildServiceButton(
+                        title: "Grievance",
+                        color: Colors.orange,
+                        isEnabled: canGrievance,
+                        onPressed: canGrievance ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => GrievanceDetailsScreen(
+                                selectedIndex: 3,
+                                fromRegisteredInmates: true,
+                                prefilledPrisonerName: inmate['prisonerName'],
+                                prefilledPrison: inmate['prison'],
                               ),
-                            );
-                          },
-                          child: const Text("Grievance"),
-                        ),
+                            ),
+                          );
+                        } : null,
                       ),
                     ],
                   ),

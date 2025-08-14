@@ -6,6 +6,7 @@ import '../../dashboard/evisitor_pass_screen.dart';
 import '../../dashboard/grievance/grievance_details_screen.dart';
 import '../../dashboard/grievance/grievance_home.dart';
 import '../../dashboard/parole/parole_home.dart';
+import '../../dashboard/parole/parole_screen.dart';
 import '../../dashboard/visit/visit_home.dart';
 import '../../dashboard/visit/whom_to_meet_screen.dart';
 import '../../models/visitor_model.dart';
@@ -317,9 +318,7 @@ class _HomeScreenState extends State<HomeScreen>
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: buildVerticalVisitsList(),
           ),
-
           SizedBox(height: 30),
-
         ],
       ),
     );
@@ -509,16 +508,23 @@ class _HomeScreenState extends State<HomeScreen>
               indicatorColor: Colors.white,
               indicatorWeight: 5,
 
-              // Text style for selected tab
-              labelStyle: TextStyle(
+              // Selected tab style with shadow
+              labelStyle: const TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 15, // Increase font size here
+                fontSize: 15,
+                shadows: [
+                  Shadow(
+                    offset: Offset(1.5, 1.5), // horizontal, vertical offset
+                    blurRadius: 3, // softness of shadow
+                    color: Colors.grey, // shadow color
+                  ),
+                ],
               ),
 
-              // Text style for unselected tabs
-              unselectedLabelStyle: TextStyle(
-                fontWeight: FontWeight.normal,
-                fontSize: 14,
+              // Unselected tab style (still bold, no shadow)
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
               ),
 
               tabs: const [
@@ -600,7 +606,7 @@ class _HomeScreenState extends State<HomeScreen>
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ParoleHomeScreen(selectedIndex: 2),
+                          builder: (context) => ParoleScreen(selectedIndex: 2),
                         ),
                       );
                     },

@@ -1,33 +1,64 @@
+import 'package:eMulakat/dashboard/parole/parole_home.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../models/visitor_model.dart';
+import '../../pdf_viewer_screen.dart';
 import '../../screens/home/home_screen.dart';
+import '../../utils/color_scheme.dart';
+import '../../utils/validators.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/form_section_title.dart';
+import '../grievance/grievance_details_screen.dart';
+import '../visit/whom_to_meet_screen.dart';
 
 class ParoleScreen extends StatefulWidget {
-  const ParoleScreen({super.key});
+  final bool fromChatbot;
+  final int selectedIndex;
+  final VisitorModel? visitorData;
+  final bool fromNavbar;
+  final bool fromRegisteredInmates;
+  final String? prefilledPrisonerName;
+  final String? prefilledPrison;
+  final bool showVisitCards;
+
+  const ParoleScreen({
+    Key? key,
+    this.fromChatbot = false,
+    this.visitorData,
+    this.selectedIndex = 0,
+    this.fromNavbar = false,
+    this.fromRegisteredInmates = false,
+    this.prefilledPrisonerName,
+    this.prefilledPrison,
+    this.showVisitCards = false,
+  }) : super(key: key);
 
   @override
   State<ParoleScreen> createState() => _ParoleScreenState();
 }
 
 class _ParoleScreenState extends State<ParoleScreen> {
+  late int _selectedIndex;
   final _formKey = GlobalKey<FormState>();
+  bool _showingVisitCards = false;
   String? _selectedState;
   String? _selectedPoliceStation;
   String? _selectedDistrict;
   String? _selectedReason;
+  String selectedVisitType = 'Parole';
+  String selectedStatus = 'All';
+  bool _isReadOnlyMode = false;
 
   final TextEditingController _paroleFromDateController = TextEditingController();
   final TextEditingController _paroleToDateController = TextEditingController();
   final TextEditingController _AddressPlaceController = TextEditingController();
+  final TextEditingController _prisonerNameController = TextEditingController();
+  final TextEditingController _prisonController = TextEditingController();
 
-
-  final List<String> _reason = ["To maintain family and social ties",
-  "other"];
+  final List<String> _reason = ["To maintain family and social ties", "other"];
   final List<String> _states = [
     'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
     'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
@@ -54,7 +85,9 @@ class _ParoleScreenState extends State<ParoleScreen> {
       'Satara', 'Sindhudurg', 'Solapur', 'Thane', 'Wardha', 'Washim', 'Yavatmal',
     ],
   };
-
+  Map<String, List<VisitorModel>> visitData = {
+    'Parole': [],
+  };
   static const Map<String, Map<String, Map<String, List<String>>>> _policeStationsByDistrict = {
     "Andhra Pradesh": {
       "districts": {
@@ -131,8 +164,144 @@ class _ParoleScreenState extends State<ParoleScreen> {
     // ... Repeat same pattern for other states
   };
 
+  final List<Map<String, dynamic>> inmates = [
+    {
+      "serial": 1,
+      "prisonerName": "Raj Shekar",
+      "paroleFrom": "5 Jul 2025",
+      "paroleTo": "25 Sep 2025",
+      "reason": "To maintain family and social ties",
+      "prison": "CENTRAL JAIL NO.2, TIHAR",
+    },
+    {
+      "serial": 2,
+      "prisonerName": "Ram Kumar",
+      "paroleFrom": "15 Nov 2025",
+      "paroleTo": "27 Nov 2025",
+      "reason": "Other",
+      "prison": "CENTRAL JAIL NO.2, TIHAR",
+    },
+    {
+      "serial": 3,
+      "prisonerName": "Prashant Singh",
+      "paroleFrom": "18 Nov 2025",
+      "paroleTo": "1 Dec 2025",
+      "reason": "To maintain family and social ties",
+      "prison": "PHQ",
+    }
+  ];
+
+  void initializeVisitData() {
+    visitData['Parole'] = [
+      VisitorModel(
+        visitorName: 'Meena Patel',
+        fatherName: 'Raj Patel',
+        address: '789 SB Road, Pune',
+        gender: 'Female',
+        age: 45,
+        relation: 'Mother',
+        idProof: 'Voter ID',
+        idNumber: 'VOT9876543',
+        isInternational: false,
+        state: 'Maharashtra',
+        jail: 'Pune Central Jail',
+        visitDate: DateTime.now().add(Duration(days: 7)),
+        additionalVisitors: 1,
+        additionalVisitorNames: ['Kiran Patel'],
+        prisonerName: 'Amit Patel',
+        prisonerFatherName: 'Raj Patel',
+        prisonerAge: 25,
+        prisonerGender: 'Male',
+        mode: true,
+        status: VisitStatus.pending,
+        startTime: '09:00',
+        endTime: '17:00',
+        dayOfWeek: 'Monday', prison: '',
+      ),
+      VisitorModel(
+        visitorName: 'Krishna Kumar',
+        fatherName: 'Ram Kumar',
+        address: '456 MG Road, Mumbai',
+        gender: 'Male',
+        age: 35,
+        relation: 'Brother',
+        idProof: 'Aadhar',
+        idNumber: 'XXXX-XXXX-9876',
+        isInternational: false,
+        state: 'Maharashtra',
+        jail: 'Arthur Road',
+        visitDate: DateTime.now().subtract(Duration(days: 1)),
+        additionalVisitors: 0,
+        additionalVisitorNames: [],
+        prisonerName: 'Vishnu Kumar',
+        prisonerFatherName: 'Shyam Kumar',
+        prisonerAge: 30,
+        prisonerGender: 'Male',
+        mode: false,
+        status: VisitStatus.completed,
+        startTime: '14:00',
+        endTime: '16:00',
+        dayOfWeek: 'Sunday', prison: '',
+      ),
+      VisitorModel(
+        visitorName: 'Krishna Kumar',
+        fatherName: 'Ram Kumar',
+        address: '456 MG Road, Mumbai',
+        gender: 'Male',
+        age: 35,
+        relation: 'Brother',
+        idProof: 'Aadhar',
+        idNumber: 'XXXX-XXXX-9876',
+        isInternational: false,
+        state: 'Maharashtra',
+        jail: 'Arthur Road',
+        visitDate: DateTime.now().subtract(Duration(days: 1)),
+        additionalVisitors: 0,
+        additionalVisitorNames: [],
+        prisonerName: 'Vishnu Kumar',
+        prisonerFatherName: 'Shyam Kumar',
+        prisonerAge: 30,
+        prisonerGender: 'Male',
+        mode: false,
+        status: VisitStatus.expired,
+        startTime: '14:00',
+        endTime: '16:00',
+        dayOfWeek: 'Sunday', prison: '',
+      ),
+    ];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.selectedIndex;
+    initializeVisitData();
+
+    // Show visit cards by default unless explicitly coming from registered inmates
+    if (widget.fromRegisteredInmates) {
+      _showingVisitCards = false;
+      _isReadOnlyMode = true;
+
+      // ✅ Add this: Populate prefilled values
+      if (widget.prefilledPrisonerName != null) {
+        _prisonerNameController.text = widget.prefilledPrisonerName!;
+      }
+      if (widget.prefilledPrison != null) {
+        _prisonController.text = widget.prefilledPrison!;
+      }
+    } else {
+      _showingVisitCards = widget.showVisitCards || !widget.fromChatbot;
+      _isReadOnlyMode = false;
+    }
+  }
 
   Future<bool> _onWillPop() async {
+    // If came from chatbot, allow normal back navigation
+    if (widget.fromChatbot) {
+      return true; // Allow back navigation to chatbot
+    }
+
+    // Otherwise show alert (normal app flow)
     return await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -140,13 +309,135 @@ class _ParoleScreenState extends State<ParoleScreen> {
         content: const Text('Please use Logout and close the App'),
         actions: <Widget>[
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false), // stay
+            onPressed: () => Navigator.of(context).pop(false), // Stay
             child: const Text('OK'),
           ),
         ],
       ),
-    ) ??
-        false;
+    ) ?? false;
+  }
+
+  void _handleAppBarBack() {
+    if (_showingVisitCards) {
+      if (widget.fromNavbar || widget.fromRegisteredInmates) {
+        Navigator.pop(context);
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      }
+    }else {
+      if (widget.fromChatbot) {
+        Navigator.pop(context);
+      } else if (widget.fromNavbar && !widget.showVisitCards) {
+        setState(() {
+          _showingVisitCards = true;
+          _clearFormData();
+        });
+      } else {
+        _onWillPop();
+      }
+    }
+  }
+
+  void _clearFormData() {
+    _prisonerNameController.clear();
+    _prisonController.clear();
+    _paroleFromDateController.clear();
+    _paroleToDateController.clear();
+  }
+
+  Widget _buildNavItem({
+    required int index,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final isSelected = _selectedIndex == index;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedIndex = index;
+            ;
+          });
+          onTap();
+        },
+        child: Container(
+          height: 60,
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? Colors.white : Colors.white70,
+                size: 24,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.white70,
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showReadOnlyAlert(String fieldName) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.lock_outline, color: Colors.orange, size: 60),
+              SizedBox(height: 16),
+              Text(
+                "Field Locked",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              Text(
+                "Can't edit $fieldName field. This information is pre-filled and cannot be modified.",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+              ),
+              SizedBox(height: 16),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF5A8BBA),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text(
+                  "OK",
+                  style: TextStyle(fontSize: 14, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void showSuccessDialog(BuildContext context) {
@@ -202,203 +493,530 @@ class _ParoleScreenState extends State<ParoleScreen> {
     );
   }
 
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: Colors.black),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 14,fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<VisitorModel> getFilteredVisits() {
+    List<VisitorModel> currentVisits = visitData[selectedVisitType] ?? [];
+
+    if (selectedStatus == 'All') {
+      return currentVisits;
+    }
+
+    VisitStatus statusFilter;
+    switch (selectedStatus) {
+      case 'Pending':
+        statusFilter = VisitStatus.pending;
+        break;
+      case 'Upcoming':
+        statusFilter = VisitStatus.upcoming;
+        break;
+      case 'Completed':
+        statusFilter = VisitStatus.completed;
+        break;
+      case 'Expired':
+        statusFilter = VisitStatus.expired;
+        break;
+      default:
+        return currentVisits;
+    }
+    return currentVisits.where((visit) => visit.status == statusFilter).toList();
+  }
+
+  Widget _buildReadOnlyTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    String? Function(String?)? validator,
+    bool readOnly = false,
+    int maxLines = 1,
+    String? fieldName,
+    bool isRequired = false,
+  }) {
+    return GestureDetector(
+      onTap: readOnly ? () => _showReadOnlyAlert(fieldName ?? label) : null,
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: isRequired ? '$label*' : label,
+          hintText: hint,
+          border: OutlineInputBorder(),
+          fillColor: readOnly ? Colors.grey[200] : Colors.white,
+          filled: true,
+          suffixIcon: readOnly ? Icon(Icons.lock_outline, color: Colors.grey) : null,
+        ),
+        style: TextStyle(
+          color: readOnly ? Colors.grey[600] : Colors.black,
+        ),
+        validator: validator,
+        readOnly: readOnly,
+        maxLines: maxLines,
+        inputFormatters: readOnly ? [] : [
+          TextInputFormatter.withFunction((oldValue, newValue) {
+            String text = newValue.text;
+            if (text.isNotEmpty) {
+              text = text.split(' ').map((word) {
+                if (word.isNotEmpty) {
+                  return word[0].toUpperCase() + word.substring(1).toLowerCase();
+                }
+                return word;
+              }).join(' ');
+            }
+            return TextEditingValue(
+              text: text,
+              selection: TextSelection.collapsed(offset: text.length),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerticalList() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: inmates.length,
+      itemBuilder: (context, index) {
+        final inmate = inmates[index];
+        return Card(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Colors.black, width: 1),
+          ),
+          elevation: 4,
+          shadowColor: Colors.black.withOpacity(0.2),
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with Serial No. and Prisoner Name
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          const Icon(Icons.person, color: Colors.black, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              "${inmate['prisonerName']} (#${inmate['serial']})",
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.download, color: Colors.blue),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Download functionality coming soon')),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                _buildInfoRow(Icons.explicit_outlined, "Reason: ${inmate['reason']}"),
+                // Gender/Age with arrow icon
+                Row(
+                  children: [
+                    const Icon(Icons.date_range_outlined, size: 18, color: Colors.black),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        "Parole From: ${inmate['paroleFrom']}",
+                        style: const TextStyle(fontSize: 14,fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ParoleScreen(
+                              selectedIndex: 2,
+                              fromRegisteredInmates: true,
+                              prefilledPrisonerName: inmate['prisonerName'],
+                              prefilledPrison: inmate['prison'],
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.white,
+                          size: 17,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                _buildInfoRow(Icons.date_range, "Parole To: ${inmate['paroleTo']}"),
+                _buildInfoRow(Icons.location_on, "Prison: ${inmate['prison']}"),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildParoleForm(){
+    return Form(
+      key: _formKey,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            FormSectionTitle(title: 'Parole Application'),
+            SizedBox(height: 20),
+// Prisoner Name - Read only when from registered inmates or visit cards
+            _buildReadOnlyTextField(
+              controller: _prisonerNameController,
+              label: 'Prisoner Name*',
+              hint: 'Enter prisoner Name',
+              validator: Validators.validateName,
+              readOnly: _isReadOnlyMode,
+              fieldName: 'Prisoner Name',
+            ),
+            SizedBox(height: 20),
+
+            // Prison Address - Read only when from registered inmates or visit cards
+            _buildReadOnlyTextField(
+              controller: _prisonController,
+              label: 'Prison*',
+              hint: 'Prison',
+              validator: (value) => value!.isEmpty ? 'Prison is required' : null,
+              readOnly: _isReadOnlyMode,
+              maxLines: 2,
+              fieldName: 'Prison',
+            ),
+            SizedBox(height: 20),
+
+            DropdownButtonFormField<String>(
+              value: _selectedReason,
+              decoration: InputDecoration(
+                labelText: 'Reason*',
+                border: OutlineInputBorder(),
+              ),
+              items: _reason.map((state) {
+                return DropdownMenuItem(
+                  value: state,
+                  child: Text(state),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedReason = value;
+                });
+              },
+              validator: (value) => value == null ? 'Please select a reason' : null,
+            ),
+            SizedBox(height: 16),
+
+            // Visit Date
+            TextFormField(
+              controller: _paroleFromDateController,
+              decoration: InputDecoration(
+                labelText: 'Parole From*',
+                border: OutlineInputBorder(),
+                suffixIcon: Icon(Icons.calendar_today),
+              ),
+              readOnly: true,
+              onTap: () async {
+                DateTime? pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime.now().add(Duration(days: 30)),
+                );
+                if (pickedDate != null) {
+                  _paroleFromDateController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
+                }
+              },
+              validator: (value) => value!.isEmpty ? 'Please select date' : null,
+            ),
+            SizedBox(height: 16),
+            TextFormField(
+              controller: _paroleToDateController,
+              decoration: InputDecoration(
+                labelText: 'Parole To*',
+                border: OutlineInputBorder(),
+                suffixIcon: Icon(Icons.calendar_today),
+              ),
+              readOnly: true,
+              onTap: () async {
+                DateTime? pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime.now().add(Duration(days: 30)),
+                );
+                if (pickedDate != null) {
+                  _paroleToDateController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
+                }
+              },
+              validator: (value) => value!.isEmpty ? 'Please select date' : null,
+            ),
+            SizedBox(height: 16),
+
+            DropdownButtonFormField<String>(
+              value: _selectedState,
+              decoration: InputDecoration(
+                labelText: 'State*',
+                border: OutlineInputBorder(),
+              ),
+              items: _states.map((state) {
+                return DropdownMenuItem(
+                  value: state,
+                  child: Text(state),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedState = value;
+                  _selectedDistrict = null;
+                });
+              },
+              validator: (value) => value == null ? 'Please select a state' : null,
+            ),
+            SizedBox(height: 16),
+
+            DropdownButtonFormField<String>(
+              value: _selectedDistrict,
+              decoration: InputDecoration(
+                labelText: 'District*',
+                border: OutlineInputBorder(),
+              ),
+              items: _selectedState != null && _districtByState[_selectedState] != null
+                  ? _districtByState[_selectedState]!.map((district) {
+                return DropdownMenuItem(
+                  value: district,
+                  child: Text(district),
+                );
+              }).toList()
+                  : [],
+              onChanged: (value) {
+                setState(() {
+                  _selectedDistrict = value;
+                });
+              },
+              validator: (value) => value == null ? 'Please select a District' : null,
+            ),
+            SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: _selectedPoliceStation,
+              decoration: const InputDecoration(
+                labelText: 'Police Station*',
+                border: OutlineInputBorder(),
+              ),
+              items: (_selectedState != null &&
+                  _selectedDistrict != null &&
+                  _policeStationsByDistrict[_selectedState]?["districts"]?[_selectedDistrict] != null)
+                  ? _policeStationsByDistrict[_selectedState]!["districts"]![_selectedDistrict]!
+                  .map((station) => DropdownMenuItem<String>(
+                value: station,
+                child: Text(station),
+              ))
+                  .toList()
+                  : [],
+              onChanged: (value) {
+                setState(() {
+                  _selectedPoliceStation = value;
+                });
+              },
+              validator: (value) => value == null ? 'Please select a police station' : null,
+            ),
+
+            SizedBox(height: 16),
+
+            CustomTextField(
+              controller: _AddressPlaceController,
+              label: 'Address of Place to Visit*',
+              hint: 'Application Testing',
+              maxLines: 5, // 👈 Makes it look like a textarea
+              maxLength: 500, // Optional: increase limit
+              validator: (value) {
+                final pattern = RegExp(r'^[a-zA-Z0-9\s.,;!?()\-]+$');
+                if (value == null || value.isEmpty) {
+                  return 'Message is required';
+                } else if (!pattern.hasMatch(value)) {
+                  return 'Only letters, numbers and . , ; ! ? - ( ) are allowed';
+                }
+                return null;
+              },
+              inputFormatters: [
+                TextInputFormatter.withFunction((oldValue, newValue) {
+                  // Allow letters, numbers, common punctuation
+                  final allowedPattern = RegExp(r'^[a-zA-Z0-9\s.,;!?()\-]*$');
+                  if (allowedPattern.hasMatch(newValue.text)) {
+                    return newValue;
+                  }
+                  return oldValue;
+                }),
+              ],
+            ),
+            SizedBox(height: 30),
+            // Action Buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: CustomButton(
+                    text: 'Save',
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        showSuccessDialog(context);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _onWillPop,
       child:Scaffold(
         backgroundColor: Colors.white,
-        body: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                FormSectionTitle(title: 'Parole Application'),
-                SizedBox(height: 20),
-
-                DropdownButtonFormField<String>(
-                  value: _selectedReason,
-                  decoration: InputDecoration(
-                    labelText: 'Reason*',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: _reason.map((state) {
-                    return DropdownMenuItem(
-                      value: state,
-                      child: Text(state),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedReason = value;
-                    });
-                  },
-                  validator: (value) => value == null ? 'Please select a reason' : null,
-                ),
-                SizedBox(height: 16),
-
-                // Visit Date
-                TextFormField(
-                  controller: _paroleFromDateController,
-                  decoration: InputDecoration(
-                    labelText: 'Parole From*',
-                    border: OutlineInputBorder(),
-                    suffixIcon: Icon(Icons.calendar_today),
-                  ),
-                  readOnly: true,
-                  onTap: () async {
-                    DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(Duration(days: 30)),
-                    );
-                    if (pickedDate != null) {
-                      _paroleFromDateController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
-                    }
-                  },
-                  validator: (value) => value!.isEmpty ? 'Please select date' : null,
-                ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: _paroleToDateController,
-                  decoration: InputDecoration(
-                    labelText: 'Parole To*',
-                    border: OutlineInputBorder(),
-                    suffixIcon: Icon(Icons.calendar_today),
-                  ),
-                  readOnly: true,
-                  onTap: () async {
-                    DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(Duration(days: 30)),
-                    );
-                    if (pickedDate != null) {
-                      _paroleToDateController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
-                    }
-                  },
-                  validator: (value) => value!.isEmpty ? 'Please select date' : null,
-                ),
-                SizedBox(height: 16),
-
-                DropdownButtonFormField<String>(
-                  value: _selectedState,
-                  decoration: InputDecoration(
-                    labelText: 'State*',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: _states.map((state) {
-                    return DropdownMenuItem(
-                      value: state,
-                      child: Text(state),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedState = value;
-                      _selectedDistrict = null;
-                    });
-                  },
-                  validator: (value) => value == null ? 'Please select a state' : null,
-                ),
-                SizedBox(height: 16),
-
-                DropdownButtonFormField<String>(
-                  value: _selectedDistrict,
-                  decoration: InputDecoration(
-                    labelText: 'District*',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: _selectedState != null && _districtByState[_selectedState] != null
-                      ? _districtByState[_selectedState]!.map((district) {
-                    return DropdownMenuItem(
-                      value: district,
-                      child: Text(district),
-                    );
-                  }).toList()
-                      : [],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedDistrict = value;
-                    });
-                  },
-                  validator: (value) => value == null ? 'Please select a District' : null,
-                ),
-                SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: _selectedPoliceStation,
-                  decoration: const InputDecoration(
-                    labelText: 'Police Station*',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: (_selectedState != null &&
-                      _selectedDistrict != null &&
-                      _policeStationsByDistrict[_selectedState]?["districts"]?[_selectedDistrict] != null)
-                      ? _policeStationsByDistrict[_selectedState]!["districts"]![_selectedDistrict]!
-                      .map((station) => DropdownMenuItem<String>(
-                    value: station,
-                    child: Text(station),
-                  ))
-                      .toList()
-                      : [],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedPoliceStation = value;
-                    });
-                  },
-                  validator: (value) => value == null ? 'Please select a police station' : null,
-                ),
-
-                SizedBox(height: 16),
-
-                CustomTextField(
-                  controller: _AddressPlaceController,
-                  label: 'Address of Place to Visit*',
-                  hint: 'Application Testing',
-                  maxLines: 5, // 👈 Makes it look like a textarea
-                  maxLength: 500, // Optional: increase limit
-                  validator: (value) {
-                    final pattern = RegExp(r'^[a-zA-Z0-9\s.,;!?()\-]+$');
-                    if (value == null || value.isEmpty) {
-                      return 'Message is required';
-                    } else if (!pattern.hasMatch(value)) {
-                      return 'Only letters, numbers and . , ; ! ? - ( ) are allowed';
-                    }
-                    return null;
-                  },
-                  inputFormatters: [
-                    TextInputFormatter.withFunction((oldValue, newValue) {
-                      // Allow letters, numbers, common punctuation
-                      final allowedPattern = RegExp(r'^[a-zA-Z0-9\s.,;!?()\-]*$');
-                      if (allowedPattern.hasMatch(newValue.text)) {
-                        return newValue;
-                      }
-                      return oldValue;
-                    }),
-                  ],
-                ),
-                SizedBox(height: 30),
-                // Action Buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: CustomButton(
-                        text: 'Save',
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            showSuccessDialog(context);
-                          }
-                        },
+        body: _showingVisitCards ? _buildVerticalList() : _buildParoleForm(),
+        appBar: AppBar(
+          title: const Text('Parole'),
+          centerTitle: true,
+          backgroundColor: const Color(0xFF5A8BBA),
+          foregroundColor: Colors.black,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context); // Normal back navigation
+            },
+          ),
+          actions: [
+            if (_showingVisitCards)
+              IconButton(
+                icon: const Icon(Icons.help_outline),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PDFViewerScreen(
+                        assetPath: 'assets/pdfs/about_us.pdf',
                       ),
                     ),
-                  ],
-                )
-              ],
+                  );
+                },
+              ),
+          ],
+        ),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF5A8BBA),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: SizedBox(
+              height: 60,
+              child: Row(
+                children: [
+                  _buildNavItem(
+                    index: 0,
+                    icon: Icons.dashboard,
+                    label: 'Dashboard',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => HomeScreen(selectedIndex: 0),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildNavItem(
+                    index: 1,
+                    icon: Icons.directions_walk,
+                    label: 'Meeting',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => MeetFormScreen(selectedIndex: 1,showVisitCards: true,)),
+                      );
+                    },
+                  ),
+                  _buildNavItem(
+                    index: 2,
+                    icon: Icons.gavel,
+                    label: 'Parole',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ParoleScreen(
+                            selectedIndex: 2,
+                            fromNavbar: true,  // ✅ Add this line
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildNavItem(
+                    index: 3,
+                    icon: Icons.report_problem,
+                    label: 'Grievance',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GrievanceDetailsScreen(selectedIndex: 3),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),
