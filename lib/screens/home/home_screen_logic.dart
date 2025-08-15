@@ -747,6 +747,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
     );
   }
 
+  // Update this method in your home_screen_logic.dart file
   Widget buildVerticalVisitsList() {
     List<VisitorModel> filteredVisits = getFilteredVisits();
 
@@ -772,13 +773,15 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
         ),
       );
     }
+
     return Column(
       children: filteredVisits.map((visitor) {
         return VerticalVisitCard(
           visitor: visitor,
+          sourceType: selectedVisitType, // This will pass 'Meeting', 'Parole', or 'Grievance'
           onTap: () {
-            print('Selected visit: ${visitor.visitorName}');
-          }, sourceType: '',
+            print('Selected ${selectedVisitType}: ${visitor.visitorName}');
+          },
         );
       }).toList(),
     );

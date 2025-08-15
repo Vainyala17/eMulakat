@@ -35,7 +35,7 @@ class AdditionalVisitor {
     this.idProofType,
     this.idProofNumber,
     this.idProofPath,
-    this.isSelected = false,
+    this.isSelected = false, // Changed from false to true for new visitors
     this.passportImage,
     this.idProofImage,
   });
@@ -691,16 +691,19 @@ class _AddNewVisitorScreenState extends State<AddNewVisitorScreen> {
         return;
       }
 
-      // Create new visitor object
+      // Create new visitor object with isSelected = true by default for new visitors
       AdditionalVisitor newVisitor = AdditionalVisitor(
         visitorName: _visitorNameController.text.trim(),
         fatherName: _fatherNameController.text.trim(),
         relation: _selectedRelation!,
         mobileNumber: _mobileController.text.trim(),
-        passportImage: _passportImage, // Fixed: use _passportImage instead of _idProofImage
+        passportImage: _passportImage,
         idProofType: _selectedIdProof,
         idProofNumber: _idNumberController.text.trim(),
         idProofImage: _idProofImage,
+        photoPath: 'visitor_photo_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        idProofPath: _idProofImage != null ? '${_selectedIdProof?.toLowerCase().replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.pdf' : null,
+        isSelected: true, // Set to true by default for new visitors
       );
 
       // Show success dialog
