@@ -675,7 +675,6 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     );
   }
 
-
   // Widget to build the additional visitors list view
   Widget _buildAdditionalVisitorsListView() {
     return Scaffold(
