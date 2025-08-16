@@ -1,50 +1,28 @@
 import 'package:flutter/material.dart';
 
-import '../../dashboard/grievance/grievance_details_screen.dart';
-import '../../dashboard/grievance/grievance_home.dart';
-import '../../dashboard/parole/parole_home.dart';
-import '../../dashboard/parole/parole_screen.dart';
-import '../../dashboard/visit/visit_home.dart';
-import '../../dashboard/visit/whom_to_meet_screen.dart';
-import 'home_screen.dart';
-
-class BottomNavBarScreen extends StatefulWidget {
+class buildNavItem extends StatelessWidget {
+  final int index;
   final int selectedIndex;
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
 
-  const BottomNavBarScreen({
-    Key? key,
-    this.selectedIndex = 1, // default to Meeting tab
-  }) : super(key: key);
+  const buildNavItem({
+    super.key,
+    required this.index,
+    required this.selectedIndex,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
-  _BottomNavBarScreenState createState() => _BottomNavBarScreenState();
-}
-
-class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
-  late int _selectedIndex;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedIndex = widget.selectedIndex;
-  }
-
-  Widget _buildNavItem({
-    required int index,
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    final isSelected = _selectedIndex == index;
+  Widget build(BuildContext context) {
+    final isSelected = selectedIndex == index;
 
     return Expanded(
       child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _selectedIndex = index;
-          });
-          onTap();
-        },
+        onTap: onTap,
         child: Container(
           height: 60,
           decoration: BoxDecoration(
@@ -69,80 +47,6 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Color(0xFF5A8BBA),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: SizedBox(
-            height: 60,
-            child: Row(
-              children: [
-                _buildNavItem(
-                  index: 0,
-                  icon: Icons.dashboard,
-                  label: 'Dashboard',
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => HomeScreen(selectedIndex: 0)),
-                    );
-                  },
-                ),
-                _buildNavItem(
-                  index: 1,
-                  icon: Icons.directions_walk,
-                  label: 'Meeting',
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => MeetFormScreen(selectedIndex: 1,showVisitCards: true,)),
-                    );
-                  },
-                ),
-                _buildNavItem(
-                  index: 2,
-                  icon: Icons.gavel,
-                  label: 'Parole',
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ParoleScreen(selectedIndex: 2),
-                      ),
-                    );
-                  },
-                ),
-
-                _buildNavItem(
-                  index: 3,
-                  icon: Icons.report_problem,
-                  label: 'Grievance',
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => GrievanceDetailsScreen(selectedIndex: 3)),
-                    );
-                  },
-                ),
-              ],
-            ),
           ),
         ),
       ),

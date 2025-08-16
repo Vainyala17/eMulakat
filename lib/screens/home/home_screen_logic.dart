@@ -571,15 +571,13 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: isSelected ? Colors.grey[300] : Colors.transparent,
-                  boxShadow: isSelected
-                      ? [
+                  boxShadow: isSelected ? [
                     BoxShadow(
                       color: Colors.white.withOpacity(0.6),
                       blurRadius: 8,
                       spreadRadius: 2,
                     )
-                  ]
-                      : [],
+                  ] : [],
                 ),
                 child: Icon(
                   icon,

@@ -6,6 +6,7 @@ import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
+import '../../utils/image_uploading.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/form_section_title.dart';
@@ -25,6 +26,7 @@ class AdditionalVisitor {
   bool isSelected;
   File? passportImage;
   File? idProofImage;
+  bool isNewlyAdded;
 
   AdditionalVisitor({
     required this.visitorName,
@@ -35,9 +37,10 @@ class AdditionalVisitor {
     this.idProofType,
     this.idProofNumber,
     this.idProofPath,
-    this.isSelected = false, // Changed from false to true for new visitors
+    this.isSelected = true, // Changed default to true for newly added visitors
     this.passportImage,
     this.idProofImage,
+    this.isNewlyAdded = false,
   });
 }
 
@@ -96,85 +99,6 @@ class _AddNewVisitorScreenState extends State<AddNewVisitorScreen> {
     'Ration Card'
   ];
 
-  double computeLaplacianVariance(img.Image image) {
-    final grayscale = img.grayscale(image);
-
-    // Correct Laplacian kernel as a 3x3 matrix
-    final kernel = [
-      [0, -1, 0],
-      [-1, 4, -1],
-      [0, -1, 0],
-    ];
-
-    int width = grayscale.width;
-    int height = grayscale.height;
-
-    double sum = 0;
-    double sumSquared = 0;
-    int pixelCount = 0;
-
-    // Apply Laplacian filter manually
-    for (int y = 1; y < height - 1; y++) {
-      for (int x = 1; x < width - 1; x++) {
-        double result = 0;
-
-        for (int ky = 0; ky < 3; ky++) {
-          for (int kx = 0; kx < 3; kx++) {
-            final pixel = grayscale.getPixel(x + kx - 1, y + ky - 1);
-            final luminance = img.getLuminance(pixel).toDouble();
-            result += luminance * kernel[ky][kx];
-          }
-        }
-
-        sum += result;
-        sumSquared += result * result;
-        pixelCount++;
-      }
-    }
-
-    if (pixelCount == 0) return 0;
-
-    double mean = sum / pixelCount;
-    double variance = (sumSquared / pixelCount) - (mean * mean);
-    return variance;
-  }
-
-  Future<bool> isImageSharpAndFaceVisible(File file, {double threshold = 100}) async {
-    try {
-      // Decode image
-      final bytes = await file.readAsBytes();
-      final image = img.decodeImage(bytes);
-      if (image == null) return false;
-
-      // Sharpness check
-      final variance = computeLaplacianVariance(image);
-      print('Sharpness (variance): $variance');
-      final isSharp = variance > threshold;
-
-      if (!isSharp) return false;
-
-      // Face detection
-      final inputImage = InputImage.fromFile(file);
-      final faceDetector = FaceDetector(
-        options: FaceDetectorOptions(
-          performanceMode: FaceDetectorMode.accurate, // Changed from fast to accurate
-          enableContours: false,
-          enableClassification: false,
-        ),
-      );
-
-      final faces = await faceDetector.processImage(inputImage);
-      await faceDetector.close();
-
-      final hasFace = faces.isNotEmpty;
-      print('Face detected: $hasFace');
-
-      return hasFace;
-    } catch (e) {
-      print('Error in face detection: $e');
-      return false;
-    }
-  }
   // Pick image function with type parameter
   Future<void> _pickImage(String imageType) async {
     showModalBottomSheet(
@@ -320,24 +244,6 @@ class _AddNewVisitorScreenState extends State<AddNewVisitorScreen> {
         );
       }
     }
-  }
-
-  Future<bool> isIdNumberInDocument(File imageFile, String enteredNumber) async {
-    final inputImage = InputImage.fromFile(imageFile);
-    final recognizer = TextRecognizer();
-    final result = await recognizer.processImage(inputImage);
-    await recognizer.close();
-    print(result.text);
-    final extractedText = result.text.replaceAll(RegExp(r'\s+'), '');
-    print(extractedText);
-    final cleanedInput = enteredNumber.replaceAll(RegExp(r'\s+'), '');
-
-    return extractedText.contains(cleanedInput);
-  }
-
-  bool isImageUnderSizeLimit(File imageFile, {int maxKB = 10000}) {
-    final bytes = imageFile.lengthSync();
-    return bytes <= maxKB * 1024;
   }
 
   @override
@@ -691,7 +597,7 @@ class _AddNewVisitorScreenState extends State<AddNewVisitorScreen> {
         return;
       }
 
-      // Create new visitor object with isSelected = true by default for new visitors
+      // Create new visitor object
       AdditionalVisitor newVisitor = AdditionalVisitor(
         visitorName: _visitorNameController.text.trim(),
         fatherName: _fatherNameController.text.trim(),
@@ -703,8 +609,11 @@ class _AddNewVisitorScreenState extends State<AddNewVisitorScreen> {
         idProofImage: _idProofImage,
         photoPath: 'visitor_photo_${DateTime.now().millisecondsSinceEpoch}.jpg',
         idProofPath: _idProofImage != null ? '${_selectedIdProof?.toLowerCase().replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.pdf' : null,
-        isSelected: true, // Set to true by default for new visitors
+        isSelected: true,
+        isNewlyAdded: true,
       );
+
+      print("DEBUG: Created new visitor: ${newVisitor.visitorName}, isNewlyAdded: ${newVisitor.isNewlyAdded}");
 
       // Show success dialog
       showDialog(
@@ -739,6 +648,7 @@ class _AddNewVisitorScreenState extends State<AddNewVisitorScreen> {
                   ),
                   onPressed: () {
                     Navigator.of(context).pop(); // Close dialog
+                    print("DEBUG: About to return newVisitor to previous screen");
                     Navigator.of(context).pop(newVisitor); // Return to previous screen with new visitor
                   },
                   child: Text(
