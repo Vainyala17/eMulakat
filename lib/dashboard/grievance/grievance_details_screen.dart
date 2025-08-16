@@ -5,6 +5,7 @@ import '../../models/visitor_model.dart';
 import '../../pdf_viewer_screen.dart';
 import '../../screens/home/home_screen.dart';
 import '../../utils/color_scheme.dart';
+import '../../utils/read_only_text_fields.dart';
 import '../../utils/validators.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_button.dart';
@@ -225,107 +226,6 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
     }
   }
 
-  void showSuccessDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false, // prevent dismissing by tapping outside
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.check_circle, color: Colors.green, size: 60),
-              SizedBox(height: 16),
-              Text(
-                "Success",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 8),
-              Text(
-                "Your data has been successfully saved!",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-              ),
-              SizedBox(height: 16),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop(); // close dialog
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => HomeScreen()),
-                  );
-                },
-                child: Text(
-                  "OK",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black, // ✅ Correct way
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildReadOnlyTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    String? Function(String?)? validator,
-    bool readOnly = false,
-    int maxLines = 1,
-    String? fieldName,
-    bool isRequired = false,
-  }) {
-    return GestureDetector(
-      onTap: readOnly ? () => _showReadOnlyAlert(fieldName ?? label) : null,
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: isRequired ? '$label*' : label,
-          hintText: hint,
-          border: OutlineInputBorder(),
-          fillColor: readOnly ? Colors.grey[200] : Colors.white,
-          filled: true,
-          suffixIcon: readOnly ? Icon(Icons.lock_outline, color: Colors.grey) : null,
-        ),
-        style: TextStyle(
-          color: readOnly ? Colors.grey[600] : Colors.black,
-        ),
-        validator: validator,
-        readOnly: readOnly,
-        maxLines: maxLines,
-        inputFormatters: readOnly ? [] : [
-          TextInputFormatter.withFunction((oldValue, newValue) {
-            String text = newValue.text;
-            if (text.isNotEmpty) {
-              text = text.split(' ').map((word) {
-                if (word.isNotEmpty) {
-                  return word[0].toUpperCase() + word.substring(1).toLowerCase();
-                }
-                return word;
-              }).join(' ');
-            }
-            return TextEditingValue(
-              text: text,
-              selection: TextSelection.collapsed(offset: text.length),
-            );
-          }),
-        ],
-      ),
-    );
-  }
 
   Future<bool> _onWillPop() async {
     // If came from chatbot, allow normal back navigation
@@ -418,50 +318,6 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
           ),
         ),
       ),
-    );
-  }
-  void _showReadOnlyAlert(String fieldName) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.lock_outline, color: Colors.orange, size: 60),
-              SizedBox(height: 16),
-              Text(
-                "Field Locked",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 8),
-              Text(
-                "Can't edit $fieldName field. This information is pre-filled and cannot be modified.",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-              ),
-              SizedBox(height: 16),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF5A8BBA),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text(
-                  "OK",
-                  style: TextStyle(fontSize: 14, color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 
@@ -595,7 +451,8 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
             FormSectionTitle(title: 'Grievance Details'),
             SizedBox(height: 20),
 // Prisoner Name - Read only when from registered inmates or visit cards
-            _buildReadOnlyTextField(
+            buildReadOnlyTextField(
+              context : context,
               controller: _prisonerNameController,
               label: 'Prisoner Name*',
               hint: 'Enter prisoner Name',
@@ -606,7 +463,8 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
             SizedBox(height: 20),
 
             // Prison Address - Read only when from registered inmates or visit cards
-            _buildReadOnlyTextField(
+            buildReadOnlyTextField(
+              context : context,
               controller: _prisonController,
               label: 'Prison*',
               hint: 'Prison',

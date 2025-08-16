@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:io';
+import '../../utils/image_uploading.dart';
 import '../home/home_screen.dart';
 import '../../pdf_viewer_screen.dart';
 import '../../widgets/custom_textfield.dart';
@@ -39,11 +40,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
 
   String? _selectedGender;
   String? _selectedIdProof;
-  List<num> laplacianKernel = [
-    0,  1,  0,
-    1, -4,  1,
-    0,  1,  0,
-  ];
   File? _passportImage;  // For passport photo
   File? _idProofImage;   // For ID proof image
   final List<String> _genders = ['Male', 'Female', 'Transgender'];
@@ -64,69 +60,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     super.initState();
   }
 
-
-
-  double computeLaplacianVariance(img.Image image) {
-    final grayscale = img.grayscale(image);
-    final filtered = img.convolution(
-      grayscale,
-      filter: laplacianKernel,
-      div: 1,
-    );
-
-    int width = filtered.width;
-    int height = filtered.height;
-    int pixelCount = width * height;
-
-    double sum = 0;
-    double sumSquared = 0;
-
-    for (int y = 0; y < height; y++) {
-      for (int x = 0; x < width; x++) {
-        final pixel = filtered.getPixel(x, y);
-        final luminance = img.getLuminance(pixel).toDouble();
-        sum += luminance;
-        sumSquared += luminance * luminance;
-      }
-    }
-
-    double mean = sum / pixelCount;
-    double variance = (sumSquared / pixelCount) - (mean * mean);
-    return variance;
-  }
-
-  Future<bool> isImageSharpAndFaceVisible(File file, {double threshold = 100}) async {
-    // Decode image
-    final bytes = await file.readAsBytes();
-    final image = img.decodeImage(bytes);
-    if (image == null) return false;
-
-    // Sharpness check
-    final variance = computeLaplacianVariance(image);
-    print('Sharpness (variance): $variance');
-    final isSharp = variance > threshold;
-    print("Hello");
-    if (!isSharp) return false;
-
-    // Face detection
-    final inputImage = InputImage.fromFile(file);
-    final faceDetector = FaceDetector(
-      options: FaceDetectorOptions(
-        performanceMode: FaceDetectorMode.fast,
-        enableContours: false,
-        enableClassification: false,
-      ),
-    );
-
-    final faces = await faceDetector.processImage(inputImage);
-    await faceDetector.close();
-
-    final hasFace = faces.isNotEmpty;
-    print('Face detected: $hasFace');
-
-    return hasFace;
-  }
-
   Future<bool> isIdNumberInDocument(File imageFile, String enteredNumber) async {
     final inputImage = InputImage.fromFile(imageFile);
     final recognizer = TextRecognizer();
@@ -140,10 +73,6 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     return extractedText.contains(cleanedInput);
   }
 
-  bool isImageUnderSizeLimit(File imageFile, {int maxKB = 10000}) {
-    final bytes = imageFile.lengthSync();
-    return bytes <= maxKB * 1024;
-  }
 
   void showSuccessDialog(BuildContext context) {
     showDialog(
