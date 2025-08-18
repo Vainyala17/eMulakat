@@ -147,7 +147,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     super.initState();
     _selectedIndex = widget.selectedIndex;
     _initializePreviousVisitors();
-    _initializeVisitData();
+    //_initializeVisitData();
     _setupInitialState();
     _loadDashboard();
 
@@ -196,37 +196,37 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     ];
   }
 
-  void _initializeVisitData() {
-    visitData['Meeting'] = [
-      VisitorModel(
-        visitorName: 'Sunita Roy',
-        fatherName: 'Bimal Roy',
-        address: '321 MG Road, Nagpur',
-        gender: 'Female',
-        age: 38,
-        relation: 'Wife',
-        idProof: 'Passport',
-        idNumber: 'P1234567',
-        isInternational: false,
-        state: 'Maharashtra',
-        jail: 'Nagpur Central Jail',
-        visitDate: DateTime.now().subtract(Duration(days: 3)),
-        additionalVisitors: 0,
-        additionalVisitorNames: [],
-        prisonerName: 'Rajesh Roy',
-        prisonerFatherName: 'Mohan Roy',
-        prisonerAge: 42,
-        prisonerGender: 'Male',
-        mode: false,
-        status: VisitStatus.expired,
-        startTime: '11:00',
-        endTime: '13:00',
-        dayOfWeek: 'Thursday',
-        prison: 'Nagpur Central Jail',
-      ),
-      // Add more sample data as needed...
-    ];
-  }
+  // void _initializeVisitData() {
+  //   visitData['Meeting'] = [
+  //     VisitorModel(
+  //       visitorName: 'Sunita Roy',
+  //       fatherName: 'Bimal Roy',
+  //       address: '321 MG Road, Nagpur',
+  //       gender: 'Female',
+  //       age: 38,
+  //       relation: 'Wife',
+  //       idProof: 'Passport',
+  //       idNumber: 'P1234567',
+  //       isInternational: false,
+  //       state: 'Maharashtra',
+  //       jail: 'Nagpur Central Jail',
+  //       visitDate: DateTime.now().subtract(Duration(days: 3)),
+  //       additionalVisitors: 0,
+  //       additionalVisitorNames: [],
+  //       prisonerName: 'Rajesh Roy',
+  //       prisonerFatherName: 'Mohan Roy',
+  //       prisonerAge: 42,
+  //       prisonerGender: 'Male',
+  //       mode: false,
+  //       status: VisitStatus.expired,
+  //       startTime: '11:00',
+  //       endTime: '13:00',
+  //       dayOfWeek: 'Thursday',
+  //       prison: 'Nagpur Central Jail',
+  //     ),
+  //     // Add more sample data as needed...
+  //   ];
+  // }
 
   // Image handling methods
   Future<void> _pickImageForVisitor(String imageType, AdditionalVisitor visitor) async {

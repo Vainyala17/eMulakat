@@ -5,6 +5,7 @@ import 'package:speech_to_text/speech_to_text.dart';
 import 'package:translator/translator.dart';
 import '../../models/visitor_model.dart';
 import '../../utils/color_scheme.dart';
+import '../../services/api_service.dart';
 import 'home_screen.dart';
 import 'vertical_visit_card.dart';
 
@@ -15,6 +16,8 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
   bool isTtsEnabled = false;
   bool isAuthChecking = true;
   bool isAuthenticated = false;
+  bool isLoading = true;
+  String? errorMessage;
 
   FlutterTts flutterTts = FlutterTts();
   SpeechToText speechToText = SpeechToText();
@@ -31,76 +34,42 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
     'Marathi': 'mr',
   };
 
-  // Visit type selection
-  String selectedVisitType = 'Meeting'; // Default selection
-  String selectedStatus = 'All'; // Default status filter
+  String selectedVisitType = 'Meeting';
+  String selectedStatus = 'All';
 
-  // Sample data for different visit types
   Map<String, List<VisitorModel>> visitData = {
     'Meeting': [],
     'Parole': [],
     'Grievance': [],
   };
 
+  // ✅ Fixed: Use lowercase keys to match API response
   Map<String, Map<String, int>> statusCounts = {
     'Meeting': {
-      'Pending': 2,
-      'Upcoming': 3,
-      'Completed': 5,
-      'Expired': 1,
-      'Total': 11,
+      'pending': 0,
+      'completed': 0,
+      'upcoming': 0,
+      'expired': 0,
+      'total': 0,
     },
     'Parole': {
-      'Pending': 1,
-      'Upcoming': 0,
-      'Completed': 2,
-      'Expired': 0,
-      'Total': 3,
+      'pending': 0,
+      'completed': 0,
+      'upcoming': 0,
+      'expired': 0,
+      'total': 0,
     },
     'Grievance': {
-      'Pending': 3,
-      'Upcoming': 1,
-      'Completed': 4,
-      'Expired': 2,
-      'Total': 10,
+      'pending': 0,
+      'completed': 0,
+      'upcoming': 0,
+      'expired': 0,
+      'total': 0,
     },
   };
 
-  // Sample notifications data
-  List<NotificationModel> notifications = [
-    NotificationModel(
-      id: '1',
-      title: 'Visit completed',
-      message: 'Your visit request for Arthur Road Jail has been completed for Monday, 15:00-17:30',
-      timestamp: DateTime.now().subtract(Duration(hours: 2)),
-      type: 'visit',
-      isRead: false,
-    ),
-    NotificationModel(
-      id: '2',
-      title: 'Visit Reminder',
-      message: 'You have an upcoming visit tomorrow at Yerwada Jail. Please arrive 30 minutes early.',
-      timestamp: DateTime.now().subtract(Duration(hours: 5)),
-      type: 'visit',
-      isRead: false,
-    ),
-    NotificationModel(
-      id: '3',
-      title: 'Grievance Update',
-      message: 'Your grievance #GR-2024-001 has been reviewed and a response has been provided.',
-      timestamp: DateTime.now().subtract(Duration(days: 1)),
-      type: 'grievance',
-      isRead: true,
-    ),
-    NotificationModel(
-      id: '4',
-      title: 'System Maintenance',
-      message: 'The system will be under maintenance on Sunday from 2:00 AM to 4:00 AM.',
-      timestamp: DateTime.now().subtract(Duration(days: 2)),
-      type: 'system',
-      isRead: false,
-    ),
-  ];
+  String visitorMobileNumber = "7702000725";
+  List<NotificationModel> notifications = [];
 
   @override
   void initState() {
@@ -108,9 +77,278 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
     initializeTts();
     initializeStt();
     _selectedIndex = (widget as HomeScreen).selectedIndex;
+    _loadDashboardData();
   }
 
-  // TTS and Speech methods
+  // ✅ Improved error handling and loading logic
+  Future<void> _loadDashboardData() async {
+    if (!mounted) return;
+
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      print('📊 Starting to load dashboard data...');
+
+      // Load dashboard summary first
+      await _loadDashboardSummary();
+      print('✅ Dashboard summary loaded');
+
+      // Load detailed data for all visit types
+      await _loadAllVisitTypes();
+      print('✅ All visit types loaded');
+
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        print('🎉 Dashboard data loading completed successfully!');
+      }
+    } catch (e) {
+      print('❌ Error loading dashboard data: $e');
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          errorMessage = 'Failed to load data: ${e.toString()}';
+        });
+      }
+    }
+  }
+
+  Future<void> _loadDashboardSummary() async {
+    try {
+      final ApiService apiService = ApiService();
+      final response = await apiService.getDashboardSummary(visitorMobileNumber);
+
+      print('📡 Dashboard Summary Response: $response');
+
+      if (response == null) {
+        print('❌ Response is null');
+        return;
+      }
+
+      // ✅ Parse Meeting data (inside dashboard object)
+      if (response['dashboard']?.containsKey('meeting') == true) {
+        final meetingData = response['dashboard']['meeting'];
+        statusCounts['Meeting'] = {
+          'pending': _parseCount(meetingData['pending']),
+          'completed': _parseCount(meetingData['Completed']), // Capital C from API
+          'upcoming': _parseCount(meetingData['upcoming']),
+          'expired': _parseCount(meetingData['expired']),
+          'total': _parseCount(meetingData['total']),
+        };
+        print('✅ Meeting counts updated: ${statusCounts['Meeting']}');
+      }
+
+      // ✅ Parse Parole data (inside dashboard object)
+      if (response['dashboard']?.containsKey('parole') == true) {
+        final paroleData = response['dashboard']['parole'];
+        statusCounts['Parole'] = {
+          'pending': _parseCount(paroleData['pending']),
+          'completed': _parseCount(paroleData['Completed']), // Capital C from API
+          'upcoming': _parseCount(paroleData['upcoming']),
+          'expired': _parseCount(paroleData['expired']),
+          'total': _parseCount(paroleData['total']),
+        };
+        print('✅ Parole counts updated: ${statusCounts['Parole']}');
+      }
+
+      // ✅ Parse Grievance data (at root level, not inside dashboard)
+      if (response.containsKey('grievance')) {
+        final grievanceData = response['grievance'];
+        statusCounts['Grievance'] = {
+          'pending': _parseCount(grievanceData['pending']),
+          'completed': _parseCount(grievanceData['Completed']), // Capital C from API
+          'upcoming': _parseCount(grievanceData['upcoming']),
+          'expired': _parseCount(grievanceData['expired']),
+          'total': _parseCount(grievanceData['total']),
+        };
+        print('✅ Grievance counts updated: ${statusCounts['Grievance']}');
+      }
+
+      print('📊 Final Status Counts: $statusCounts');
+
+    } catch (e) {
+      print('❌ Error loading dashboard summary: $e');
+      print('📍 Stack trace: ${StackTrace.current}');
+      rethrow;
+    }
+  }
+
+  // ✅ Helper method to safely parse counts
+  int _parseCount(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
+
+  // ✅ Improved parallel loading with better error handling
+  Future<void> _loadAllVisitTypes() async {
+    try {
+      final results = await Future.wait([
+        _loadVisitTypeData('Meeting').catchError((e) {
+          print('❌ Error loading Meeting data: $e');
+          return null;
+        }),
+        _loadVisitTypeData('Parole').catchError((e) {
+          print('❌ Error loading Parole data: $e');
+          return null;
+        }),
+        _loadVisitTypeData('Grievance').catchError((e) {
+          print('❌ Error loading Grievance data: $e');
+          return null;
+        }),
+      ]);
+
+      print('✅ All visit type data loaded successfully');
+    } catch (e) {
+      print('❌ Error in _loadAllVisitTypes: $e');
+      // Continue anyway with partial data
+    }
+  }
+
+  // ✅ Better error handling for individual visit types
+  Future<void> _loadVisitTypeData(String visitType) async {
+    try {
+      print('📡 Loading $visitType data...');
+
+      final ApiService apiService = ApiService();
+      final response = await apiService.getDashboardDetailedData(visitType);
+
+      print('📡 $visitType Response: $response');
+
+      if (response != null && response['header'] != null && response['header']['data'] != null) {
+        final List<dynamic> dataList = response['header']['data'];
+        print('📊 Found ${dataList.length} $visitType records');
+
+        List<VisitorModel> visitors = dataList.map((item) {
+          try {
+            return _createVisitorModelFromApi(item, visitType);
+          } catch (e) {
+            print('❌ Error parsing $visitType item: $e');
+            print('📄 Item data: $item');
+            return null;
+          }
+        }).where((visitor) => visitor != null).cast<VisitorModel>().toList();
+
+        visitData[visitType] = visitors;
+        print('✅ $visitType data loaded: ${visitors.length} records');
+      } else {
+        print('⚠️ No data found for $visitType');
+        visitData[visitType] = [];
+      }
+    } catch (e) {
+      print('❌ Error loading $visitType data: $e');
+      visitData[visitType] = []; // Set empty list on error
+      rethrow;
+    }
+  }
+
+  // ✅ Improved data parsing with better error handling
+  VisitorModel _createVisitorModelFromApi(Map<String, dynamic> apiData, String visitType) {
+    try {
+      // Convert request_status to VisitStatus enum
+      VisitStatus status = _parseVisitStatus(apiData['request_status']?.toString() ?? 'pending');
+
+      // Parse dates based on visit type
+      DateTime visitDate;
+      if (visitType == 'Parole') {
+        visitDate = _parseDate(apiData['leave_from_date'] ?? '');
+      } else {
+        visitDate = _parseDate(apiData['req_visit_date'] ?? '');
+      }
+
+      return VisitorModel(
+        id: apiData['regn_no']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        visitorName: 'Visitor', // This should come from user session
+        prisonerName: apiData['prisoner_name']?.toString() ?? 'Unknown Prisoner',
+        prisonerFatherName: apiData['father_name']?.toString() ?? '',
+        relation: 'Family', // Default or from API if available
+        visitDate: visitDate,
+        startTime: '10:00',
+        endTime: '12:00',
+        jail: 'Central Jail',
+        address: apiData['spent_address']?.toString() ?? '',
+        mode: (apiData['meeting_mode']?.toString().toLowerCase() == 'physical'),
+        status: status,
+        // Additional fields for different visit types
+        leaveFromDate: apiData['leave_from_date']?.toString(),
+        leaveToDate: apiData['leave_to_date']?.toString(),
+        reason: apiData['reason']?.toString(),
+        grievanceCategory: apiData['grievance_category']?.toString(),
+        grievance: apiData['grievance']?.toString(),
+        meetingMode: apiData['meeting_mode']?.toString(),
+        reqVisitDate: apiData['req_visit_date']?.toString(),
+        apprVisitDate: apiData['appr_visit_date']?.toString(),
+        remarks: apiData['remarks']?.toString(),
+        // Required fields with defaults
+        fatherName: '',
+        gender: '',
+        age: 0,
+        idProof: '',
+        idNumber: '',
+        isInternational: false,
+        state: '',
+        additionalVisitors: 0,
+        additionalVisitorNames: [],
+        prisonerAge: 0,
+        prisonerGender: '',
+        dayOfWeek: '',
+        prison: '',
+      );
+    } catch (e) {
+      print('❌ Error creating VisitorModel from API data: $e');
+      print('📄 API Data: $apiData');
+      rethrow;
+    }
+  }
+
+  VisitStatus _parseVisitStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return VisitStatus.pending;
+      case 'completed':
+        return VisitStatus.completed;
+      case 'upcoming':
+        return VisitStatus.upcoming;
+      case 'expired':
+        return VisitStatus.expired;
+      default:
+        return VisitStatus.pending;
+    }
+  }
+
+  DateTime _parseDate(String dateString) {
+    if (dateString.isEmpty) return DateTime.now();
+
+    try {
+      // Handle DD/MM/YYYY format from your API
+      List<String> parts = dateString.split('/');
+      if (parts.length == 3) {
+        int day = int.parse(parts[0]);
+        int month = int.parse(parts[1]);
+        int year = int.parse(parts[2]);
+        return DateTime(year, month, day);
+      }
+
+      // Fallback: Try ISO format
+      return DateTime.parse(dateString);
+    } catch (e) {
+      print('❌ Error parsing date: $dateString - $e');
+      return DateTime.now();
+    }
+  }
+
+  // ✅ Improved refresh with loading state
+  Future<void> refreshData() async {
+    print('🔄 Refreshing dashboard data...');
+    await _loadDashboardData();
+  }
+
+  // TTS and Speech methods (unchanged)
   Future<void> initializeTts() async {
     await flutterTts.setLanguage("en-US");
     await flutterTts.setSpeechRate(0.5);
@@ -141,7 +379,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
     await flutterTts.speak(text);
   }
 
-  // Translation methods
+  // Translation methods (unchanged)
   Future<void> translateAll(String langCode) async {
     final translator = GoogleTranslator();
 
@@ -157,7 +395,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
     setState(() {});
   }
 
-  // Utility methods
+  // Utility methods (unchanged)
   String getDayOfWeek(DateTime date) {
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     return days[date.weekday - 1];
@@ -203,7 +441,6 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
     }
   }
 
-  // Get filtered visits based on selected status
   List<VisitorModel> getFilteredVisits() {
     List<VisitorModel> currentVisits = visitData[selectedVisitType] ?? [];
 
@@ -231,7 +468,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
     return currentVisits.where((visit) => visit.status == statusFilter).toList();
   }
 
-  // Notification methods
+  // Notification methods (unchanged)
   int get unreadNotificationCount {
     return notifications.where((notification) => !notification.isRead).length;
   }
@@ -253,7 +490,10 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
     });
   }
 
+  // ✅ Fixed: Use proper key names for status counts
   Widget buildVisitTypeCard(String title, int count, bool selected, VoidCallback onTap, {Image? leadingIcon}) {
+    int apiCount = statusCounts[title]?['total'] ?? 0;
+
     return SizedBox(
       width: 150,
       height: 150,
@@ -261,7 +501,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
         onTap: () {
           setState(() {
             selectedVisitType = title;
-            selectedStatus = 'All'; // Reset status filter when changing visit type
+            selectedStatus = 'All';
           });
           onTap();
         },
@@ -298,7 +538,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
                   backgroundColor: Colors.white,
                   radius: 15,
                   child: Text(
-                    '${statusCounts[title]?['Total'] ?? 0}',
+                    apiCount.toString(),
                     style: TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.bold,
@@ -313,9 +553,24 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
     );
   }
 
+  // ✅ Fixed: Use proper key names for status counts
   Widget buildStatusCard(String title, int count, String iconType, bool selected, VoidCallback onTap) {
     Color iconColor;
     String imagePath;
+
+    // Get count from API data based on current visit type
+    int apiCount = 0;
+    String statusKey = title.toLowerCase();
+    if (statusKey == 'all') {
+      apiCount = statusCounts[selectedVisitType]?['total'] ?? 0;
+    } else {
+      // Map the status correctly
+      if (statusKey == 'completed') {
+        apiCount = statusCounts[selectedVisitType]?['completed'] ?? 0;
+      } else {
+        apiCount = statusCounts[selectedVisitType]?[statusKey] ?? 0;
+      }
+    }
 
     switch (iconType) {
       case 'pending':
@@ -354,9 +609,9 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2), // ✅ Black shadow
-                blurRadius: 6, // Softness of shadow
-                offset: const Offset(0, 3), // Position of shadow
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
@@ -380,7 +635,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
               ),
               const SizedBox(height: 4),
               Text(
-                count.toString(),
+                apiCount.toString(),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -394,8 +649,66 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
     );
   }
 
-  // Update this method in your home_screen_logic.dart file
+  Widget buildLoadingWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(color: AppColors.primary),
+          SizedBox(height: 16),
+          Text(
+            'Loading data...',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildErrorWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: Colors.red[400],
+          ),
+          SizedBox(height: 16),
+          Text(
+            errorMessage ?? 'Something went wrong',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.red[600],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: refreshData,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+            ),
+            child: Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget buildVerticalVisitsList() {
+    if (isLoading) {
+      return buildLoadingWidget();
+    }
+
+    if (errorMessage != null) {
+      return buildErrorWidget();
+    }
+
     List<VisitorModel> filteredVisits = getFilteredVisits();
 
     if (filteredVisits.isEmpty) {
@@ -425,7 +738,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
       children: filteredVisits.map((visitor) {
         return VerticalVisitCard(
           visitor: visitor,
-          sourceType: selectedVisitType, // This will pass 'Meeting', 'Parole', or 'Grievance'
+          sourceType: selectedVisitType,
           onTap: () {
             print('Selected ${selectedVisitType}: ${visitor.visitorName}');
           },
