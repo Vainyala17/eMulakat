@@ -57,7 +57,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     startTime: '14:00',
     endTime: '16:30',
     dayOfWeek: 'Friday',
-    prison: 'null',
+    prison: 'null', id: '',
   );
 
   @override
