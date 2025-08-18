@@ -1,12 +1,16 @@
-import 'package:eMulakat/dashboard/parole/parole_home.dart';
+import 'dart:convert';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../models/visitor_model.dart';
 import '../../pdf_viewer_screen.dart';
+import '../../screens/home/bottom_nav_bar.dart';
 import '../../screens/home/home_screen.dart';
+import '../../services/api_service.dart';
 import '../../utils/color_scheme.dart';
+import '../../utils/dialog_utils.dart';
 import '../../utils/read_only_text_fields.dart';
 import '../../utils/validators.dart';
 import '../../widgets/custom_button.dart';
@@ -14,6 +18,41 @@ import '../../widgets/custom_textfield.dart';
 import '../../widgets/form_section_title.dart';
 import '../grievance/grievance_details_screen.dart';
 import '../visit/whom_to_meet_screen.dart';
+
+class ParoleRequest {
+  final String regnNo;
+  final String prisonerName;
+  final String fatherName;
+  final String leaveFromDate;
+  final String leaveToDate;
+  final String spentAddress;
+  final String reason;
+  final String requestStatus;
+
+  ParoleRequest({
+    required this.regnNo,
+    required this.prisonerName,
+    required this.fatherName,
+    required this.leaveFromDate,
+    required this.leaveToDate,
+    required this.spentAddress,
+    required this.reason,
+    required this.requestStatus,
+  });
+
+  factory ParoleRequest.fromJson(Map<String, dynamic> json) {
+    return ParoleRequest(
+      regnNo: json['regn_no'] ?? '',
+      prisonerName: json['prisoner_name'] ?? '',
+      fatherName: json['father_name'] ?? '',
+      leaveFromDate: json['leave_from_date'] ?? '',
+      leaveToDate: json['leave_to_date'] ?? '',
+      spentAddress: json['spent_address'] ?? '',
+      reason: json['reason'] ?? '',
+      requestStatus: json['request_status'] ?? '',
+    );
+  }
+}
 
 class ParoleScreen extends StatefulWidget {
   final bool fromChatbot;
@@ -52,6 +91,11 @@ class _ParoleScreenState extends State<ParoleScreen> {
   String selectedVisitType = 'Parole';
   String selectedStatus = 'All';
   bool _isReadOnlyMode = false;
+  bool _isLoading = true;
+
+  // ✅ NEW: Replace hardcoded list with API data
+  List<ParoleRequest> paroleRequests = [];
+  Map<String, dynamic> dashboardSummary = {};
 
   final TextEditingController _paroleFromDateController = TextEditingController();
   final TextEditingController _paroleToDateController = TextEditingController();
@@ -60,6 +104,7 @@ class _ParoleScreenState extends State<ParoleScreen> {
   final TextEditingController _prisonController = TextEditingController();
 
   final List<String> _reason = ["To maintain family and social ties", "other"];
+
   final List<String> _states = [
     'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
     'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
@@ -67,6 +112,7 @@ class _ParoleScreenState extends State<ParoleScreen> {
     'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
     'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
   ];
+
   final Map<String, List<String>> _districtByState = {
     'Andhra Pradesh': [
       'Alluri Sitharama Raju', 'Anakapalli', 'Parvathipuram Manyam', 'Srikakulam',
@@ -86,9 +132,11 @@ class _ParoleScreenState extends State<ParoleScreen> {
       'Satara', 'Sindhudurg', 'Solapur', 'Thane', 'Wardha', 'Washim', 'Yavatmal',
     ],
   };
+
   Map<String, List<VisitorModel>> visitData = {
     'Parole': [],
   };
+
   static const Map<String, Map<String, Map<String, List<String>>>> _policeStationsByDistrict = {
     "Andhra Pradesh": {
       "districts": {
@@ -162,121 +210,94 @@ class _ParoleScreenState extends State<ParoleScreen> {
         ]
       }
     },
-    // ... Repeat same pattern for other states
   };
 
-  final List<Map<String, dynamic>> inmates = [
-    {
-      "serial": 1,
-      "prisonerName": "Raj Shekar",
-      "paroleFrom": "5 Jul 2025",
-      "paroleTo": "25 Sep 2025",
-      "reason": "To maintain family and social ties",
-      "prison": "CENTRAL JAIL NO.2, TIHAR",
-    },
-    {
-      "serial": 2,
-      "prisonerName": "Ram Kumar",
-      "paroleFrom": "15 Nov 2025",
-      "paroleTo": "27 Nov 2025",
-      "reason": "Other",
-      "prison": "CENTRAL JAIL NO.2, TIHAR",
-    },
-    {
-      "serial": 3,
-      "prisonerName": "Prashant Singh",
-      "paroleFrom": "18 Nov 2025",
-      "paroleTo": "1 Dec 2025",
-      "reason": "To maintain family and social ties",
-      "prison": "PHQ",
-    }
-  ];
-
-  void initializeVisitData() {
-    visitData['Parole'] = [
-      VisitorModel(
-        visitorName: 'Meena Patel',
-        fatherName: 'Raj Patel',
-        address: '789 SB Road, Pune',
-        gender: 'Female',
-        age: 45,
-        relation: 'Mother',
-        idProof: 'Voter ID',
-        idNumber: 'VOT9876543',
-        isInternational: false,
-        state: 'Maharashtra',
-        jail: 'Pune Central Jail',
-        visitDate: DateTime.now().add(Duration(days: 7)),
-        additionalVisitors: 1,
-        additionalVisitorNames: ['Kiran Patel'],
-        prisonerName: 'Amit Patel',
-        prisonerFatherName: 'Raj Patel',
-        prisonerAge: 25,
-        prisonerGender: 'Male',
-        mode: true,
-        status: VisitStatus.pending,
-        startTime: '09:00',
-        endTime: '17:00',
-        dayOfWeek: 'Monday', prison: '',
-      ),
-      VisitorModel(
-        visitorName: 'Krishna Kumar',
-        fatherName: 'Ram Kumar',
-        address: '456 MG Road, Mumbai',
-        gender: 'Male',
-        age: 35,
-        relation: 'Brother',
-        idProof: 'Aadhar',
-        idNumber: 'XXXX-XXXX-9876',
-        isInternational: false,
-        state: 'Maharashtra',
-        jail: 'Arthur Road',
-        visitDate: DateTime.now().subtract(Duration(days: 1)),
-        additionalVisitors: 0,
-        additionalVisitorNames: [],
-        prisonerName: 'Vishnu Kumar',
-        prisonerFatherName: 'Shyam Kumar',
-        prisonerAge: 30,
-        prisonerGender: 'Male',
-        mode: false,
-        status: VisitStatus.completed,
-        startTime: '14:00',
-        endTime: '16:00',
-        dayOfWeek: 'Sunday', prison: '',
-      ),
-      VisitorModel(
-        visitorName: 'Krishna Kumar',
-        fatherName: 'Ram Kumar',
-        address: '456 MG Road, Mumbai',
-        gender: 'Male',
-        age: 35,
-        relation: 'Brother',
-        idProof: 'Aadhar',
-        idNumber: 'XXXX-XXXX-9876',
-        isInternational: false,
-        state: 'Maharashtra',
-        jail: 'Arthur Road',
-        visitDate: DateTime.now().subtract(Duration(days: 1)),
-        additionalVisitors: 0,
-        additionalVisitorNames: [],
-        prisonerName: 'Vishnu Kumar',
-        prisonerFatherName: 'Shyam Kumar',
-        prisonerAge: 30,
-        prisonerGender: 'Male',
-        mode: false,
-        status: VisitStatus.expired,
-        startTime: '14:00',
-        endTime: '16:00',
-        dayOfWeek: 'Sunday', prison: '',
-      ),
-    ];
-  }
+  // void initializeVisitData() {
+  //   visitData['Parole'] = [
+  //     VisitorModel(
+  //       visitorName: 'Meena Patel',
+  //       fatherName: 'Raj Patel',
+  //       address: '789 SB Road, Pune',
+  //       gender: 'Female',
+  //       age: 45,
+  //       relation: 'Mother',
+  //       idProof: 'Voter ID',
+  //       idNumber: 'VOT9876543',
+  //       isInternational: false,
+  //       state: 'Maharashtra',
+  //       jail: 'Pune Central Jail',
+  //       visitDate: DateTime.now().add(Duration(days: 7)),
+  //       additionalVisitors: 1,
+  //       additionalVisitorNames: ['Kiran Patel'],
+  //       prisonerName: 'Amit Patel',
+  //       prisonerFatherName: 'Raj Patel',
+  //       prisonerAge: 25,
+  //       prisonerGender: 'Male',
+  //       mode: true,
+  //       status: VisitStatus.pending,
+  //       startTime: '09:00',
+  //       endTime: '17:00',
+  //       dayOfWeek: 'Monday', prison: '',
+  //     ),
+  //     VisitorModel(
+  //       visitorName: 'Krishna Kumar',
+  //       fatherName: 'Ram Kumar',
+  //       address: '456 MG Road, Mumbai',
+  //       gender: 'Male',
+  //       age: 35,
+  //       relation: 'Brother',
+  //       idProof: 'Aadhar',
+  //       idNumber: 'XXXX-XXXX-9876',
+  //       isInternational: false,
+  //       state: 'Maharashtra',
+  //       jail: 'Arthur Road',
+  //       visitDate: DateTime.now().subtract(Duration(days: 1)),
+  //       additionalVisitors: 0,
+  //       additionalVisitorNames: [],
+  //       prisonerName: 'Vishnu Kumar',
+  //       prisonerFatherName: 'Shyam Kumar',
+  //       prisonerAge: 30,
+  //       prisonerGender: 'Male',
+  //       mode: false,
+  //       status: VisitStatus.completed,
+  //       startTime: '14:00',
+  //       endTime: '16:00',
+  //       dayOfWeek: 'Sunday', prison: '',
+  //     ),
+  //     VisitorModel(
+  //       visitorName: 'Krishna Kumar',
+  //       fatherName: 'Ram Kumar',
+  //       address: '456 MG Road, Mumbai',
+  //       gender: 'Male',
+  //       age: 35,
+  //       relation: 'Brother',
+  //       idProof: 'Aadhar',
+  //       idNumber: 'XXXX-XXXX-9876',
+  //       isInternational: false,
+  //       state: 'Maharashtra',
+  //       jail: 'Arthur Road',
+  //       visitDate: DateTime.now().subtract(Duration(days: 1)),
+  //       additionalVisitors: 0,
+  //       additionalVisitorNames: [],
+  //       prisonerName: 'Vishnu Kumar',
+  //       prisonerFatherName: 'Shyam Kumar',
+  //       prisonerAge: 30,
+  //       prisonerGender: 'Male',
+  //       mode: false,
+  //       status: VisitStatus.expired,
+  //       startTime: '14:00',
+  //       endTime: '16:00',
+  //       dayOfWeek: 'Sunday', prison: '',
+  //     ),
+  //   ];
+  // }
 
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.selectedIndex;
-    initializeVisitData();
+    //initializeVisitData();
+    _loadParoleData(); // ✅ NEW: Load parole data from API
 
     // Show visit cards by default unless explicitly coming from registered inmates
     if (widget.fromRegisteredInmates) {
@@ -296,106 +317,28 @@ class _ParoleScreenState extends State<ParoleScreen> {
     }
   }
 
-  Future<bool> _onWillPop() async {
-    // If came from chatbot, allow normal back navigation
-    if (widget.fromChatbot) {
-      return true; // Allow back navigation to chatbot
-    }
+  // ✅ NEW: Load parole data from API
+  Future<void> _loadParoleData() async {
+    try {
+      final api = ApiService();
+      final response = await api.getDashboardDetailedData("Parole");
 
-    // Otherwise show alert (normal app flow)
-    return await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Exit App'),
-        content: const Text('Please use Logout and close the App'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false), // Stay
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    ) ?? false;
-  }
-
-  void _handleAppBarBack() {
-    if (_showingVisitCards) {
-      if (widget.fromNavbar || widget.fromRegisteredInmates) {
-        Navigator.pop(context);
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-        );
-      }
-    }else {
-      if (widget.fromChatbot) {
-        Navigator.pop(context);
-      } else if (widget.fromNavbar && !widget.showVisitCards) {
+      if (response['header'] != null && response['header']['data'] != null) {
         setState(() {
-          _showingVisitCards = true;
-          _clearFormData();
+          paroleRequests = (response['header']['data'] as List)
+              .map((item) => ParoleRequest.fromJson(item))
+              .toList();
+          dashboardSummary = response['header']['summary'] ?? {};
+          _isLoading = false;
         });
-      } else {
-        _onWillPop();
       }
+    } catch (e) {
+      print('Error loading parole data: $e');
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
-
-  void _clearFormData() {
-    _prisonerNameController.clear();
-    _prisonController.clear();
-    _paroleFromDateController.clear();
-    _paroleToDateController.clear();
-  }
-
-  Widget _buildNavItem({
-    required int index,
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    final isSelected = _selectedIndex == index;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _selectedIndex = index;
-            ;
-          });
-          onTap();
-        },
-        child: Container(
-          height: 60,
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                color: isSelected ? Colors.white : Colors.white70,
-                size: 24,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.white70,
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
 
   Widget _buildInfoRow(IconData icon, String text) {
     return Padding(
@@ -413,6 +356,15 @@ class _ParoleScreenState extends State<ParoleScreen> {
         ],
       ),
     );
+  }
+
+  // ✅ NEW: Filter parole requests by status
+  List<ParoleRequest> getFilteredParoleRequests() {
+    if (selectedStatus == 'All') {
+      return paroleRequests;
+    }
+    return paroleRequests.where((request) =>
+    request.requestStatus.toLowerCase() == selectedStatus.toLowerCase()).toList();
   }
 
   List<VisitorModel> getFilteredVisits() {
@@ -442,109 +394,187 @@ class _ParoleScreenState extends State<ParoleScreen> {
     return currentVisits.where((visit) => visit.status == statusFilter).toList();
   }
 
+  // ✅ NEW: Build status color based on request status
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Colors.orange;
+      case 'completed':
+        return Colors.green;
+      case 'expired':
+        return Colors.red;
+      case 'upcoming':
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
+  }
 
   Widget _buildVerticalList() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(12),
-      itemCount: inmates.length,
-      itemBuilder: (context, index) {
-        final inmate = inmates[index];
-        return Card(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: Colors.black, width: 1),
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final filteredRequests = getFilteredParoleRequests();
+
+    if (filteredRequests.isEmpty) {
+      return const Center(
+        child: Text(
+          'No parole requests found',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        // ✅ NEW: Add filter buttons
+        Container(
+          padding: const EdgeInsets.all(12),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: ['All', 'Pending', 'Completed', 'Expired', 'Upcoming']
+                  .map((status) => Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilterChip(
+                  label: Text(status),
+                  selected: selectedStatus == status,
+                  onSelected: (selected) {
+                    setState(() {
+                      selectedStatus = status;
+                    });
+                  },
+                  selectedColor: AppColors.primary.withOpacity(0.3),
+                ),
+              ))
+                  .toList(),
+            ),
           ),
-          elevation: 4,
-          shadowColor: Colors.black.withOpacity(0.2),
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          child: Padding(
+        ),
+        // ✅ NEW: Updated list with API data
+        Expanded(
+          child: ListView.builder(
             padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header with Serial No. and Prisoner Name
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Row(
+            itemCount: filteredRequests.length,
+            itemBuilder: (context, index) {
+              final request = filteredRequests[index];
+              return Card(
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: const BorderSide(color: Colors.black, width: 1),
+                ),
+                elevation: 4,
+                shadowColor: Colors.black.withOpacity(0.2),
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header with Registration No. and Prisoner Name
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.person, color: Colors.black, size: 18),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                const Icon(Icons.person, color: Colors.black, size: 18),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    "${request.prisonerName}\n(${request.regnNo})",
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Status badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _getStatusColor(request.requestStatus),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              request.requestStatus,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.download, color: Colors.blue),
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Download functionality coming soon')),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      _buildInfoRow(Icons.person_outline, "Father: ${request.fatherName}"),
+                      Row(
+                        children: [
+                          const Icon(Icons.date_range_outlined, size: 18, color: Colors.black),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              "${inmate['prisonerName']} (#${inmate['serial']})",
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
-                              overflow: TextOverflow.ellipsis,
+                              "From: ${request.leaveFromDate}   To: ${request.leaveToDate}",
+                              style: const TextStyle(fontSize: 14,fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ParoleScreen(
+                                    selectedIndex: 2,
+                                    fromRegisteredInmates: true,
+                                    prefilledPrisonerName: request.prisonerName,
+                                    prefilledPrison: request.spentAddress, // You might need to add this to your JSON
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.arrow_forward_ios,
+                                color: Colors.white,
+                                size: 17,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.download, color: Colors.blue),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Download functionality coming soon')),
-                        );
-                      },
-                    ),
-                  ],
+                      _buildInfoRow(Icons.explicit_outlined, "Reason: ${request.reason}"),
+                      _buildInfoRow(Icons.location_on, "Prison: ${request.spentAddress}"),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 4),
-                _buildInfoRow(Icons.explicit_outlined, "Reason: ${inmate['reason']}"),
-                // Gender/Age with arrow icon
-                Row(
-                  children: [
-                    const Icon(Icons.date_range_outlined, size: 18, color: Colors.black),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        "Parole From: ${inmate['paroleFrom']}",
-                        style: const TextStyle(fontSize: 14,fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ParoleScreen(
-                              selectedIndex: 2,
-                              fromRegisteredInmates: true,
-                              prefilledPrisonerName: inmate['prisonerName'],
-                              prefilledPrison: inmate['prison'],
-                            ),
-                          ),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_forward_ios,
-                          color: Colors.white,
-                          size: 17,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                _buildInfoRow(Icons.date_range, "Parole To: ${inmate['paroleTo']}"),
-                _buildInfoRow(Icons.location_on, "Prison: ${inmate['prison']}"),
-                const SizedBox(height: 12),
-              ],
-            ),
+              );
+            },
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 
@@ -772,7 +802,7 @@ class _ParoleScreenState extends State<ParoleScreen> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: _onWillPop,
+      onWillPop: () => DialogUtils.onWillPop(context, showingCards: _showingVisitCards),
       child:Scaffold(
         backgroundColor: Colors.white,
         body: _showingVisitCards ? _buildVerticalList() : _buildParoleForm(),
@@ -820,7 +850,8 @@ class _ParoleScreenState extends State<ParoleScreen> {
               height: 60,
               child: Row(
                 children: [
-                  _buildNavItem(
+                  buildNavItem(
+                    selectedIndex : _selectedIndex,
                     index: 0,
                     icon: Icons.dashboard,
                     label: 'Dashboard',
@@ -833,7 +864,8 @@ class _ParoleScreenState extends State<ParoleScreen> {
                       );
                     },
                   ),
-                  _buildNavItem(
+                  buildNavItem(
+                    selectedIndex : _selectedIndex,
                     index: 1,
                     icon: Icons.directions_walk,
                     label: 'Meeting',
@@ -844,7 +876,8 @@ class _ParoleScreenState extends State<ParoleScreen> {
                       );
                     },
                   ),
-                  _buildNavItem(
+                  buildNavItem(
+                    selectedIndex : _selectedIndex,
                     index: 2,
                     icon: Icons.gavel,
                     label: 'Parole',
@@ -860,7 +893,8 @@ class _ParoleScreenState extends State<ParoleScreen> {
                       );
                     },
                   ),
-                  _buildNavItem(
+                  buildNavItem(
+                    selectedIndex : _selectedIndex,
                     index: 3,
                     icon: Icons.report_problem,
                     label: 'Grievance',
@@ -886,6 +920,9 @@ class _ParoleScreenState extends State<ParoleScreen> {
   void dispose() {
     _paroleFromDateController.dispose();
     _paroleToDateController.dispose();
+    _AddressPlaceController.dispose();
+    _prisonerNameController.dispose();
+    _prisonController.dispose();
     super.dispose();
   }
 }

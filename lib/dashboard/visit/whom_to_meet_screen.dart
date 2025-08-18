@@ -8,6 +8,7 @@ import '../../models/visitor_model.dart';
 import '../../pdf_viewer_screen.dart';
 import '../../screens/home/bottom_nav_bar.dart';
 import '../../screens/home/home_screen.dart';
+import '../../services/api_service.dart';
 import '../../utils/color_scheme.dart';
 import '../../utils/dialog_utils.dart';
 import '../../utils/image_uploading.dart';
@@ -148,6 +149,14 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     _initializePreviousVisitors();
     _initializeVisitData();
     _setupInitialState();
+    _loadDashboard();
+
+  }
+
+  Future<void> _loadDashboard() async {
+    final api = ApiService();
+    final dashboard = await api.getDashboardSummary("7702000725");
+    print(dashboard); // <-- test output
   }
 
   void _setupInitialState() {

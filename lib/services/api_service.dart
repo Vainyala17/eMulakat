@@ -1,13 +1,12 @@
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:path/path.dart';
 import '../models/keyword_model.dart';
-import 'auth_service.dart';
 import 'hive_service.dart';
+
 
 class ApiService {
   static const String BASE_URL = 'http://192.168.0.106:5000/api/kskeywords';
-
 
   // FIXED: Enhanced fetch keywords with better error handling and validation
   static Future<List<KeywordModel>> fetchKeywords() async {
@@ -347,4 +346,85 @@ class ApiService {
     }
   }
 
+
+
+
+
+
+  // this is apis are into assets/mock
+
+
+
+  /// 🔹 Get Dashboard Summary
+  Future<Map<String, dynamic>> getDashboardSummary(String mobileNumber) async {
+    // TODO: Uncomment when backend is live
+    // final response = await http.get(
+    //   Uri.parse("$baseUrl/getDashboardSummary/$mobileNumber"),
+    //   headers: {"accessToken": "xyz"},
+    // );
+    // return json.decode(response.body);
+
+    // 🔹 Mock data (temporary)
+    final String response = await rootBundle.loadString('assets/mock/dashboard_summary.json');
+    return json.decode(response);
+  }
+
+  /// 🔹 Get Dashboard Detailed Data (Meeting/Parole/Grievance)
+  Future<Map<String, dynamic>> getDashboardDetailedData(String type) async {
+    // TODO: Uncomment when backend is live
+    // final response = await http.post(
+    //   Uri.parse("$baseUrl/getDashboardData/7702000725"),
+    //   headers: {"accessToken": "xyz"},
+    //   body: {"request_type": type},
+    // );
+    // return json.decode(response.body);
+
+    // 🔹 Mock data
+    String path = "";
+    if (type == "Meeting") path = 'assets/mock/dashboard_detailed_meeting.json';
+    if (type == "Parole") path = 'assets/mock/dashboard_detailed_parole.json';
+    if (type == "Grievance") path = 'assets/mock/dashboard_detailed_grievance.json';
+
+    final String response = await rootBundle.loadString(path);
+    return json.decode(response);
+  }
+
+  /// 🔹 Get My Registered Inmates
+  Future<Map<String, dynamic>> getMyRegisteredInmates(String mobileNumber) async {
+    // TODO: Uncomment when backend is live
+    // final response = await http.get(
+    //   Uri.parse("$baseUrl/getMyregdinmatesSummary/$mobileNumber"),
+    //   headers: {"accessToken": "xyz"},
+    // );
+    // return json.decode(response.body);
+
+    final String response = await rootBundle.loadString('assets/mock/my_registered_inmates.json');
+    return json.decode(response);
+  }
+
+  /// 🔹 Raise Meeting Request
+  Future<Map<String, dynamic>> raiseMeetingRequest(Map<String, String> body) async {
+    // TODO: Uncomment when backend is live
+    // final response = await http.post(
+    //   Uri.parse("$baseUrl/raiseMeetingRequest/7702000725"),
+    //   headers: {"accessToken": "xyz"},
+    //   body: body,
+    // );
+    // return json.decode(response.body);
+
+    final String response = await rootBundle.loadString('assets/mock/raise_meeting_success.json');
+    return json.decode(response);
+  }
+
+  /// 🔹 Raise Parole Request
+  Future<Map<String, dynamic>> raiseParoleRequest(Map<String, String> body) async {
+    final String response = await rootBundle.loadString('assets/mock/raise_parole_success.json');
+    return json.decode(response);
+  }
+
+  /// 🔹 Raise Grievance Request
+  Future<Map<String, dynamic>> raiseGrievanceRequest(Map<String, String> body) async {
+    final String response = await rootBundle.loadString('assets/mock/raise_grievance_success.json');
+    return json.decode(response);
+  }
 }
