@@ -2,21 +2,16 @@ import 'dart:async';
 import 'package:eMulakat/screens/home/registered_inmates.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../dashboard/evisitor_pass_screen.dart';
 import '../../dashboard/grievance/grievance_details_screen.dart';
-import '../../dashboard/grievance/grievance_home.dart';
-import '../../dashboard/parole/parole_home.dart';
 import '../../dashboard/parole/parole_screen.dart';
-import '../../dashboard/visit/visit_home.dart';
 import '../../dashboard/visit/whom_to_meet_screen.dart';
-import '../../models/visitor_model.dart';
+import '../../utils/dialog_utils.dart';
 import '../registration/visitor_register_screen.dart';
 import 'chatbot_screen.dart';
 import 'drawer_menu.dart';
 import '../../utils/color_scheme.dart';
 import 'notifications_screen.dart';
 import 'home_screen_logic.dart';
-import 'horizontal_visit_card.dart';
 
 class HomeScreen extends StatefulWidget {
   final int selectedIndex;
@@ -30,7 +25,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with HomeScreenLogic, SingleTickerProviderStateMixin {
-
+  bool _showingVisitCards = false;
   late TabController _tabController;
   bool _isProfileCompleted = false;
   int _currentBottomNavIndex = 0; // Add this to track bottom navigation state
@@ -49,13 +44,59 @@ class _HomeScreenState extends State<HomeScreen>
     _checkProfileStatus();
     initializeTts();
     initializeStt();
-    initializeVisitData();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  // Updated buildNavItem to show active state correctly
+  Widget buildNavItem({
+    required int index,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    bool isSelected = _currentBottomNavIndex == index;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _currentBottomNavIndex = index;
+          });
+          onTap();
+        },
+        child: Container(
+          height: 60,
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? Colors.white : Colors.white70,
+                size: 24,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.white70,
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _checkProfileStatus() async {
@@ -324,77 +365,10 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  // Updated buildNavItem to show active state correctly
-  Widget buildNavItem({
-    required int index,
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    bool isSelected = _currentBottomNavIndex == index;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _currentBottomNavIndex = index;
-          });
-          onTap();
-        },
-        child: Container(
-          height: 60,
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                color: isSelected ? Colors.white : Colors.white70,
-                size: 24,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.white70,
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () async {
-        bool exitConfirmed = await showDialog(
-          context: context,
-          builder: (context) =>
-              AlertDialog(
-                title: Text('Exit Confirmation'),
-                content: Text('Please use Logout and close the App.'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: Text('Logout'),
-                  ),
-                ],
-              ),
-        );
-        return exitConfirmed;
-      },
+      onWillPop: () => DialogUtils.onWillPop(context, showingCards: _showingVisitCards),
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(

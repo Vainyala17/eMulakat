@@ -1,11 +1,63 @@
 import 'package:flutter/material.dart';
-import '../../dashboard/grievance/grievance_details_screen.dart';
-import '../../dashboard/grievance/grievance_home.dart';
-import '../../dashboard/parole/parole_home.dart';
-import '../../dashboard/parole/parole_screen.dart';
-import '../../dashboard/visit/whom_to_meet_screen.dart';
 import '../../models/visitor_model.dart';
 import '../../utils/color_scheme.dart';
+
+
+class VerticalVisits {
+  final String regnNo;
+  final String prisonerName;
+  final String fatherName;
+  final String leaveFromDate;
+  final String leaveToDate;
+  final String spentAddress;
+  final String reason;
+  final String requestStatus;
+  final String GrievanceCategory;
+  final String Grievance;
+  final String MeetingMode;
+  final String ReqVisitDate;
+  final String ApprVisitDate;
+  final String Remarks;
+
+  VerticalVisits({
+    required this.regnNo,
+    required this.prisonerName,
+    required this.fatherName,
+    required this.leaveFromDate,
+    required this.leaveToDate,
+    required this.spentAddress,
+    required this.reason,
+    required this.requestStatus,
+    required this.GrievanceCategory,
+    required this.Grievance,
+    required this.MeetingMode,
+    required this.ReqVisitDate,
+    required this.ApprVisitDate,
+    required this.Remarks,
+
+  });
+
+  factory VerticalVisits.fromJson(Map<String, dynamic> json) {
+    return VerticalVisits(
+      regnNo: json['regn_no'] ?? '',
+      prisonerName: json['prisoner_name'] ?? '',
+      fatherName: json['father_name'] ?? '',
+      leaveFromDate: json['leave_from_date'] ?? '',
+      leaveToDate: json['leave_to_date'] ?? '',
+      spentAddress: json['spent_address'] ?? '',
+      reason: json['reason'] ?? '',
+      GrievanceCategory: json['grievance_category'] ?? '',
+      Grievance: json['grievance'] ?? '',
+      MeetingMode: json['meeting_mode'] ?? '',
+      ReqVisitDate: json['req_visit_date'] ?? '',
+      ApprVisitDate: json['appr_visit_date'] ?? '',
+      Remarks: json['remarks'] ?? '',
+      requestStatus: json['request_status'] ?? '',
+    );
+  }
+}
+
+
 
 class VerticalVisitCard extends StatelessWidget {
   final VisitorModel visitor;
@@ -273,21 +325,6 @@ class VerticalVisitCard extends StatelessWidget {
 
     return Row(
       children: [
-        // Container(
-        //   padding: EdgeInsets.all(12),
-        //   decoration: BoxDecoration(
-        //     color: Colors.white.withOpacity(0.2),
-        //     borderRadius: BorderRadius.circular(12),
-        //     border: Border.all(
-        //       color: Colors.white.withOpacity(0.3),
-        //       width: 1,
-        //     ),
-        //   ),
-        //   // child: Icon(
-        //   //   color: Colors.white,
-        //   //   size: 24,
-        //   // ),
-        // ),
         const SizedBox(width: 16),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,

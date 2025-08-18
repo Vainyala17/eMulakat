@@ -1,0 +1,15 @@
+{
+  "prisoner_details": {
+    "visitor_mobile_number": "7702000725",
+    "prisoner_name": "Ashok Kumar",
+    "father_name": "Anil Kumar",
+    "gender": "12/08/2025",
+    "age": "14/08/2025",
+    "relation_with_visitor": "Friend",
+    "prison_name": "Central Jail No. 2 Tihar, Delhi",
+    "meeting_flag": true,
+    "parole_flag": false,
+    "grievance_flag": true,
+    "complete_profile_flag": true
+  }
+}

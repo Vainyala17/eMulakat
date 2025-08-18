@@ -1,0 +1,27 @@
+{
+  "dashboard": {
+    "visitor_mobile_number": "7702000725",
+    "meeting": {
+      "pending": "4",
+      "Completed": "2",
+      "upcoming": "1",
+      "expired": "5",
+      "total": "12"
+    },
+    "parole": {
+      "pending": "4",
+      "Completed": "2",
+      "upcoming": "1",
+      "expired": "5",
+      "total": "12"
+    }
+  },
+  "grievance": {
+    "pending": "4",
+    "Completed": "2",
+    "upcoming": "1",
+    "expired": "5",
+    "total": "12"
+  }
+}
+

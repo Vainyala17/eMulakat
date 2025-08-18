@@ -3,14 +3,16 @@ import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../models/visitor_model.dart';
 import '../../pdf_viewer_screen.dart';
+import '../../screens/home/bottom_nav_bar.dart';
 import '../../screens/home/home_screen.dart';
+import '../../services/api_service.dart';
 import '../../utils/color_scheme.dart';
+import '../../utils/dialog_utils.dart';
 import '../../utils/read_only_text_fields.dart';
 import '../../utils/validators.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/form_section_title.dart';
-import '../parole/parole_home.dart';
 import '../parole/parole_screen.dart';
 import '../visit/whom_to_meet_screen.dart';
 
@@ -202,11 +204,11 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
   }
 
   @override
-  @override
   void initState() {
     super.initState();
     _selectedIndex = widget.selectedIndex;
     initializeVisitData();
+    _loadDashboard();
 
     // Show visit cards by default unless explicitly coming from registered inmates
     if (widget.fromRegisteredInmates) {
@@ -226,99 +228,10 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
     }
   }
 
-
-  Future<bool> _onWillPop() async {
-    // If came from chatbot, allow normal back navigation
-    if (widget.fromChatbot) {
-      return true; // Allow back navigation to chatbot
-    }
-    return await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Exit App'),
-        content: const Text('Please use Logout and close the App'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false), // Stay in app
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    ) ?? false;
-  }
-
-  void _handleAppBarBack() {
-    if (_showingVisitCards) {
-      if (widget.fromNavbar || widget.fromRegisteredInmates) {
-        Navigator.pop(context);
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-        );
-      }
-    }else {
-      if (widget.fromChatbot) {
-        Navigator.pop(context);
-      } else if (widget.fromNavbar && !widget.showVisitCards) {
-        setState(() {
-          _showingVisitCards = true;
-          _clearFormData();
-        });
-      } else {
-        _onWillPop();
-      }
-    }
-  }
-  void _clearFormData() {
-    _prisonerNameController.clear();
-    _prisonController.clear();
-    _messageController .clear();
-  }
-  Widget _buildNavItem({
-    required int index,
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    final isSelected = _selectedIndex == index;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _selectedIndex = index;
-          });
-          onTap();
-        },
-        child: Container(
-          height: 60,
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                color: isSelected ? Colors.white : Colors.white70,
-                size: 24,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.white70,
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  Future<void> _loadDashboard() async {
+    final api = ApiService();
+    final dashboard = await api.getDashboardSummary("7702000725");
+    print(dashboard); // <-- test output
   }
 
   Widget _buildVerticalList() {
@@ -550,7 +463,7 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: _onWillPop,
+      onWillPop: () => DialogUtils.onWillPop(context, showingCards: _showingVisitCards),
       child: Scaffold(
         backgroundColor: Colors.white,
         body: _showingVisitCards ? _buildVerticalList() : _buildGrievanceForm(),
@@ -598,7 +511,8 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
               height: 60,
               child: Row(
                 children: [
-                  _buildNavItem(
+                  buildNavItem(
+                    selectedIndex : _selectedIndex,
                     index: 0,
                     icon: Icons.dashboard,
                     label: 'Dashboard',
@@ -609,7 +523,8 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
                       );
                     },
                   ),
-                  _buildNavItem(
+                  buildNavItem(
+                    selectedIndex : _selectedIndex,
                     index: 1,
                     icon: Icons.directions_walk,
                     label: 'Meeting',
@@ -620,7 +535,8 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
                       );
                     },
                   ),
-                  _buildNavItem(
+                  buildNavItem(
+                    selectedIndex : _selectedIndex,
                     index: 2,
                     icon: Icons.gavel,
                     label: 'Parole',
@@ -633,7 +549,8 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
                       );
                     },
                   ),
-                  _buildNavItem(
+                  buildNavItem(
+                    selectedIndex : _selectedIndex,
                     index: 3,
                     icon: Icons.report_problem,
                     label: 'Grievance',

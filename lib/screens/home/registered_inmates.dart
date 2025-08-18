@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-
 import '../../dashboard/grievance/grievance_details_screen.dart';
-import '../../dashboard/grievance/grievance_home.dart';
-import '../../dashboard/parole/parole_home.dart';
 import '../../dashboard/parole/parole_screen.dart';
-import '../../dashboard/visit/visit_home.dart';
 import '../../dashboard/visit/whom_to_meet_screen.dart';
+import '../../services/api_service.dart';
 
 class MyRegisteredInmatesScreen extends StatefulWidget {
   const MyRegisteredInmatesScreen({super.key});
@@ -142,6 +139,35 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
       "prison": "PHQ",
     }
   ];
+
+  List<Map<String, dynamic>> inmate = [];
+  bool isLoading = true; // to show loader while fetching
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchInmates();
+  }
+
+  Future<void> _fetchInmates() async {
+    try {
+      final api = ApiService();
+      // Call API with mobile number (here hardcoded, later get from storage/login)
+      final response = await api.getMyRegisteredInmates("7702000725");
+
+      // Your JSON structure has `prisoner_details`, so extract properly
+      setState(() {
+        inmate = [response['prisoner_details']];
+        isLoading = false;
+      });
+    } catch (e) {
+      print("Error fetching inmates: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
 
   // Check if inmate has meeting data
   bool hasMeetingData(Map<String, dynamic> inmate) {
