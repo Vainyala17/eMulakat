@@ -354,7 +354,6 @@ class ApiService {
   // this is apis are into assets/mock
 
 
-
   /// 🔹 Get Dashboard Summary
   Future<Map<String, dynamic>> getDashboardSummary(String mobileNumber) async {
     // TODO: Uncomment when backend is live
@@ -389,42 +388,114 @@ class ApiService {
     return json.decode(response);
   }
 
-  /// 🔹 Get My Registered Inmates
+  /// 🔹 CORRECTED - Get My Registered Inmates
   Future<Map<String, dynamic>> getMyRegisteredInmates(String mobileNumber) async {
-    // TODO: Uncomment when backend is live
-    // final response = await http.get(
-    //   Uri.parse("$baseUrl/getMyregdinmatesSummary/$mobileNumber"),
-    //   headers: {"accessToken": "xyz"},
-    // );
-    // return json.decode(response.body);
+    try {
+      // TODO: Uncomment when backend is live
+      // final response = await http.get(
+      //   Uri.parse("$baseUrl/getMyregdinmatesSummary/$mobileNumber"),
+      //   headers: {
+      //     "accessToken": "xyz",
+      //     "Content-Type": "application/json",
+      //   },
+      // );
+      //
+      // if (response.statusCode == 200) {
+      //   return json.decode(response.body);
+      // } else {
+      //   throw Exception('Failed to load inmates: ${response.statusCode}');
+      // }
 
-    final String response = await rootBundle.loadString('assets/mock/my_registered_inmates.json');
-    return json.decode(response);
+      // 🔹 Mock data with proper error handling
+      final String response = await rootBundle.loadString('assets/mock/my_registered_inmates.json');
+      final Map<String, dynamic> decodedResponse = json.decode(response);
+
+      // Validate response structure
+      if (decodedResponse['status'] == 'success' && decodedResponse['prisoners'] != null) {
+        return decodedResponse;
+      } else {
+        throw Exception('Invalid response format');
+      }
+    } catch (e) {
+      // Log error for debugging
+      print('Error in getMyRegisteredInmates: $e');
+
+      // Return empty result instead of throwing
+      return {
+        'status': 'error',
+        'message': 'Failed to fetch inmates',
+        'prisoners': [],
+        'total_inmates': 0
+      };
+    }
   }
 
   /// 🔹 Raise Meeting Request
   Future<Map<String, dynamic>> raiseMeetingRequest(Map<String, String> body) async {
-    // TODO: Uncomment when backend is live
-    // final response = await http.post(
-    //   Uri.parse("$baseUrl/raiseMeetingRequest/7702000725"),
-    //   headers: {"accessToken": "xyz"},
-    //   body: body,
-    // );
-    // return json.decode(response.body);
+    try {
+      // TODO: Uncomment when backend is live
+      // final response = await http.post(
+      //   Uri.parse("$baseUrl/raiseMeetingRequest/7702000725"),
+      //   headers: {
+      //     "accessToken": "xyz",
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: json.encode(body),
+      // );
+      //
+      // if (response.statusCode == 200) {
+      //   return json.decode(response.body);
+      // } else {
+      //   throw Exception('Failed to raise meeting request: ${response.statusCode}');
+      // }
 
-    final String response = await rootBundle.loadString('assets/mock/raise_meeting_success.json');
-    return json.decode(response);
+      // Mock success response
+      final String response = await rootBundle.loadString('assets/mock/raise_meeting_success.json');
+      return json.decode(response);
+    } catch (e) {
+      throw Exception('Failed to raise meeting request: $e');
+    }
   }
 
   /// 🔹 Raise Parole Request
   Future<Map<String, dynamic>> raiseParoleRequest(Map<String, String> body) async {
-    final String response = await rootBundle.loadString('assets/mock/raise_parole_success.json');
-    return json.decode(response);
+    try {
+      // TODO: Uncomment when backend is live
+      // final response = await http.post(
+      //   Uri.parse("$baseUrl/raiseParoleRequest/7702000725"),
+      //   headers: {
+      //     "accessToken": "xyz",
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: json.encode(body),
+      // );
+
+      // Mock success response
+      final String response = await rootBundle.loadString('assets/mock/raise_parole_success.json');
+      return json.decode(response);
+    } catch (e) {
+      throw Exception('Failed to raise parole request: $e');
+    }
   }
 
   /// 🔹 Raise Grievance Request
   Future<Map<String, dynamic>> raiseGrievanceRequest(Map<String, String> body) async {
-    final String response = await rootBundle.loadString('assets/mock/raise_grievance_success.json');
-    return json.decode(response);
+    try {
+      // TODO: Uncomment when backend is live
+      // final response = await http.post(
+      //   Uri.parse("$baseUrl/raiseGrievanceRequest/7702000725"),
+      //   headers: {
+      //     "accessToken": "xyz",
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: json.encode(body),
+      // );
+
+      // Mock success response
+      final String response = await rootBundle.loadString('assets/mock/raise_grievance_success.json');
+      return json.decode(response);
+    } catch (e) {
+      throw Exception('Failed to raise grievance request: $e');
+    }
   }
 }

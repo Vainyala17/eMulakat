@@ -1,3 +1,4 @@
+// 🔹 UPDATED my_registered_inmates_screen.dart - Based on actual screenshots
 import 'package:flutter/material.dart';
 import '../../dashboard/grievance/grievance_details_screen.dart';
 import '../../dashboard/parole/parole_screen.dart';
@@ -12,136 +13,8 @@ class MyRegisteredInmatesScreen extends StatefulWidget {
 }
 
 class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
-  final List<Map<String, dynamic>> inmates = [
-    // Meeting + Parole + Grievance (All 3 services)
-    {
-      "serial": 1,
-      "prisonerName": "Ashok Kumar",
-      "visitorName": "Govind Ram", // For meeting
-      "genderAge": "M/47", // For meeting
-      "relation": "Brother", // For meeting
-      "modeOfVisit": "Yes", // For meeting
-      "paroleFrom": "10 Aug 2025", // For parole
-      "paroleTo": "20 Aug 2025", // For parole
-      "reason": "To maintain family and social ties", // For parole
-      "category": "III Treated by the prison authorities", // For grievance
-      "prison": "CENTRAL JAIL NO.2, TIHAR",
-    },
-    // Meeting + Parole only
-    {
-      "serial": 2,
-      "prisonerName": "Anil Kumar",
-      "visitorName": "Kewal Singh", // For meeting
-      "genderAge": "M/57", // For meeting
-      "relation": "Lawyer", // For meeting
-      "modeOfVisit": "Yes", // For meeting
-      "paroleFrom": "15 Aug 2025", // For parole
-      "paroleTo": "25 Aug 2025", // For parole
-      "reason": "Other", // For parole
-      "prison": "CENTRAL JAIL NO.2, TIHAR",
-    },
-    // Meeting + Grievance only
-    {
-      "serial": 3,
-      "prisonerName": "Test Kumar",
-      "visitorName": "Rajesh Singh", // For meeting
-      "genderAge": "M/21", // For meeting
-      "relation": "Lawyer", // For meeting
-      "modeOfVisit": "No", // For meeting
-      "category": "Manhandling by co prisoners", // For grievance
-      "prison": "PHQ",
-    },
-    // Parole + Grievance only
-    {
-      "serial": 4,
-      "prisonerName": "Raj Shekar",
-      "paroleFrom": "5 Jul 2025", // For parole
-      "paroleTo": "25 Sep 2025", // For parole
-      "reason": "To maintain family and social ties", // For parole
-      "category": "Basic Facilities not provided inside prison", // For grievance
-      "prison": "CENTRAL JAIL NO.2, TIHAR",
-    },
-    // Meeting only
-    {
-      "serial": 5,
-      "prisonerName": "Ram Kumar",
-      "visitorName": "Sita Devi", // For meeting
-      "genderAge": "F/45", // For meeting
-      "relation": "Wife", // For meeting
-      "modeOfVisit": "Yes", // For meeting
-      "prison": "CENTRAL JAIL NO.2, TIHAR",
-    },
-    // Parole only
-    {
-      "serial": 6,
-      "prisonerName": "Prashant Singh",
-      "paroleFrom": "18 Nov 2025", // For parole
-      "paroleTo": "1 Dec 2025", // For parole
-      "reason": "To maintain family and social ties", // For parole
-      "prison": "PHQ",
-    },
-    // Grievance only
-    {
-      "serial": 7,
-      "prisonerName": "Sid Kumar",
-      "category": "III Treated by the prison authorities", // For grievance
-      "prison": "CENTRAL JAIL NO.2, TIHAR",
-    },
-    // All 3 services (another example)
-    {
-      "serial": 8,
-      "prisonerName": "Dilip Mhatre",
-      "visitorName": "Sunita Mhatre", // For meeting
-      "genderAge": "F/40", // For meeting
-      "relation": "Wife", // For meeting
-      "modeOfVisit": "Yes", // For meeting
-      "paroleFrom": "20 Aug 2025", // For parole
-      "paroleTo": "30 Aug 2025", // For parole
-      "reason": "Other", // For parole
-      "category": "Manhandling by co prisoners", // For grievance
-      "prison": "CENTRAL JAIL NO.2, TIHAR",
-    },
-    // Meeting + Parole only
-    {
-      "serial": 9,
-      "prisonerName": "Nirav Rao",
-      "visitorName": "Kavita Rao", // For meeting
-      "genderAge": "F/35", // For meeting
-      "relation": "Sister", // For meeting
-      "modeOfVisit": "No", // For meeting
-      "paroleFrom": "25 Aug 2025", // For parole
-      "paroleTo": "5 Sep 2025", // For parole
-      "reason": "To maintain family and social ties", // For parole
-      "prison": "PHQ",
-    },
-    // Parole + Grievance only
-    {
-      "serial": 10,
-      "prisonerName": "Mahesh Patil",
-      "paroleFrom": "1 Sep 2025", // For parole
-      "paroleTo": "10 Sep 2025", // For parole
-      "reason": "Other", // For parole
-      "category": "Basic Facilities not provided inside prison", // For grievance
-      "prison": "CENTRAL JAIL NO.2, TIHAR",
-    },
-    // All 3 services
-    {
-      "serial": 11,
-      "prisonerName": "Ramesh Dodhia",
-      "visitorName": "Meera Dodhia", // For meeting
-      "genderAge": "F/38", // For meeting
-      "relation": "Wife", // For meeting
-      "modeOfVisit": "Yes", // For meeting
-      "paroleFrom": "12 Sep 2025", // For parole
-      "paroleTo": "22 Sep 2025", // For parole
-      "reason": "To maintain family and social ties", // For parole
-      "category": "Manhandling by co prisoners", // For grievance
-      "prison": "PHQ",
-    }
-  ];
-
-  List<Map<String, dynamic>> inmate = [];
-  bool isLoading = true; // to show loader while fetching
+  List<Map<String, dynamic>> inmates = [];
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -152,41 +25,32 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
   Future<void> _fetchInmates() async {
     try {
       final api = ApiService();
-      // Call API with mobile number (here hardcoded, later get from storage/login)
       final response = await api.getMyRegisteredInmates("7702000725");
 
-      // Your JSON structure has `prisoner_details`, so extract properly
       setState(() {
-        inmate = [response['prisoner_details']];
+        if (response['prisoners'] != null && response['prisoners'] is List) {
+          inmates = List<Map<String, dynamic>>.from(response['prisoners']);
+        } else {
+          inmates = [];
+        }
         isLoading = false;
       });
     } catch (e) {
       print("Error fetching inmates: $e");
       setState(() {
+        inmates = [];
         isLoading = false;
       });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error fetching inmates: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
-  }
-
-
-  // Check if inmate has meeting data
-  bool hasMeetingData(Map<String, dynamic> inmate) {
-    return inmate.containsKey('visitorName') &&
-        inmate.containsKey('genderAge') &&
-        inmate.containsKey('relation') &&
-        inmate.containsKey('modeOfVisit');
-  }
-
-  // Check if inmate has parole data
-  bool hasParoleData(Map<String, dynamic> inmate) {
-    return inmate.containsKey('paroleFrom') &&
-        inmate.containsKey('paroleTo') &&
-        inmate.containsKey('reason');
-  }
-
-  // Check if inmate has grievance data
-  bool hasGrievanceData(Map<String, dynamic> inmate) {
-    return inmate.containsKey('category');
   }
 
   Widget _buildInfoRow(IconData icon, String text) {
@@ -235,6 +99,34 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (inmates.isEmpty) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.person_off, size: 64, color: Colors.grey),
+              SizedBox(height: 16),
+              Text(
+                'No registered inmates found',
+                style: TextStyle(fontSize: 18, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: ListView.builder(
@@ -243,10 +135,15 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
         itemBuilder: (context, index) {
           final inmate = inmates[index];
 
-          // Check which services are available
-          bool canMeeting = hasMeetingData(inmate);
-          bool canParole = hasParoleData(inmate);
-          bool canGrievance = hasGrievanceData(inmate);
+          // Get flags from API response
+          bool canMeeting = inmate['meeting_flag'] ?? false;
+          bool canParole = inmate['parole_flag'] ?? false;
+          bool canGrievance = inmate['grievance_flag'] ?? false;
+
+          // Get data for display
+          Map<String, dynamic>? meetingData = inmate['meeting_data'];
+          Map<String, dynamic>? paroleData = inmate['parole_data'];
+          Map<String, dynamic>? grievanceData = inmate['grievance_data'];
 
           return Card(
             color: Colors.white,
@@ -262,7 +159,7 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header with Serial No. and Prisoner Name
+                  // Header with Prisoner Name and Serial
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -273,7 +170,7 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                "${inmate['prisonerName']} (#${inmate['serial']})",
+                                "${inmate['prisoner_name'] ?? 'Unknown'} (#${index + 1})",
                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -293,33 +190,63 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
                   ),
                   const SizedBox(height: 4),
 
-                  // Dynamic data display based on available services
-                  // Meeting data
-                  if (canMeeting) ...[
-                    _buildInfoRow(Icons.perm_identity, "Father Name: ${inmate['visitorName']}"),
-                    _buildInfoRow(Icons.badge, "Gender/Age: ${inmate['genderAge']}"),
-                    _buildInfoRow(Icons.family_restroom, "Relation: ${inmate['relation']}"),
-                    _buildInfoRow(Icons.meeting_room, "Mode of Visit: ${inmate['modeOfVisit']}"),
+                  // Display meeting data if available
+                  if (canMeeting && meetingData != null) ...[
+                    _buildInfoRow(Icons.perm_identity, "Father Name: ${meetingData['visitor_name'] ?? inmate['father_name'] ?? 'N/A'}"),
+                    _buildInfoRow(Icons.badge, "Gender/Age: ${meetingData['gender_age'] ?? '${inmate['gender']?.substring(0,1) ?? 'M'}/${inmate['age'] ?? 'N/A'}'}"),
+                    _buildInfoRow(Icons.family_restroom, "Relation: ${meetingData['relation'] ?? inmate['relation_with_visitor'] ?? 'N/A'}"),
+                    _buildInfoRow(Icons.meeting_room, "Mode of Visit: ${meetingData['mode_of_visit'] ?? 'N/A'}"),
                   ],
 
-                  // Parole data
-                  if (canParole) ...[
-                    _buildInfoRow(Icons.date_range_outlined, "Parole From: ${inmate['paroleFrom']}"),
-                    _buildInfoRow(Icons.date_range, "Parole To: ${inmate['paroleTo']}"),
-                    _buildInfoRow(Icons.explicit_outlined, "Reason: ${inmate['reason']}"),
+                  // Display parole data if available
+                  if (canParole && paroleData != null) ...[
+                    _buildInfoRow(Icons.date_range_outlined, "Parole From: ${paroleData['parole_from'] ?? 'N/A'}"),
+                    _buildInfoRow(Icons.date_range, "Parole To: ${paroleData['parole_to'] ?? 'N/A'}"),
+                    _buildInfoRow(Icons.explicit_outlined, "Reason: ${paroleData['reason'] ?? 'N/A'}"),
                   ],
 
-                  // Grievance data
-                  if (canGrievance) ...[
-                    _buildInfoRow(Icons.report_problem_outlined, "Category: ${inmate['category']}"),
+                  // Display grievance data if available
+                  if (canGrievance && grievanceData != null) ...[
+                    _buildInfoRow(Icons.report_problem_outlined, "Category: ${grievanceData['category'] ?? 'N/A'}"),
                   ],
 
-                  // Prison (always show)
-                  _buildInfoRow(Icons.location_on, "Prison: ${inmate['prison']}"),
+                  // If no specific data available but flags are true, show basic info
+                  if (!canMeeting && !canParole && !canGrievance) ...[
+                    _buildInfoRow(Icons.perm_identity, "Father Name: ${inmate['father_name'] ?? 'N/A'}"),
+                    _buildInfoRow(Icons.badge, "Gender/Age: ${inmate['gender']?.substring(0,1) ?? 'M'}/${inmate['age'] ?? 'N/A'}"),
+                    _buildInfoRow(Icons.family_restroom, "Relation: ${inmate['relation_with_visitor'] ?? 'N/A'}"),
+                  ],
+
+                  // Always show prison info
+                  _buildInfoRow(Icons.location_on, "Prison: ${inmate['prison_name'] ?? 'N/A'}"),
+
+                  // Show profile completion warning if needed
+                  if (inmate['complete_profile_flag'] == false)
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade100,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.orange),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning, color: Colors.orange, size: 16),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              "Profile incomplete - Complete profile to access all services",
+                              style: TextStyle(fontSize: 12, color: Colors.orange.shade800),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
                   const SizedBox(height: 12),
 
-                  // Service buttons - all visible but only enabled if data exists
+                  // Service buttons - same as your original design
                   Row(
                     children: [
                       _buildServiceButton(
@@ -333,8 +260,8 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
                               builder: (context) => MeetFormScreen(
                                 selectedIndex: 1,
                                 fromRegisteredInmates: true,
-                                prefilledPrisonerName: inmate['prisonerName'],
-                                prefilledPrison: inmate['prison'],
+                                prefilledPrisonerName: inmate['prisoner_name'],
+                                prefilledPrison: inmate['prison_name'],
                               ),
                             ),
                           );
@@ -352,8 +279,8 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
                               builder: (context) => ParoleScreen(
                                 selectedIndex: 2,
                                 fromRegisteredInmates: true,
-                                prefilledPrisonerName: inmate['prisonerName'],
-                                prefilledPrison: inmate['prison'],
+                                prefilledPrisonerName: inmate['prisoner_name'],
+                                prefilledPrison: inmate['prison_name'],
                               ),
                             ),
                           );
@@ -371,8 +298,8 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
                               builder: (context) => GrievanceDetailsScreen(
                                 selectedIndex: 3,
                                 fromRegisteredInmates: true,
-                                prefilledPrisonerName: inmate['prisonerName'],
-                                prefilledPrison: inmate['prison'],
+                                prefilledPrisonerName: inmate['prisoner_name'],
+                                prefilledPrison: inmate['prison_name'],
                               ),
                             ),
                           );
