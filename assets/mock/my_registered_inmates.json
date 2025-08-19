@@ -1,15 +1,214 @@
 {
-  "prisoner_details": {
-    "visitor_mobile_number": "7702000725",
-    "prisoner_name": "Ashok Kumar",
-    "father_name": "Anil Kumar",
-    "gender": "12/08/2025",
-    "age": "14/08/2025",
-    "relation_with_visitor": "Friend",
-    "prison_name": "Central Jail No. 2 Tihar, Delhi",
-    "meeting_flag": true,
-    "parole_flag": false,
-    "grievance_flag": true,
-    "complete_profile_flag": true
-  }
+  "status": "success",
+  "message": "Registered inmates retrieved successfully",
+  "visitor_mobile_number": "7702000725",
+  "total_inmates": 8,
+  "prisoners": [
+    {
+      "prisoner_id": "P001",
+      "regn_no": "2025/08/12/617",
+      "visitor_mobile_number": "7702000725",
+      "prisoner_name": "Ashok Kumar",
+      "father_name": "Govind Ram",
+      "gender": "Male",
+      "age": "47",
+      "relation_with_visitor": "Brother",
+      "prison_name": "CENTRAL JAIL NO.2, TIHAR",
+      "meeting_flag": true,
+      "parole_flag": true,
+      "grievance_flag": true,
+      "complete_profile_flag": true,
+      "registration_date": "10/08/2025",
+      "last_activity": "15/08/2025",
+      "meeting_data": {
+        "visitor_name": "Govind Ram",
+        "gender_age": "M/47",
+        "relation": "Brother",
+        "mode_of_visit": "Yes"
+      },
+      "parole_data": {
+        "parole_from": "10 Aug 2025",
+        "parole_to": "20 Aug 2025",
+        "reason": "To maintain family and social ties"
+      },
+      "grievance_data": {
+        "category": "Ill Treated by the prison authorities"
+      }
+    },
+    {
+      "prisoner_id": "P002",
+      "regn_no": "2025/08/12/618",
+      "visitor_mobile_number": "7702000725",
+      "prisoner_name": "Anil Kumar",
+      "father_name": "Kewal Singh",
+      "gender": "Male",
+      "age": "57",
+      "relation_with_visitor": "Friend",
+      "prison_name": "CENTRAL JAIL NO.2, TIHAR",
+      "meeting_flag": true,
+      "parole_flag": true,
+      "grievance_flag": false,
+      "complete_profile_flag": true,
+      "registration_date": "05/08/2025",
+      "last_activity": "12/08/2025",
+      "meeting_data": {
+        "visitor_name": "Kewal Singh",
+        "gender_age": "M/57",
+        "relation": "Lawyer",
+        "mode_of_visit": "Yes"
+      },
+      "parole_data": {
+        "parole_from": "15 Aug 2025",
+        "parole_to": "25 Aug 2025",
+        "reason": "Other"
+      }
+    },
+    {
+      "prisoner_id": "P003",
+      "regn_no": "2025/08/12/619",
+      "visitor_mobile_number": "7702000725",
+      "prisoner_name": "Test Kumar",
+      "father_name": "Rajesh Singh",
+      "gender": "Male",
+      "age": "21",
+      "relation_with_visitor": "Friend",
+      "prison_name": "PHQ",
+      "meeting_flag": true,
+      "parole_flag": false,
+      "grievance_flag": true,
+      "complete_profile_flag": false,
+      "registration_date": "01/08/2025",
+      "last_activity": "08/08/2025",
+      "meeting_data": {
+        "visitor_name": "Rajesh Singh",
+        "gender_age": "M/21",
+        "relation": "Lawyer",
+        "mode_of_visit": "No"
+      },
+      "grievance_data": {
+        "category": "Manhandling by co prisoners"
+      }
+    },
+    {
+      "prisoner_id": "P004",
+      "regn_no": "2025/08/12/620",
+      "visitor_mobile_number": "7702000725",
+      "prisoner_name": "Raj Shekar",
+      "father_name": "Mohan Lal",
+      "gender": "Male",
+      "age": "42",
+      "relation_with_visitor": "Brother-in-law",
+      "prison_name": "CENTRAL JAIL NO.2, TIHAR",
+      "meeting_flag": false,
+      "parole_flag": true,
+      "grievance_flag": true,
+      "complete_profile_flag": true,
+      "registration_date": "25/07/2025",
+      "last_activity": "05/08/2025",
+      "parole_data": {
+        "parole_from": "5 Jul 2025",
+        "parole_to": "25 Sep 2025",
+        "reason": "To maintain family and social ties"
+      },
+      "grievance_data": {
+        "category": "Basic Facilities not provided inside prison"
+      }
+    },
+    {
+      "prisoner_id": "P005",
+      "regn_no": "2025/08/12/621",
+      "visitor_mobile_number": "7702000725",
+      "prisoner_name": "Ram Kumar",
+      "father_name": "Sita Devi",
+      "gender": "Male",
+      "age": "38",
+      "relation_with_visitor": "Husband",
+      "prison_name": "CENTRAL JAIL NO.2, TIHAR",
+      "meeting_flag": true,
+      "parole_flag": false,
+      "grievance_flag": false,
+      "complete_profile_flag": true,
+      "registration_date": "20/07/2025",
+      "last_activity": "02/08/2025",
+      "meeting_data": {
+        "visitor_name": "Sita Devi",
+        "gender_age": "F/45",
+        "relation": "Wife",
+        "mode_of_visit": "Yes"
+      }
+    },
+    {
+      "prisoner_id": "P006",
+      "regn_no": "2025/08/12/622",
+      "visitor_mobile_number": "7702000725",
+      "prisoner_name": "Prashant Singh",
+      "father_name": "Suresh Singh",
+      "gender": "Male",
+      "age": "29",
+      "relation_with_visitor": "Son",
+      "prison_name": "PHQ",
+      "meeting_flag": false,
+      "parole_flag": true,
+      "grievance_flag": false,
+      "complete_profile_flag": false,
+      "registration_date": "15/07/2025",
+      "last_activity": "28/07/2025",
+      "parole_data": {
+        "parole_from": "18 Nov 2025",
+        "parole_to": "1 Dec 2025",
+        "reason": "To maintain family and social ties"
+      }
+    },
+    {
+      "prisoner_id": "P007",
+      "regn_no": "2025/08/12/623",
+      "visitor_mobile_number": "7702000725",
+      "prisoner_name": "Sid Kumar",
+      "father_name": "Krishna Das",
+      "gender": "Male",
+      "age": "33",
+      "relation_with_visitor": "Brother",
+      "prison_name": "CENTRAL JAIL NO.2, TIHAR",
+      "meeting_flag": false,
+      "parole_flag": false,
+      "grievance_flag": true,
+      "complete_profile_flag": true,
+      "registration_date": "10/07/2025",
+      "last_activity": "25/07/2025",
+      "grievance_data": {
+        "category": "Ill Treated by the prison authorities"
+      }
+    },
+    {
+      "prisoner_id": "P008",
+      "regn_no": "2025/08/12/624",
+      "visitor_mobile_number": "7702000725",
+      "prisoner_name": "Dilip Mhatre",
+      "father_name": "Sunita Mhatre",
+      "gender": "Male",
+      "age": "40",
+      "relation_with_visitor": "Son",
+      "prison_name": "CENTRAL JAIL NO.2, TIHAR",
+      "meeting_flag": true,
+      "parole_flag": true,
+      "grievance_flag": true,
+      "complete_profile_flag": true,
+      "registration_date": "05/07/2025",
+      "last_activity": "20/07/2025",
+      "meeting_data": {
+        "visitor_name": "Sunita Mhatre",
+        "gender_age": "F/40",
+        "relation": "Wife",
+        "mode_of_visit": "Yes"
+      },
+      "parole_data": {
+        "parole_from": "20 Aug 2025",
+        "parole_to": "30 Aug 2025",
+        "reason": "Other"
+      },
+      "grievance_data": {
+        "category": "Manhandling by co prisoners"
+      }
+    }
+  ]
 }
