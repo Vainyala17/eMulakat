@@ -1,14 +1,12 @@
-import 'dart:convert';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 import '../../models/visitor_model.dart';
 import '../../pdf_viewer_screen.dart';
 import '../../screens/home/bottom_nav_bar.dart';
 import '../../screens/home/home_screen.dart';
-import '../../services/api_service.dart';
+import '../../services/auth_service.dart';
+import '../../services/api_service.dart'; // Import your API service
 import '../../utils/color_scheme.dart';
 import '../../utils/dialog_utils.dart';
 import '../../utils/read_only_text_fields.dart';
@@ -18,41 +16,6 @@ import '../../widgets/custom_textfield.dart';
 import '../../widgets/form_section_title.dart';
 import '../grievance/grievance_details_screen.dart';
 import '../visit/whom_to_meet_screen.dart';
-
-class ParoleRequest {
-  final String regnNo;
-  final String prisonerName;
-  final String fatherName;
-  final String leaveFromDate;
-  final String leaveToDate;
-  final String spentAddress;
-  final String reason;
-  final String requestStatus;
-
-  ParoleRequest({
-    required this.regnNo,
-    required this.prisonerName,
-    required this.fatherName,
-    required this.leaveFromDate,
-    required this.leaveToDate,
-    required this.spentAddress,
-    required this.reason,
-    required this.requestStatus,
-  });
-
-  factory ParoleRequest.fromJson(Map<String, dynamic> json) {
-    return ParoleRequest(
-      regnNo: json['regn_no'] ?? '',
-      prisonerName: json['prisoner_name'] ?? '',
-      fatherName: json['father_name'] ?? '',
-      leaveFromDate: json['leave_from_date'] ?? '',
-      leaveToDate: json['leave_to_date'] ?? '',
-      spentAddress: json['spent_address'] ?? '',
-      reason: json['reason'] ?? '',
-      requestStatus: json['request_status'] ?? '',
-    );
-  }
-}
 
 class ParoleScreen extends StatefulWidget {
   final bool fromChatbot;
@@ -91,11 +54,7 @@ class _ParoleScreenState extends State<ParoleScreen> {
   String selectedVisitType = 'Parole';
   String selectedStatus = 'All';
   bool _isReadOnlyMode = false;
-  bool _isLoading = true;
-
-  // ✅ NEW: Replace hardcoded list with API data
-  List<ParoleRequest> paroleRequests = [];
-  Map<String, dynamic> dashboardSummary = {};
+  bool _isLoading = false;
 
   final TextEditingController _paroleFromDateController = TextEditingController();
   final TextEditingController _paroleToDateController = TextEditingController();
@@ -104,7 +63,6 @@ class _ParoleScreenState extends State<ParoleScreen> {
   final TextEditingController _prisonController = TextEditingController();
 
   final List<String> _reason = ["To maintain family and social ties", "other"];
-
   final List<String> _states = [
     'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
     'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
@@ -212,99 +170,43 @@ class _ParoleScreenState extends State<ParoleScreen> {
     },
   };
 
-  // void initializeVisitData() {
-  //   visitData['Parole'] = [
-  //     VisitorModel(
-  //       visitorName: 'Meena Patel',
-  //       fatherName: 'Raj Patel',
-  //       address: '789 SB Road, Pune',
-  //       gender: 'Female',
-  //       age: 45,
-  //       relation: 'Mother',
-  //       idProof: 'Voter ID',
-  //       idNumber: 'VOT9876543',
-  //       isInternational: false,
-  //       state: 'Maharashtra',
-  //       jail: 'Pune Central Jail',
-  //       visitDate: DateTime.now().add(Duration(days: 7)),
-  //       additionalVisitors: 1,
-  //       additionalVisitorNames: ['Kiran Patel'],
-  //       prisonerName: 'Amit Patel',
-  //       prisonerFatherName: 'Raj Patel',
-  //       prisonerAge: 25,
-  //       prisonerGender: 'Male',
-  //       mode: true,
-  //       status: VisitStatus.pending,
-  //       startTime: '09:00',
-  //       endTime: '17:00',
-  //       dayOfWeek: 'Monday', prison: '',
-  //     ),
-  //     VisitorModel(
-  //       visitorName: 'Krishna Kumar',
-  //       fatherName: 'Ram Kumar',
-  //       address: '456 MG Road, Mumbai',
-  //       gender: 'Male',
-  //       age: 35,
-  //       relation: 'Brother',
-  //       idProof: 'Aadhar',
-  //       idNumber: 'XXXX-XXXX-9876',
-  //       isInternational: false,
-  //       state: 'Maharashtra',
-  //       jail: 'Arthur Road',
-  //       visitDate: DateTime.now().subtract(Duration(days: 1)),
-  //       additionalVisitors: 0,
-  //       additionalVisitorNames: [],
-  //       prisonerName: 'Vishnu Kumar',
-  //       prisonerFatherName: 'Shyam Kumar',
-  //       prisonerAge: 30,
-  //       prisonerGender: 'Male',
-  //       mode: false,
-  //       status: VisitStatus.completed,
-  //       startTime: '14:00',
-  //       endTime: '16:00',
-  //       dayOfWeek: 'Sunday', prison: '',
-  //     ),
-  //     VisitorModel(
-  //       visitorName: 'Krishna Kumar',
-  //       fatherName: 'Ram Kumar',
-  //       address: '456 MG Road, Mumbai',
-  //       gender: 'Male',
-  //       age: 35,
-  //       relation: 'Brother',
-  //       idProof: 'Aadhar',
-  //       idNumber: 'XXXX-XXXX-9876',
-  //       isInternational: false,
-  //       state: 'Maharashtra',
-  //       jail: 'Arthur Road',
-  //       visitDate: DateTime.now().subtract(Duration(days: 1)),
-  //       additionalVisitors: 0,
-  //       additionalVisitorNames: [],
-  //       prisonerName: 'Vishnu Kumar',
-  //       prisonerFatherName: 'Shyam Kumar',
-  //       prisonerAge: 30,
-  //       prisonerGender: 'Male',
-  //       mode: false,
-  //       status: VisitStatus.expired,
-  //       startTime: '14:00',
-  //       endTime: '16:00',
-  //       dayOfWeek: 'Sunday', prison: '',
-  //     ),
-  //   ];
-  // }
+  final List<Map<String, dynamic>> inmates = [
+    {
+      "serial": 1,
+      "prisonerName": "Raj Shekar",
+      "paroleFrom": "5 Jul 2025",
+      "paroleTo": "25 Sep 2025",
+      "reason": "To maintain family and social ties",
+      "prison": "CENTRAL JAIL NO.2, TIHAR",
+    },
+    {
+      "serial": 2,
+      "prisonerName": "Ram Kumar",
+      "paroleFrom": "15 Nov 2025",
+      "paroleTo": "27 Nov 2025",
+      "reason": "Other",
+      "prison": "CENTRAL JAIL NO.2, TIHAR",
+    },
+    {
+      "serial": 3,
+      "prisonerName": "Prashant Singh",
+      "paroleFrom": "18 Nov 2025",
+      "paroleTo": "1 Dec 2025",
+      "reason": "To maintain family and social ties",
+      "prison": "PHQ",
+    }
+  ];
 
   @override
   void initState() {
     super.initState();
+    AuthService.checkAndHandleSession(context);
     _selectedIndex = widget.selectedIndex;
-    //initializeVisitData();
-    _loadParoleData(); // ✅ NEW: Load parole data from API
 
-    // Show visit cards by default unless explicitly coming from registered inmates
     if (widget.fromRegisteredInmates) {
       _showingVisitCards = false;
       _isReadOnlyMode = true;
 
-      // ✅ Add this: Populate prefilled values
       if (widget.prefilledPrisonerName != null) {
         _prisonerNameController.text = widget.prefilledPrisonerName!;
       }
@@ -317,27 +219,96 @@ class _ParoleScreenState extends State<ParoleScreen> {
     }
   }
 
-  // ✅ NEW: Load parole data from API
-  Future<void> _loadParoleData() async {
-    try {
-      final api = ApiService();
-      final response = await api.getDashboardDetailedData("Parole");
+  // Handle form submission using API service
+  Future<void> _handleFormSubmission() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
-      if (response['header'] != null && response['header']['data'] != null) {
-        setState(() {
-          paroleRequests = (response['header']['data'] as List)
-              .map((item) => ParoleRequest.fromJson(item))
-              .toList();
-          dashboardSummary = response['header']['summary'] ?? {};
-          _isLoading = false;
-        });
-      }
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Prepare request body
+      Map<String, String> requestBody = {
+        'prisonerName': _prisonerNameController.text,
+        'prison': _prisonController.text,
+        'reason': _selectedReason ?? '',
+        'paroleFromDate': _paroleFromDateController.text,
+        'paroleToDate': _paroleToDateController.text,
+        'state': _selectedState ?? '',
+        'district': _selectedDistrict ?? '',
+        'policeStation': _selectedPoliceStation ?? '',
+        'addressOfPlace': _AddressPlaceController.text,
+      };
+
+      // Call API service
+      final response = await ApiService.raiseParoleRequest(requestBody);
+
+      // Handle success - show success message and go back
+      _showSuccessMessage(response);
+
     } catch (e) {
-      print('Error loading parole data: $e');
+      _showErrorMessage('An error occurred: ${e.toString()}');
+    } finally {
       setState(() {
         _isLoading = false;
       });
     }
+  }
+
+  // Show success message and navigate back
+  void _showSuccessMessage(Map<String, dynamic> response) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    response['message'] ?? 'Parole request submitted successfully!',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  if (response['applicationId'] != null)
+                    Text(
+                      'ID: ${response['applicationId']}',
+                      style: const TextStyle(fontSize: 12, color: Colors.white),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+
+    // Navigate back immediately, don't wait
+    Navigator.of(context).pop();
+  }
+
+  // Show error message
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   Widget _buildInfoRow(IconData icon, String text) {
@@ -356,15 +327,6 @@ class _ParoleScreenState extends State<ParoleScreen> {
         ],
       ),
     );
-  }
-
-  // ✅ NEW: Filter parole requests by status
-  List<ParoleRequest> getFilteredParoleRequests() {
-    if (selectedStatus == 'All') {
-      return paroleRequests;
-    }
-    return paroleRequests.where((request) =>
-    request.requestStatus.toLowerCase() == selectedStatus.toLowerCase()).toList();
   }
 
   List<VisitorModel> getFilteredVisits() {
@@ -394,187 +356,105 @@ class _ParoleScreenState extends State<ParoleScreen> {
     return currentVisits.where((visit) => visit.status == statusFilter).toList();
   }
 
-  // ✅ NEW: Build status color based on request status
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return Colors.orange;
-      case 'completed':
-        return Colors.green;
-      case 'expired':
-        return Colors.red;
-      case 'upcoming':
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
-
   Widget _buildVerticalList() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    final filteredRequests = getFilteredParoleRequests();
-
-    if (filteredRequests.isEmpty) {
-      return const Center(
-        child: Text(
-          'No parole requests found',
-          style: TextStyle(fontSize: 16, color: Colors.grey),
-        ),
-      );
-    }
-
-    return Column(
-      children: [
-        // ✅ NEW: Add filter buttons
-        Container(
-          padding: const EdgeInsets.all(12),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: ['All', 'Pending', 'Completed', 'Expired', 'Upcoming']
-                  .map((status) => Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: FilterChip(
-                  label: Text(status),
-                  selected: selectedStatus == status,
-                  onSelected: (selected) {
-                    setState(() {
-                      selectedStatus = status;
-                    });
-                  },
-                  selectedColor: AppColors.primary.withOpacity(0.3),
-                ),
-              ))
-                  .toList(),
-            ),
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: inmates.length,
+      itemBuilder: (context, index) {
+        final inmate = inmates[index];
+        return Card(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Colors.black, width: 1),
           ),
-        ),
-        // ✅ NEW: Updated list with API data
-        Expanded(
-          child: ListView.builder(
+          elevation: 4,
+          shadowColor: Colors.black.withOpacity(0.2),
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          child: Padding(
             padding: const EdgeInsets.all(12),
-            itemCount: filteredRequests.length,
-            itemBuilder: (context, index) {
-              final request = filteredRequests[index];
-              return Card(
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: const BorderSide(color: Colors.black, width: 1),
-                ),
-                elevation: 4,
-                shadowColor: Colors.black.withOpacity(0.2),
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header with Registration No. and Prisoner Name
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Row(
                         children: [
-                          Expanded(
-                            child: Row(
-                              children: [
-                                const Icon(Icons.person, color: Colors.black, size: 18),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    "${request.prisonerName}\n(${request.regnNo})",
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Status badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: _getStatusColor(request.requestStatus),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              request.requestStatus,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.download, color: Colors.blue),
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Download functionality coming soon')),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      _buildInfoRow(Icons.person_outline, "Father: ${request.fatherName}"),
-                      Row(
-                        children: [
-                          const Icon(Icons.date_range_outlined, size: 18, color: Colors.black),
+                          const Icon(Icons.person, color: Colors.black, size: 18),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              "From: ${request.leaveFromDate}   To: ${request.leaveToDate}",
-                              style: const TextStyle(fontSize: 14,fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ParoleScreen(
-                                    selectedIndex: 2,
-                                    fromRegisteredInmates: true,
-                                    prefilledPrisonerName: request.prisonerName,
-                                    prefilledPrison: request.spentAddress, // You might need to add this to your JSON
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(
-                                Icons.arrow_forward_ios,
-                                color: Colors.white,
-                                size: 17,
-                              ),
+                              "${inmate['prisonerName']} (#${inmate['serial']})",
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
                       ),
-                      _buildInfoRow(Icons.explicit_outlined, "Reason: ${request.reason}"),
-                      _buildInfoRow(Icons.location_on, "Prison: ${request.spentAddress}"),
-                      const SizedBox(height: 12),
-                    ],
-                  ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.download, color: Colors.blue),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Download functionality coming soon')),
+                        );
+                      },
+                    ),
+                  ],
                 ),
-              );
-            },
+                const SizedBox(height: 4),
+                _buildInfoRow(Icons.explicit_outlined, "Reason: ${inmate['reason']}"),
+                Row(
+                  children: [
+                    const Icon(Icons.date_range_outlined, size: 18, color: Colors.black),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        "Parole From: ${inmate['paroleFrom']}",
+                        style: const TextStyle(fontSize: 14,fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ParoleScreen(
+                              selectedIndex: 2,
+                              fromRegisteredInmates: true,
+                              prefilledPrisonerName: inmate['prisonerName'],
+                              prefilledPrison: inmate['prison'],
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.white,
+                          size: 17,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                _buildInfoRow(Icons.date_range, "Parole To: ${inmate['paroleTo']}"),
+                _buildInfoRow(Icons.location_on, "Prison: ${inmate['prison']}"),
+                const SizedBox(height: 12),
+              ],
+            ),
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -588,7 +468,7 @@ class _ParoleScreenState extends State<ParoleScreen> {
           children: [
             FormSectionTitle(title: 'Parole Application'),
             SizedBox(height: 20),
-// Prisoner Name - Read only when from registered inmates or visit cards
+
             buildReadOnlyTextField(
               context : context,
               controller: _prisonerNameController,
@@ -600,7 +480,6 @@ class _ParoleScreenState extends State<ParoleScreen> {
             ),
             SizedBox(height: 20),
 
-            // Prison Address - Read only when from registered inmates or visit cards
             buildReadOnlyTextField(
               context : context,
               controller: _prisonController,
@@ -634,7 +513,6 @@ class _ParoleScreenState extends State<ParoleScreen> {
             ),
             SizedBox(height: 16),
 
-            // Visit Date
             TextFormField(
               controller: _paroleFromDateController,
               decoration: InputDecoration(
@@ -657,6 +535,7 @@ class _ParoleScreenState extends State<ParoleScreen> {
               validator: (value) => value!.isEmpty ? 'Please select date' : null,
             ),
             SizedBox(height: 16),
+
             TextFormField(
               controller: _paroleToDateController,
               decoration: InputDecoration(
@@ -724,6 +603,7 @@ class _ParoleScreenState extends State<ParoleScreen> {
               validator: (value) => value == null ? 'Please select a District' : null,
             ),
             SizedBox(height: 16),
+
             DropdownButtonFormField<String>(
               value: _selectedPoliceStation,
               decoration: const InputDecoration(
@@ -747,15 +627,14 @@ class _ParoleScreenState extends State<ParoleScreen> {
               },
               validator: (value) => value == null ? 'Please select a police station' : null,
             ),
-
             SizedBox(height: 16),
 
             CustomTextField(
               controller: _AddressPlaceController,
               label: 'Address of Place to Visit*',
               hint: 'Application Testing',
-              maxLines: 5, // 👈 Makes it look like a textarea
-              maxLength: 500, // Optional: increase limit
+              maxLines: 5,
+              maxLength: 500,
               validator: (value) {
                 final pattern = RegExp(r'^[a-zA-Z0-9\s.,;!?()\-]+$');
                 if (value == null || value.isEmpty) {
@@ -767,7 +646,6 @@ class _ParoleScreenState extends State<ParoleScreen> {
               },
               inputFormatters: [
                 TextInputFormatter.withFunction((oldValue, newValue) {
-                  // Allow letters, numbers, common punctuation
                   final allowedPattern = RegExp(r'^[a-zA-Z0-9\s.,;!?()\-]*$');
                   if (allowedPattern.hasMatch(newValue.text)) {
                     return newValue;
@@ -777,18 +655,42 @@ class _ParoleScreenState extends State<ParoleScreen> {
               ],
             ),
             SizedBox(height: 30),
-            // Action Buttons
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: CustomButton(
+                  child: _isLoading
+                      ? Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade400,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Text(
+                            'Submitting...',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                      : CustomButton(
                     text: 'Save',
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        showSuccessDialog(context);
-                      }
-                    },
+                    onPressed: () => _handleFormSubmission(),
                   ),
                 ),
               ],
@@ -814,7 +716,18 @@ class _ParoleScreenState extends State<ParoleScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
-              Navigator.pop(context); // Normal back navigation
+              // Check if we can pop, if not navigate to home
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              } else {
+                // Navigate to home screen if there's no previous screen
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HomeScreen(selectedIndex: 0),
+                  ),
+                );
+              }
             },
           ),
           actions: [
@@ -851,7 +764,7 @@ class _ParoleScreenState extends State<ParoleScreen> {
               child: Row(
                 children: [
                   buildNavItem(
-                    selectedIndex : _selectedIndex,
+                    selectedIndex :_selectedIndex,
                     index: 0,
                     icon: Icons.dashboard,
                     label: 'Dashboard',
@@ -865,7 +778,7 @@ class _ParoleScreenState extends State<ParoleScreen> {
                     },
                   ),
                   buildNavItem(
-                    selectedIndex : _selectedIndex,
+                    selectedIndex :_selectedIndex,
                     index: 1,
                     icon: Icons.directions_walk,
                     label: 'Meeting',
@@ -877,7 +790,7 @@ class _ParoleScreenState extends State<ParoleScreen> {
                     },
                   ),
                   buildNavItem(
-                    selectedIndex : _selectedIndex,
+                    selectedIndex :_selectedIndex,
                     index: 2,
                     icon: Icons.gavel,
                     label: 'Parole',
@@ -887,14 +800,14 @@ class _ParoleScreenState extends State<ParoleScreen> {
                         MaterialPageRoute(
                           builder: (context) => ParoleScreen(
                             selectedIndex: 2,
-                            fromNavbar: true,  // ✅ Add this line
+                            fromNavbar: true,
                           ),
                         ),
                       );
                     },
                   ),
                   buildNavItem(
-                    selectedIndex : _selectedIndex,
+                    selectedIndex :_selectedIndex,
                     index: 3,
                     icon: Icons.report_problem,
                     label: 'Grievance',

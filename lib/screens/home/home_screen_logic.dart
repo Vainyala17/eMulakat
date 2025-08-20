@@ -134,7 +134,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
         final meetingData = response['dashboard']['meeting'];
         statusCounts['Meeting'] = {
           'pending': _parseCount(meetingData['pending']),
-          'completed': _parseCount(meetingData['Completed']), // Capital C from API
+          'completed': _parseCount(meetingData['completed']), // Capital C from API
           'upcoming': _parseCount(meetingData['upcoming']),
           'expired': _parseCount(meetingData['expired']),
           'total': _parseCount(meetingData['total']),
@@ -147,7 +147,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
         final paroleData = response['dashboard']['parole'];
         statusCounts['Parole'] = {
           'pending': _parseCount(paroleData['pending']),
-          'completed': _parseCount(paroleData['Completed']), // Capital C from API
+          'completed': _parseCount(paroleData['completed']), // Capital C from API
           'upcoming': _parseCount(paroleData['upcoming']),
           'expired': _parseCount(paroleData['expired']),
           'total': _parseCount(paroleData['total']),
@@ -160,7 +160,7 @@ mixin HomeScreenLogic<T extends StatefulWidget> on State<T> {
         final grievanceData = response['grievance'];
         statusCounts['Grievance'] = {
           'pending': _parseCount(grievanceData['pending']),
-          'completed': _parseCount(grievanceData['Completed']), // Capital C from API
+          'completed': _parseCount(grievanceData['completed']), // Capital C from API
           'upcoming': _parseCount(grievanceData['upcoming']),
           'expired': _parseCount(grievanceData['expired']),
           'total': _parseCount(grievanceData['total']),

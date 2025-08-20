@@ -1,18 +1,21 @@
-import 'package:eMulakat/services/api_service.dart';
 import 'package:eMulakat/services/hive_service.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'screens/splash/splash_logo.dart';
 import 'utils/color_scheme.dart';
 
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
-  await HiveService.initHive();
-  final api = ApiService();
-  final dashboard = await api.getDashboardSummary("7702000725");
-  print(dashboard);
+
+  try {
+    // Only initialize critical services in main()
+    await HiveService.initHive();
+    print('✅ App initialized successfully');
+  } catch (e) {
+    print('❌ Critical error during app initialization: $e');
+    // Handle critical errors appropriately
+  }
 
   runApp(
     EasyLocalization(
@@ -30,7 +33,7 @@ Future<void> main() async {
       ],
       path: 'assets/lang',
       fallbackLocale: Locale('en'),
-      child:eMulakatApp(),
+      child: eMulakatApp(),
     ),
   );
 }
@@ -39,7 +42,7 @@ class eMulakatApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'eMulakat', // Connects DevicePreview to your app
+      title: 'eMulakat',
       theme: ThemeData(
         primarySwatch: AppColors.primarySwatch,
         colorScheme: AppColors.colorScheme,

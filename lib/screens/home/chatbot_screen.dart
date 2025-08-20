@@ -10,6 +10,7 @@ import '../../dashboard/visit/whom_to_meet_screen.dart';
 import '../../models/keyword_model.dart';
 import '../../models/visitor_model.dart';
 import '../../services/api_service.dart';
+import '../../services/auth_service.dart';
 import '../../services/hive_service.dart';
 
 class ChatbotScreen extends StatefulWidget {
@@ -64,7 +65,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   void initState() {
     super.initState();
     _initializeApp();
-    //AuthService.checkAndHandleSession(context);
+    AuthService.checkAndHandleSession(context);
   }
 
   Future<void> _initializeApp() async {
@@ -329,8 +330,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     return replies;
   }
 
-  // FIXED: Enhanced bot reply with better keyword matching
-  // FIXED: Enhanced bot reply with better keyword matching
   void _botReply(String userInput) {
     final input = userInput.toLowerCase().trim();
 
@@ -531,8 +530,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     return greetings.any((greeting) => input.contains(greeting));
   }
 
-  // FIXED: Enhanced action execution with better error handling
-  // FIXED: Enhanced action execution with better error handling
   void _executeAction(KeywordModel keyword) {
     print('=== EXECUTE ACTION DEBUG ===');
     print('Keyword Display: "${keyword.displayOptions}"');

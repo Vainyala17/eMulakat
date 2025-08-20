@@ -4,9 +4,10 @@ import 'package:http/http.dart' as http;
 import '../models/keyword_model.dart';
 import 'hive_service.dart';
 
-
 class ApiService {
-  static const String BASE_URL = 'http://192.168.0.106:5000/api/kskeywords';
+  // static const String BASE_URL = 'http://192.168.0.106:5000/api/kskeywords';
+  static const String BASE_URL = 'https://2faedd303dbe.ngrok-free.app/api/kskeywords';
+
 
   // FIXED: Enhanced fetch keywords with better error handling and validation
   static Future<List<KeywordModel>> fetchKeywords() async {
@@ -431,7 +432,7 @@ class ApiService {
   }
 
   /// 🔹 Raise Meeting Request
-  Future<Map<String, dynamic>> raiseMeetingRequest(Map<String, String> body) async {
+  static Future<Map<String, dynamic>> raiseMeetingRequest(Map<String, String> body) async {
     try {
       // TODO: Uncomment when backend is live
       // final response = await http.post(
@@ -457,8 +458,7 @@ class ApiService {
     }
   }
 
-  /// 🔹 Raise Parole Request
-  Future<Map<String, dynamic>> raiseParoleRequest(Map<String, String> body) async {
+  static Future<Map<String, dynamic>> raiseParoleRequest(Map<String, String> body) async {
     try {
       // TODO: Uncomment when backend is live
       // final response = await http.post(
@@ -469,17 +469,27 @@ class ApiService {
       //   },
       //   body: json.encode(body),
       // );
+      //
+      // if (response.statusCode == 200) {
+      //   return json.decode(response.body);
+      // } else {
+      //   throw Exception('HTTP ${response.statusCode}: ${response.reasonPhrase}');
+      // }
 
-      // Mock success response
+      // Simulate network delay for realistic feel
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Mock success response - load from assets
       final String response = await rootBundle.loadString('assets/mock/raise_parole_success.json');
       return json.decode(response);
+
     } catch (e) {
       throw Exception('Failed to raise parole request: $e');
     }
   }
 
   /// 🔹 Raise Grievance Request
-  Future<Map<String, dynamic>> raiseGrievanceRequest(Map<String, String> body) async {
+  static Future<Map<String, dynamic>> raiseGrievanceRequest(Map<String, String> body) async {
     try {
       // TODO: Uncomment when backend is live
       // final response = await http.post(

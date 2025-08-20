@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../dashboard/grievance/grievance_details_screen.dart';
 import '../../dashboard/parole/parole_screen.dart';
 import '../../dashboard/visit/whom_to_meet_screen.dart';
+import '../../services/auth_service.dart';
 import '../../utils/dialog_utils.dart';
 import '../registration/visitor_register_screen.dart';
 import 'chatbot_screen.dart';
@@ -26,6 +27,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with HomeScreenLogic, SingleTickerProviderStateMixin {
   bool _showingVisitCards = false;
+  bool _isAuthChecking = true; // Add this flag
+  bool _isAuthenticated = false; // Add this flag
   late TabController _tabController;
   bool _isProfileCompleted = false;
   int _currentBottomNavIndex = 0; // Add this to track bottom navigation state
@@ -33,6 +36,8 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
+    _checkAuthentication(); // Check auth first
+    AuthService.checkAndHandleSession(context);
     _tabController = TabController(
       length: 2,
       vsync: this,
@@ -96,6 +101,94 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ),
       ),
+    );
+  }
+  //Improved authentication check
+  Future<void> _checkAuthentication() async {
+    try {
+      // First check if it's the special user (sir's number)
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? specialUser = prefs.getString('special_user');
+
+      if (specialUser == "7702000723") {
+        // Special user - allow access
+        setState(() {
+          _isAuthenticated = true;
+          _isAuthChecking = false;
+        });
+        return;
+      }
+
+      // Regular JWT token validation
+      bool isValid = await AuthService.isTokenValid();
+
+      if (mounted) {
+        setState(() {
+          _isAuthenticated = isValid;
+          _isAuthChecking = false;
+        });
+
+        if (!isValid) {
+          await AuthService.clearTokens();
+          _showSessionExpiredDialog();
+        }
+      }
+    } catch (e) {
+      print('Auth check error: $e');
+      if (mounted) {
+        setState(() {
+          _isAuthenticated = false;
+          _isAuthChecking = false;
+        });
+        _showAuthErrorDialog();
+      }
+    }
+  }
+
+  void _showSessionExpiredDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text('Session Expired'),
+        content: Text('Your session has expired. Please login again.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _redirectToLogin();
+            },
+            child: Text('Login'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAuthErrorDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text('Authentication Error'),
+        content: Text('Unable to verify your session. Please login again.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _redirectToLogin();
+            },
+            child: Text('Login'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _redirectToLogin() {
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      '/login', // Make sure this route exists in your main.dart
+          (route) => false,
     );
   }
 

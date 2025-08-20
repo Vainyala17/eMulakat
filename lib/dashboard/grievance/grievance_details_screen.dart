@@ -6,6 +6,7 @@ import '../../pdf_viewer_screen.dart';
 import '../../screens/home/bottom_nav_bar.dart';
 import '../../screens/home/home_screen.dart';
 import '../../services/api_service.dart';
+import '../../services/auth_service.dart';
 import '../../utils/color_scheme.dart';
 import '../../utils/dialog_utils.dart';
 import '../../utils/read_only_text_fields.dart';
@@ -52,7 +53,7 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
   final TextEditingController _prisonerNameController = TextEditingController();
   final TextEditingController _prisonController = TextEditingController();
   String? _selectedCategory;
-
+  bool _isLoading = false;
   final List<String> _category = [
     'SELECT',
     'III Treated by the prison authorities',
@@ -98,114 +99,10 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
     }
   ];
 
-  // void initializeVisitData() {
-  //   visitData['Grievance'] = [
-  //     VisitorModel(
-  //       visitorName: 'Priya Singh',
-  //       fatherName: 'Raj Singh',
-  //       address: '567 Park Street, Mumbai',
-  //       gender: 'Female',
-  //       age: 29,
-  //       relation: 'Sister',
-  //       idProof: 'Driving License',
-  //       idNumber: 'DL1234567890',
-  //       isInternational: false,
-  //       state: 'Maharashtra',
-  //       jail: 'Arthur Road',
-  //       visitDate: DateTime.now().add(Duration(days: 3)),
-  //       additionalVisitors: 1,
-  //       additionalVisitorNames: ['Rahul Singh'],
-  //       prisonerName: 'Vikram Singh',
-  //       prisonerFatherName: 'Mohan Singh',
-  //       prisonerAge: 32,
-  //       prisonerGender: 'Male',
-  //       mode: true,
-  //       status: VisitStatus.pending,
-  //       startTime: '15:00',
-  //       endTime: '17:00',
-  //       dayOfWeek: 'Thursday', prison: '',
-  //     ),
-  //     VisitorModel(
-  //       visitorName: 'Kavita Desai',
-  //       fatherName: 'Suresh Desai',
-  //       address: '890 Link Road, Thane',
-  //       gender: 'Female',
-  //       age: 42,
-  //       relation: 'Mother',
-  //       idProof: 'Voter ID',
-  //       idNumber: 'VOT7890123',
-  //       isInternational: false,
-  //       state: 'Maharashtra',
-  //       jail: 'Thane Jail',
-  //       visitDate: DateTime.now().add(Duration(days: 1)),
-  //       additionalVisitors: 0,
-  //       additionalVisitorNames: [],
-  //       prisonerName: 'Rohit Desai',
-  //       prisonerFatherName: 'Suresh Desai',
-  //       prisonerAge: 22,
-  //       prisonerGender: 'Male',
-  //       mode: false,
-  //       status: VisitStatus.upcoming,
-  //       startTime: '10:00',
-  //       endTime: '12:00',
-  //       dayOfWeek: 'Tuesday', prison: '',
-  //     ),
-  //     VisitorModel(
-  //       visitorName: 'Deepak Joshi',
-  //       fatherName: 'Ramesh Joshi',
-  //       address: '234 Hill Road, Bandra',
-  //       gender: 'Male',
-  //       age: 55,
-  //       relation: 'Father',
-  //       idProof: 'Passport',
-  //       idNumber: 'P9876543',
-  //       isInternational: false,
-  //       state: 'Maharashtra',
-  //       jail: 'Byculla Jail',
-  //       visitDate: DateTime.now().subtract(Duration(days: 5)),
-  //       additionalVisitors: 1,
-  //       additionalVisitorNames: ['Sunita Joshi'],
-  //       prisonerName: 'Arun Joshi',
-  //       prisonerFatherName: 'Ramesh Joshi',
-  //       prisonerAge: 28,
-  //       prisonerGender: 'Male',
-  //       mode: true,
-  //       status: VisitStatus.completed,
-  //       startTime: '13:00',
-  //       endTime: '15:00',
-  //       dayOfWeek: 'Wednesday', prison: '',
-  //     ),
-  //     VisitorModel(
-  //       visitorName: 'Sunita Roy',
-  //       fatherName: 'Bimal Roy',
-  //       address: '321 MG Road, Nagpur',
-  //       gender: 'Female',
-  //       age: 38,
-  //       relation: 'Wife',
-  //       idProof: 'Passport',
-  //       idNumber: 'P1234567',
-  //       isInternational: false,
-  //       state: 'Maharashtra',
-  //       jail: 'Nagpur Central Jail',
-  //       visitDate: DateTime.now().subtract(Duration(days: 3)),
-  //       additionalVisitors: 0,
-  //       additionalVisitorNames: [],
-  //       prisonerName: 'Rajesh Roy',
-  //       prisonerFatherName: 'Mohan Roy',
-  //       prisonerAge: 42,
-  //       prisonerGender: 'Male',
-  //       mode: false,
-  //       status: VisitStatus.expired,
-  //       startTime: '11:00',
-  //       endTime: '13:00',
-  //       dayOfWeek: 'Thursday', prison: '',
-  //     ),
-  //   ];
-  // }
-
   @override
   void initState() {
     super.initState();
+    AuthService.checkAndHandleSession(context);
     _selectedIndex = widget.selectedIndex;
     //initializeVisitData();
     _loadDashboard();
@@ -232,6 +129,96 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
     final api = ApiService();
     final dashboard = await api.getDashboardSummary("7702000725");
     print(dashboard); // <-- test output
+  }
+
+  // Handle form submission using API service
+  Future<void> _handleFormSubmission() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Prepare request body
+      Map<String, String> requestBody = {
+        'prisonerName': _prisonerNameController.text,
+        'prison': _prisonController.text,
+        'category': _selectedCategory ?? '',
+        'message': _messageController.text,
+      };
+
+      // Call API service
+      final response = await ApiService.raiseGrievanceRequest(requestBody);
+
+      // Handle success - show success message and go back
+      _showSuccessMessage(response);
+
+    } catch (e) {
+      _showErrorMessage('An error occurred: ${e.toString()}');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Show success message and navigate back
+  void _showSuccessMessage(Map<String, dynamic> response) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.black),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    response['message'] ?? 'Grievance request submitted successfully!',
+                    style: const TextStyle(color: Colors.black), // ✅ Fix here
+                  ),
+                  if (response['applicationId'] != null)
+                    Text(
+                      'ID: ${response['applicationId']}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                ],
+              ),
+
+            ),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+
+    // Navigate back after a short delay
+    Future.delayed(const Duration(seconds: 1), () {
+      Navigator.of(context).pop();
+    });
+  }
+
+  // Show error message
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   Widget _buildVerticalList() {
@@ -443,17 +430,41 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: CustomButton(
+                  child: _isLoading
+                      ? Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade400,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Text(
+                            'Submitting...',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                      : CustomButton(
                     text: 'Save',
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        showSuccessDialog(context);
-                      }
-                    },
+                    onPressed: () => _handleFormSubmission(),
                   ),
                 ),
               ],
-            ),
+            )
           ],
         ),
       ),

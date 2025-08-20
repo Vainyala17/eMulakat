@@ -1,6 +1,7 @@
 // Create this as a separate file: notification_screen.dart
 import 'package:flutter/material.dart';
 import '../../models/visitor_model.dart';
+import '../../services/auth_service.dart';
 import '../../utils/color_scheme.dart';
 
 class NotificationScreen extends StatefulWidget {
@@ -34,6 +35,7 @@ class _NotificationScreenState extends State<NotificationScreen> with TickerProv
   @override
   void initState() {
     super.initState();
+    AuthService.checkAndHandleSession(context);
     _pageController = PageController();
     _tabController = TabController(length: filterOptions.length, vsync: this);
   }
