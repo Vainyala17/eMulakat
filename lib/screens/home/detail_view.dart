@@ -206,9 +206,9 @@ class DetailViewScreen extends StatelessWidget {
         ),
         _buildDetailRowWithIcon(infoIcons['approved']!, 'Approved Visit Date', _getApprovedDate()),
         _buildDetailRowWithIcon(infoIcons['status']!, 'Visit Status', _getStatusText(visitor.status)),
-        _buildDetailRowWithIcon(infoIcons['remarks']!, 'Remarks', _getRemarks()),
         _buildDetailRowWithIcon(infoIcons['jail']!, 'Jail', visitor.jail),
         _buildDetailRowWithIcon(infoIcons['time']!, 'Time Slot', '${visitor.startTime} - ${visitor.endTime}'),
+        _buildDetailRowWithIcon(infoIcons['remarks']!, 'Remarks', _getRemarks()),
       ],
     );
   }
@@ -223,9 +223,9 @@ class DetailViewScreen extends StatelessWidget {
         _buildDetailRowWithIcon(infoIcons['date']!, 'Leave From Date', _getLeaveFromDate()),
         _buildDetailRowWithIcon(infoIcons['date']!, 'Leave To Date', _getLeaveToDate()),
         _buildDetailRowWithIcon(infoIcons['address']!, 'Spent Address', _getSpentAddress()),
-        _buildDetailRowWithIcon(infoIcons['reason']!, 'Reason', _getReason()),
         _buildDetailRowWithIcon(infoIcons['status']!, 'Status', _getStatusText(visitor.status)),
         _buildDetailRowWithIcon(infoIcons['relation']!, 'Relation', visitor.relation),
+        _buildDetailRowWithIcon(infoIcons['reason']!, 'Reason', _getReason()),
       ],
     );
   }

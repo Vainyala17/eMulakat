@@ -12,8 +12,6 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/form_section_title.dart';
 import '../../utils/validators.dart';
 
-// Import the AdditionalVisitor model from the main file
-// In a real app, this would be in a separate models file
 class AdditionalVisitor {
   String visitorName;
   String fatherName;

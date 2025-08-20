@@ -4,6 +4,7 @@ import '../../dashboard/grievance/grievance_details_screen.dart';
 import '../../dashboard/parole/parole_screen.dart';
 import '../../dashboard/visit/whom_to_meet_screen.dart';
 import '../../services/api_service.dart';
+import '../../services/auth_service.dart';
 
 class MyRegisteredInmatesScreen extends StatefulWidget {
   const MyRegisteredInmatesScreen({super.key});
@@ -19,6 +20,7 @@ class _MyRegisteredInmatesScreenState extends State<MyRegisteredInmatesScreen> {
   @override
   void initState() {
     super.initState();
+    AuthService.checkAndHandleSession(context);
     _fetchInmates();
   }
 

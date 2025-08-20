@@ -9,6 +9,7 @@ import '../../pdf_viewer_screen.dart';
 import '../../screens/home/bottom_nav_bar.dart';
 import '../../screens/home/home_screen.dart';
 import '../../services/api_service.dart';
+import '../../services/auth_service.dart';
 import '../../utils/color_scheme.dart';
 import '../../utils/dialog_utils.dart';
 import '../../utils/image_uploading.dart';
@@ -95,7 +96,7 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
   bool _showAdditionalVisitorsList = false;
   String selectedVisitType = 'Meeting';
   String selectedStatus = 'All';
-
+  bool _isLoading = false;
   // Constants
   final List<String> _visitModes = ['Physical', 'Video Conferencing'];
   final List<String> _idProofTypes = [
@@ -145,12 +146,102 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
   @override
   void initState() {
     super.initState();
+    AuthService.checkAndHandleSession(context);
     _selectedIndex = widget.selectedIndex;
     _initializePreviousVisitors();
     //_initializeVisitData();
     _setupInitialState();
     _loadDashboard();
 
+  }
+
+  Future<void> _handleFormSubmission() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Prepare request body
+      Map<String, String> requestBody = {
+        'prisonerName': _prisonerNameController.text,
+        'prison': _prisonController.text,
+        'mode': _selectedVisitMode ?? '',
+        'visit Date': _visitDateController.text,
+        'visitors': _additionalVisitorControllers.map((c) => c.text).join(','),
+      };
+
+      // Call API service
+      final response = await ApiService.raiseMeetingRequest(requestBody);
+
+      // Handle success - show success message and go back
+      _showSuccessMessage(response);
+
+    } catch (e) {
+      _showErrorMessage('An error occurred: ${e.toString()}');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+// Show success message and navigate back
+  void _showSuccessMessage(Map<String, dynamic> response) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.black),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    response['message'] ?? 'Meeting request submitted successfully!',
+                    style: const TextStyle(color: Colors.black), // ✅ Fix here
+                  ),
+                  if (response['applicationId'] != null)
+                    Text(
+                      'ID: ${response['applicationId']}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                ],
+              ),
+
+            ),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+
+    // Navigate back after a short delay
+    Future.delayed(const Duration(seconds: 1), () {
+      Navigator.of(context).pop();
+    });
+  }
+
+  // Show error message
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   Future<void> _loadDashboard() async {
@@ -196,39 +287,6 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     ];
   }
 
-  // void _initializeVisitData() {
-  //   visitData['Meeting'] = [
-  //     VisitorModel(
-  //       visitorName: 'Sunita Roy',
-  //       fatherName: 'Bimal Roy',
-  //       address: '321 MG Road, Nagpur',
-  //       gender: 'Female',
-  //       age: 38,
-  //       relation: 'Wife',
-  //       idProof: 'Passport',
-  //       idNumber: 'P1234567',
-  //       isInternational: false,
-  //       state: 'Maharashtra',
-  //       jail: 'Nagpur Central Jail',
-  //       visitDate: DateTime.now().subtract(Duration(days: 3)),
-  //       additionalVisitors: 0,
-  //       additionalVisitorNames: [],
-  //       prisonerName: 'Rajesh Roy',
-  //       prisonerFatherName: 'Mohan Roy',
-  //       prisonerAge: 42,
-  //       prisonerGender: 'Male',
-  //       mode: false,
-  //       status: VisitStatus.expired,
-  //       startTime: '11:00',
-  //       endTime: '13:00',
-  //       dayOfWeek: 'Thursday',
-  //       prison: 'Nagpur Central Jail',
-  //     ),
-  //     // Add more sample data as needed...
-  //   ];
-  // }
-
-  // Image handling methods
   Future<void> _pickImageForVisitor(String imageType, AdditionalVisitor visitor) async {
     showModalBottomSheet(
       context: context,
@@ -357,7 +415,6 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     );
   }
 
-  // UI Builder methods
   Widget _buildInfoRow(IconData icon, String text, {
     Color? iconColor,
     Color? textColor,
@@ -400,7 +457,6 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
         ),
       );
     }
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -791,20 +847,9 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
       width: double.infinity,
       child: CustomButton(
         text: 'Save',
-        onPressed: _handleSave,
+        onPressed: () => _handleFormSubmission(),
       ),
     );
-  }
-
-  void _handleSave() {
-    if (!_formKey.currentState!.validate()) return;
-
-    if (_selectedVisitMode == null) {
-      _showSnackBar('Please select visit mode', Colors.red);
-      return;
-    }
-
-    showSuccessDialog(context);
   }
 
   // Additional visitor list methods
