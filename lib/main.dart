@@ -1,7 +1,10 @@
+// main.dart
 import 'package:eMulakat/services/hive_service.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'screens/splash/splash_logo.dart';
+import 'package:get/get.dart';
+import 'bindings/bindings.dart';
+import 'routes/app_pages.dart';
 import 'utils/color_scheme.dart';
 
 Future<void> main() async {
@@ -17,41 +20,32 @@ Future<void> main() async {
     // Handle critical errors appropriately
   }
 
-  runApp(
-    EasyLocalization(
-      supportedLocales: [
-        Locale('en'),
-        Locale('hi'),
-        Locale('mr'),
-        Locale('ta'),
-        Locale('te'),
-        Locale('kn'),
-        Locale('ml'),
-        Locale('gu'),
-        Locale('bn'),
-        Locale('ur'),
-      ],
-      path: 'assets/lang',
-      fallbackLocale: Locale('en'),
-      child: eMulakatApp(),
-    ),
-  );
+  runApp(eMulakatApp());
 }
 
 class eMulakatApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: 'eMulakat',
       theme: ThemeData(
         primarySwatch: AppColors.primarySwatch,
         colorScheme: AppColors.colorScheme,
       ),
       debugShowCheckedModeBanner: false,
+
+      // GetX Configuration
+      initialRoute: AppPages.INITIAL,
+      getPages: AppPages.routes,
+      initialBinding: InitialBinding(),
+
+      // Localization (if using easy_localization)
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
       locale: context.locale,
-      home: SplashLogoScreen(),
+
+      // Navigation observers for debugging (optional)
+      // navigatorObservers: [GetObserver()],
     );
   }
 }
