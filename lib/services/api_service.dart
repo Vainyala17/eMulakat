@@ -6,7 +6,7 @@ import 'hive_service.dart';
 
 class ApiService {
   // static const String BASE_URL = 'http://192.168.0.106:5000/api/kskeywords';
-  static const String BASE_URL = 'https://2faedd303dbe.ngrok-free.app/api/kskeywords';
+  static const String BASE_URL = 'https://d953a7124a0a.ngrok-free.app/api/kskeywords';
 
 
   // FIXED: Enhanced fetch keywords with better error handling and validation
