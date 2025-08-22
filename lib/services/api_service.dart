@@ -1,14 +1,146 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/keyword_model.dart';
+import 'device_service.dart';
 import 'hive_service.dart';
 
 class ApiService {
   // static const String BASE_URL = 'http://192.168.0.106:5000/api/kskeywords';
-  static const String BASE_URL = 'https://2faedd303dbe.ngrok-free.app/api/kskeywords';
+  static const String BASE_URL = 'https://d953a7124a0a.ngrok-free.app/api/kskeywords';
 
+// Add bootstrap URL (replace with your actual backend URL)
+  static const String BOOTSTRAP_URL = 'http://localhost:5000/api/bootstrap';
 
+  // Secure storage instance (using our custom implementation)
+  static Future<void> _storeSecurely(String key, String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('secure_$key', value);
+  }
+
+  static Future<String?> _readSecurely(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('secure_$key');
+  }
+
+  static Future<void> _deleteSecurely(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('secure_$key');
+  }
+
+  // ============= NEW BOOTSTRAP METHODS =============
+
+  /// Bootstrap flow - equivalent to React Native version
+  static Future<Map<String, dynamic>?> bootstrapFlow() async {
+    try {
+      print('🚀 Starting bootstrap flow...');
+
+      // Step 1: Check if app key exists, if not generate it
+      String? appKey = await DeviceService.getStoredAppKey();
+      if (appKey == null || appKey.isEmpty) {
+        appKey = DeviceService.generateAppKey();
+        await DeviceService.storeAppKey(appKey);
+      }
+
+      // Step 2: Get device info and fingerprint
+      final deviceInfo = await DeviceService.getDeviceInfo();
+      final fingerprint = await DeviceService.getDeviceFingerprint();
+
+      // Step 3: Call bootstrap API
+      final response = await http.post(
+        Uri.parse(BOOTSTRAP_URL),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-app-key': appKey,
+          'x-device-fingerprint': fingerprint,
+          'User-Agent': deviceInfo,
+        },
+        body: json.encode({}),
+      ).timeout(Duration(seconds: 30));
+
+      print('📡 Bootstrap API Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        final appOwnerInfo = responseData['AppOwnerInfo'];
+
+        if (appOwnerInfo != null) {
+          // Step 4: Store AppOwnerInfo securely
+          await _storeSecurely('AppOwnerInfo', json.encode(appOwnerInfo));
+
+          print('✅ Bootstrap successful');
+          print('👤 Client: ${appOwnerInfo['client_name']}');
+
+          return appOwnerInfo;
+        } else {
+          throw Exception('AppOwnerInfo not found in response');
+        }
+      } else {
+        throw Exception('Bootstrap API failed: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Bootstrap failed: $e');
+
+      // Try to return cached AppOwnerInfo if bootstrap fails
+      final cached = await getStoredAppOwnerInfo();
+      if (cached != null) {
+        print('📦 Using cached AppOwnerInfo');
+        return cached;
+      }
+
+      return null;
+    }
+  }
+
+  /// Get stored AppOwnerInfo
+  static Future<Map<String, dynamic>?> getStoredAppOwnerInfo() async {
+    try {
+      final storedInfo = await _readSecurely('AppOwnerInfo');
+      if (storedInfo != null) {
+        return json.decode(storedInfo);
+      }
+      return null;
+    } catch (e) {
+      print('❌ Error reading stored AppOwnerInfo: $e');
+      return null;
+    }
+  }
+
+  /// Check if bootstrap is needed
+  static Future<bool> isBootstrapNeeded() async {
+    final appKey = await DeviceService.getStoredAppKey();
+    final appOwnerInfo = await getStoredAppOwnerInfo();
+
+    return appKey == null || appOwnerInfo == null;
+  }
+
+  /// Force refresh bootstrap data
+  static Future<Map<String, dynamic>?> refreshBootstrapData() async {
+    // Clear existing data
+    await _deleteSecurely('AppOwnerInfo');
+
+    // Run bootstrap flow again
+    return await bootstrapFlow();
+  }
+
+  /// Get device information for debugging
+  static Future<void> printDeviceInfo() async {
+    try {
+      final deviceInfo = await DeviceService.getDetailedDeviceInfo();
+      final fingerprint = await DeviceService.getDeviceFingerprint();
+      final userAgent = await DeviceService.getDeviceInfo();
+
+      print('🔍 === DEVICE INFORMATION ===');
+      print('📱 Device Details: $deviceInfo');
+      print('🔐 Fingerprint: ${fingerprint.substring(0, 16)}...');
+      print('🌐 User Agent: $userAgent');
+      print('=== END DEVICE INFO ===');
+    } catch (e) {
+      print('❌ Error printing device info: $e');
+    }
+  }
   // FIXED: Enhanced fetch keywords with better error handling and validation
   static Future<List<KeywordModel>> fetchKeywords() async {
     try {
