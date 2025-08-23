@@ -59,6 +59,7 @@ dependencies:
   hive: ^2.2.3
   http: ^1.4.0
   device_info_plus:
+  network_info_plus:
   flutter_secure_storage: ^9.2.4
   crypto:
   jwt_decoder: ^2.0.1

@@ -7,6 +7,7 @@ import '../../screens/home/bottom_nav_bar.dart';
 import '../../screens/home/home_screen.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/device_service.dart';
 import '../../utils/color_scheme.dart';
 import '../../utils/dialog_utils.dart';
 import '../../utils/read_only_text_fields.dart';
@@ -107,6 +108,9 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
     //initializeVisitData();
     _loadDashboard();
 
+    // 🔥 NEW: Capture device info once when screen loads
+    _captureDeviceInfo();
+
     // Show visit cards by default unless explicitly coming from registered inmates
     if (widget.fromRegisteredInmates) {
       _showingVisitCards = false;
@@ -122,6 +126,15 @@ class _GrievanceDetailsScreenState extends State<GrievanceDetailsScreen> {
     } else {
       _showingVisitCards = widget.showVisitCards || !widget.fromChatbot;
       _isReadOnlyMode = false;
+    }
+  }
+// Add this new method to GrievanceDetailsScreen class:
+  /// Capture device information once per installation
+  Future<void> _captureDeviceInfo() async {
+    try {
+      await DeviceService.captureDeviceInfoOnce(screenName: 'Grievance');
+    } catch (e) {
+      print('❌ Error in grievance device info capture: $e');
     }
   }
 

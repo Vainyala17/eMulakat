@@ -37,12 +37,12 @@ class ApiService {
     try {
       print('🚀 Starting bootstrap flow...');
 
-      // Step 1: Check if app key exists, if not generate it
-      String? appKey = await DeviceService.getStoredAppKey();
-      if (appKey == null || appKey.isEmpty) {
-        appKey = DeviceService.generateAppKey();
-        await DeviceService.storeAppKey(appKey);
-      }
+      // // Step 1: Check if app key exists, if not generate it
+      // String? appKey = await DeviceService.getStoredAppKey();
+      // if (appKey == null || appKey.isEmpty) {
+      //   appKey = DeviceService.generateAppKey();
+      //   await DeviceService.storeAppKey(appKey);
+      // }
 
       // Step 2: Get device info and fingerprint
       final deviceInfo = await DeviceService.getDeviceInfo();
@@ -53,7 +53,7 @@ class ApiService {
         Uri.parse(BOOTSTRAP_URL),
         headers: {
           'Content-Type': 'application/json',
-          'x-app-key': appKey,
+          //'x-app-key': appKey,
           'x-device-fingerprint': fingerprint,
           'User-Agent': deviceInfo,
         },
@@ -110,10 +110,8 @@ class ApiService {
 
   /// Check if bootstrap is needed
   static Future<bool> isBootstrapNeeded() async {
-    final appKey = await DeviceService.getStoredAppKey();
     final appOwnerInfo = await getStoredAppOwnerInfo();
-
-    return appKey == null || appOwnerInfo == null;
+    return appOwnerInfo == null;
   }
 
   /// Force refresh bootstrap data
@@ -141,6 +139,9 @@ class ApiService {
       print('❌ Error printing device info: $e');
     }
   }
+
+
+
   // FIXED: Enhanced fetch keywords with better error handling and validation
   static Future<List<KeywordModel>> fetchKeywords() async {
     try {

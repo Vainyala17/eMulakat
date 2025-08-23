@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Alternative to flutter_secure_storage using SharedPreferences with encryption
 class SecureStorageService {
-  static const String _encryptionKey = 'eMulakat_encryption_key_2024'; // Change this to something unique
+  static const String _encryptionKey = 'eMulakat_encryption_key_2025'; // Change this to something unique
 
   /// Encrypt text using simple XOR cipher
   static String _encrypt(String text) {

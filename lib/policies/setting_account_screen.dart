@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/auth_service.dart';
 import '../services/device_service.dart';
 import '../pdf_viewer_screen.dart';
 
@@ -61,7 +63,11 @@ class AccountSettingsScreen extends StatelessWidget {
 
                   _buildInfoRow('Physical Device', deviceInfo['isPhysicalDevice']?.toString() ?? 'Unknown'),
                   _buildInfoRow('Fingerprint', _truncateText(deviceInfo['fingerprint'] ?? 'Unknown')),
-                  _buildInfoRow('App Key', _truncateText(deviceInfo['appKey'] ?? 'Not Generated')),
+
+                  // 🔥 NEW: Display IP Address and Mobile Number instead of app key
+                  _buildInfoRow('IP Address', deviceInfo['ipAddress'] ?? 'Unknown'),
+                  _buildInfoRow('Mobile Number', deviceInfo['mobileNumber'] ?? 'Not Available'),
+
                   _buildInfoRow('Stored At', _formatTimestamp(deviceInfo['timestamp'])),
 
                   SizedBox(height: 16),
@@ -196,6 +202,25 @@ class AccountSettingsScreen extends StatelessWidget {
     }
   }
 
+  static Future<void> logout() async {
+    try {
+      // Clear authentication tokens
+      await AuthService.clearTokens();
+
+      // Clear logged in mobile number
+      await DeviceService.clearLoggedInMobileNumber();
+
+      // Clear other user session data
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.remove('special_user');
+      await prefs.remove('is_special_user');
+
+      print('✅ Logout successful - all user data cleared');
+    } catch (e) {
+      print('❌ Error during logout: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -302,8 +327,37 @@ class AccountSettingsScreen extends StatelessWidget {
           ListTile(
             leading: Icon(Icons.logout, color: Colors.red),
             title: Text('Logout', style: TextStyle(color: Colors.red)),
-            onTap: () {
-              // Logout logic
+            onTap: () async {
+              // Show confirmation dialog
+              bool? shouldLogout = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('Logout'),
+                  content: Text('Are you sure you want to logout?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text('Logout'),
+                    ),
+                  ],
+                ),
+              );
+
+              if (shouldLogout == true) {
+                // Perform logout
+                await logout(); // Call the updated logout method
+
+                // Navigate to login screen
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/login',
+                      (route) => false,
+                );
+              }
             },
           ),
         ],

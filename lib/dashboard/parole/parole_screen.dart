@@ -7,6 +7,7 @@ import '../../screens/home/bottom_nav_bar.dart';
 import '../../screens/home/home_screen.dart';
 import '../../services/auth_service.dart';
 import '../../services/api_service.dart'; // Import your API service
+import '../../services/device_service.dart';
 import '../../utils/color_scheme.dart';
 import '../../utils/dialog_utils.dart';
 import '../../utils/read_only_text_fields.dart';
@@ -203,6 +204,9 @@ class _ParoleScreenState extends State<ParoleScreen> {
     AuthService.checkAndHandleSession(context);
     _selectedIndex = widget.selectedIndex;
 
+    // 🔥 NEW: Capture device info once when screen loads
+    _captureDeviceInfo();
+
     if (widget.fromRegisteredInmates) {
       _showingVisitCards = false;
       _isReadOnlyMode = true;
@@ -219,6 +223,15 @@ class _ParoleScreenState extends State<ParoleScreen> {
     }
   }
 
+// Add this new method to ParoleScreen class:
+  /// Capture device information once per installation
+  Future<void> _captureDeviceInfo() async {
+    try {
+      await DeviceService.captureDeviceInfoOnce(screenName: 'Parole');
+    } catch (e) {
+      print('❌ Error in parole device info capture: $e');
+    }
+  }
   // Handle form submission using API service
   Future<void> _handleFormSubmission() async {
     if (!_formKey.currentState!.validate()) {
