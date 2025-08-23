@@ -8,6 +8,7 @@ import '../../policies/contact_us_popup.dart';
 import '../../policies/privacy_policy_screen.dart';
 import '../../policies/terms_of_use_screen.dart';
 import '../../services/auth_service.dart';
+import '../../services/device_service.dart';
 import '../home/bottom_nav_bar.dart';
 import '../home/home_screen.dart';
 import '../../widgets/custom_textfield.dart';
@@ -21,6 +22,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   int _selectedIndex = 0;
+  bool shouldLogout = false;
 
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
@@ -140,6 +142,32 @@ class _LoginScreenState extends State<LoginScreen> {
     return !_isInternationalVisitor && _specialCaseNumbers.contains(input);
   }
 
+  static Future<void> logout() async {
+    try {
+      // Clear authentication tokens
+      await AuthService.clearTokens();
+
+      // Clear logged in mobile number
+      await DeviceService.clearLoggedInMobileNumber();
+
+      // Clear other user session data
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.remove('special_user');
+      await prefs.remove('is_special_user');
+
+      print('✅ Logout successful - all user data cleared');
+    } catch (e) {
+      print('❌ Error during logout: $e');
+    }
+  }
+
+  Future<void> _captureDeviceInfoAfterLogin() async {
+    try {
+      await DeviceService.captureDeviceInfoOnce(screenName: 'Login');
+    } catch (e) {
+      print('❌ Error in login device info capture: $e');
+    }
+  }
   // In your LoginScreen _login method, replace this:
   void _login() async {
     // Validate form first - SAFE NULL CHECK
@@ -185,6 +213,11 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setString('special_user', userInput);
         await prefs.setBool('is_special_user', true);
 
+        // 🔥 NEW: Store the logged in mobile number for device info
+        if (!_isInternationalVisitor) {
+          await DeviceService.storeLoggedInMobileNumber(userInput);
+        }
+
         if (mounted) {
           _showSuccessMessage('Login successful!');
 
@@ -201,10 +234,25 @@ class _LoginScreenState extends State<LoginScreen> {
         print('Regular login attempt for: $userInput');
 
         var result = await AuthService.loginUser(userInput, _passwordController.text);
+        if (shouldLogout == true) {
+          // Perform logout
+          await logout();
 
+          // 🔥 NEW: Capture device info after successful login
+          await _captureDeviceInfoAfterLogin();
+
+          // Navigate to login screen
+          Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+        }
         if (mounted) {
           if (result['success'] == true) {
             print('Login successful');
+
+            // 🔥 NEW: Store the logged in mobile number for device info
+            if (!_isInternationalVisitor) {
+              await DeviceService.storeLoggedInMobileNumber(userInput);
+            }
+
             _showSuccessMessage('Login successful!');
 
             // Small delay for user feedback

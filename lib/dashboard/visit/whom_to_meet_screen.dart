@@ -10,6 +10,7 @@ import '../../screens/home/bottom_nav_bar.dart';
 import '../../screens/home/home_screen.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/device_service.dart';
 import '../../utils/color_scheme.dart';
 import '../../utils/dialog_utils.dart';
 import '../../utils/image_uploading.dart';
@@ -149,10 +150,19 @@ class _MeetFormScreenState extends State<MeetFormScreen> {
     AuthService.checkAndHandleSession(context);
     _selectedIndex = widget.selectedIndex;
     _initializePreviousVisitors();
-    //_initializeVisitData();
+    _captureDeviceInfo();
     _setupInitialState();
     _loadDashboard();
 
+  }
+
+  /// Capture device information once per installation
+  Future<void> _captureDeviceInfo() async {
+    try {
+      await DeviceService.captureDeviceInfoOnce(screenName: 'Meeting');
+    } catch (e) {
+      print('❌ Error in parole device info capture: $e');
+    }
   }
 
   Future<void> _handleFormSubmission() async {
