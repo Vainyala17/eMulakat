@@ -9,7 +9,7 @@ import 'hive_service.dart';
 
 class ApiService {
   // static const String BASE_URL = 'http://192.168.0.106:5000/api/kskeywords';
-  static const String BASE_URL = 'https://d953a7124a0a.ngrok-free.app/api/kskeywords';
+  static const String BASE_URL = 'https://b5243d87512d.ngrok-free.app/api/kskeywords';
 
 // Add bootstrap URL (replace with your actual backend URL)
   static const String BOOTSTRAP_URL = 'http://localhost:5000/api/bootstrap';

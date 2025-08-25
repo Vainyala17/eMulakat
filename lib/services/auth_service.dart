@@ -9,7 +9,7 @@ class AuthService {
   static const String refreshTokenKey = 'refresh_token';
   static const String specialUserKey = 'special_user';
   static const String isSpecialUserKey = 'is_special_user';
-  static const String loginUrl = 'https://d953a7124a0a.ngrok-free.app/api/auth/login';
+  static const String loginUrl = 'https://b5243d87512d.ngrok-free.app/api/auth/login';
 
   // Store token
   static Future<void> saveToken(String token) async {
